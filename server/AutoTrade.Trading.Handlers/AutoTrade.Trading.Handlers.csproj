@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.36.2" />
+    <PackageReference Include="Grpc.Tools" Version="2.84.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Hikyaku" Version="10.0.2" />
     <PackageReference Include="MapZilla" Version="9.1.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
@@ -18,6 +23,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AutoTrade.Trading.Core\AutoTrade.Trading.Core.csproj" />
+  </ItemGroup>
+
+  <!-- The vendored schema declares no package, so each file carries an explicit csharp_namespace. -->
+  <ItemGroup>
+    <Protobuf Include="Broker\Proto\*.proto" GrpcServices="None" ProtoRoot="Broker\Proto" />
   </ItemGroup>
 
 </Project>
