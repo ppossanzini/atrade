@@ -22,6 +22,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddScoped<TradingDatabaseInitializer>();
       services.AddMapZilla(new[] { typeof(MappingProfile).Assembly });
       services.AddTradingBroker(configuration);
+      services.AddTradingRisk(configuration);
 
       return services;
     }

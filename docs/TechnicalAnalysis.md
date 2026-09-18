@@ -315,5 +315,40 @@ Deployment singolo host Linux:
 - cTrader Open API, messages: https://help.ctrader.com/open-api/messages/
 - cTrader Open API, error handling: https://help.ctrader.com/open-api/error-handling/
 - cTrader Open API, C# SDK: https://help.ctrader.com/open-api/net_SDK/net-sdk-index/
+
+## Appendice A - Risk Engine: gate, soglie e fail-closed
+
+Vincoli già approvati:
+
+- AC-05: nessuna proposta senza versione attiva e snapshot di mercato valido.
+- AC-08: ogni gate espone codice, valore osservato, soglia e timestamp; i dati mancanti bloccano l'operazione.
+- Il Risk Engine e deterministico: non chiama LLM, non scrive ordini, non decide da solo.
+- Il vocabolario di verdetto e quello del prototipo: `approved`, `review`, `blocked`.
+
+Verdetto della decisione: `Block` se almeno un gate blocca, altrimenti `Review` se almeno un gate richiede revisione, altrimenti `Allow`. Un input mancante o non valutabile produce `Block`: non esiste un percorso permissivo in assenza di dato.
+
+| Codice gate | Condizione valutata | Soglia | Fonte della soglia | Se violata |
+| --- | --- | --- | --- | --- |
+| `RISK_ACTIVE_VERSION_MISSING` | esiste una versione attiva del paniere | - | stato applicativo | Block |
+| `RISK_KILL_SWITCH_ENGAGED` | kill switch rilasciato | - | stato applicativo | Block |
+| `RISK_SNAPSHOT_MISSING` | snapshot di mercato presente e completo | - | pipeline analisi | Block |
+| `RISK_SNAPSHOT_STALE` | eta dello snapshot | `Trading:Risk:SnapshotMaxAgeSeconds` | configurazione, **da decidere** | Block |
+| `RISK_COVERAGE_BELOW_MINIMUM` | copertura eseguibile delle gambe selezionate | `MinimumCoverage` (%) | policy del paniere (approvata) | Block o Review secondo `FailurePolicy` |
+| `RISK_RISK_PER_BASKET_EXCEEDED` | rischio aggregato del paniere | `RiskPerBasket` (%) | policy del paniere (approvata) | Block |
+| `RISK_DAILY_LOSS_EXCEEDED` | perdita giornaliera realizzata piu aperta | `DailyLossLimit` (%) | policy del paniere (approvata) | Block |
+| `RISK_LEG_SPREAD_EXCEEDED` | spread per gamba | `Trading:Risk:LegSpreadMaxPips` | configurazione, **da decidere** | Block sulla gamba |
+| `RISK_LEG_VOLATILITY_EXCEEDED` | volatilita per gamba | `Trading:Risk:LegVolatilityMaxPercent` | configurazione, **da decidere** | Block sulla gamba |
+| `RISK_LEG_DATA_MISSING` | dato di mercato per gamba mancante | - | - | Block |
+
+Traduzione della policy di esecuzione incompleta gia approvata in verdetto:
+
+| `FailurePolicy` | Copertura | Verdetto |
+| --- | --- | --- |
+| `MinimumCoverage` | sotto `MinimumCoverage` | Block |
+| `AllOrNothing` | sotto 100% | Block |
+| `RequireConfirmation` | almeno `MinimumCoverage` ma sotto 100% | Review |
+| qualsiasi | 100% | nessuna violazione |
+
+Soglie non ancora decise: finche `Trading:Risk:SnapshotMaxAgeSeconds`, `LegSpreadMaxPips` e `LegVolatilityMaxPercent` non sono configurate, i rispettivi gate bloccano. Non esistono valori predefiniti nel codice: un default silenzioso sarebbe una decisione di rischio presa dall'implementazione invece che dall'operatore.
 - .NET support policy: https://dotnet.microsoft.com/platform/support/policy
 - SQLite WAL: https://sqlite.org/wal.html
