@@ -1,0 +1,28 @@
+.metric-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--at-space-md);
+  padding: var(--at-space-sm) 0;
+  border-bottom: 1px solid var(--at-border-subtle);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.metric-row__label {
+  font-size: 13px;
+  color: var(--at-text-secondary);
+}
+
+.metric-row__value {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.metric-row__value--muted {
+  font-weight: 400;
+  color: var(--at-text-muted);
+}

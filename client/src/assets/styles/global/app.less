@@ -1,0 +1,181 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background-color: var(--at-surface-base);
+  color: var(--at-text-primary);
+  font-family:
+    Inter,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+#app {
+  height: 100%;
+}
+
+/**
+ * Application shells never scroll as a single document: the shell is bound to the viewport and the
+ * sidebar and the content area scroll independently.
+ */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-shell__sidebar {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 232px;
+  overflow-y: auto;
+  border-right: 1px solid var(--at-border-subtle);
+  background-color: var(--at-surface-sunken);
+}
+
+.app-shell__brand {
+  padding: var(--at-space-md);
+  border-bottom: 1px solid var(--at-border-subtle);
+}
+
+.app-shell__brand-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-shell__brand-environment {
+  display: block;
+  margin-top: var(--at-space-xs);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--at-text-muted);
+}
+
+.app-shell__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app-shell__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: var(--at-space-md);
+  padding: var(--at-space-sm) var(--at-space-lg);
+  border-bottom: 1px solid var(--at-border-subtle);
+  background-color: var(--at-surface-base);
+}
+
+.app-shell__operator {
+  font-size: 13px;
+  color: var(--at-text-secondary);
+}
+
+.app-shell__content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--at-space-lg);
+}
+
+.panel {
+  padding: var(--at-space-md);
+  border: 1px solid var(--at-border-subtle);
+  border-radius: var(--at-radius);
+  background-color: var(--at-surface-raised);
+}
+
+.panel-title {
+  display: block;
+  margin-bottom: var(--at-space-sm);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--at-text-muted);
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--at-space-md);
+  margin-bottom: var(--at-space-lg);
+}
+
+.page-header__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.page-header__subtitle {
+  margin: var(--at-space-xs) 0 0;
+  font-size: 13px;
+  color: var(--at-text-secondary);
+}
+
+.metric-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--at-space-md);
+  padding: var(--at-space-sm) 0;
+  border-bottom: 1px solid var(--at-border-subtle);
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-row__label {
+  font-size: 13px;
+  color: var(--at-text-secondary);
+}
+
+.metric-row__value {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.metric-row__value--muted {
+  font-weight: 400;
+  color: var(--at-text-muted);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--at-space-md);
+}
+
+.inline-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--at-space-sm);
+}
+
+.auth-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: var(--at-surface-sunken);
+}
+
+.auth-view__card {
+  width: min(360px, 92vw);
+}
+
+:is(.el-button, .el-menu-item, .el-tag--clickable) {
+  cursor: pointer;
+}

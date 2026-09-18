@@ -127,3 +127,18 @@
   - Watch-out: the `Operator` entity type shares its name with the `CQRS.Operator` namespace, so handlers for it need a `using OperatorEntity = ...` alias. Renaming the entity to `OperatorAccount` is the recommended follow-up to remove the trap.
 - Consequences: Security behaviour is explicit and verified at runtime. Operators must bootstrap credentials through environment variables or a secret store, never through committed configuration.
 
+## ADR-0011 - Production client scaffold and HTTP contract conventions
+
+- Date: 2026-09-18
+- Status: Accepted
+- Context: The production frontend had to be created from scratch in `client/` (no reuse of the prototype) and integrated with the verified REST API. Runtime verification exposed two contract behaviours that are easy to regress.
+- Decision:
+  - Scaffold `client/` with Vue 3 + TypeScript, Vite, Router, Pinia, ESLint, Prettier, plus Element Plus, Axios, Vue I18n (Italian default) and LESS, per the locked stack.
+  - Component logic modules use `defineComponent`; plain object definitions do not satisfy the component type required by the router.
+  - API enums are serialized as names (`JsonStringEnumConverter`), so the HTTP contract stays readable and the client uses string literal unions.
+  - The antiforgery token is bound to the caller identity: the client renews it after a successful login and after logout, otherwise authenticated mutations fail with `400`.
+  - The axios instance sends cookies (`withCredentials`) and resolves the API base URL from `src/settings.ts` plus the `public/settings.json` runtime override; no dev-proxy prefix is used.
+  - Service classes are transport-only: one method per endpoint, no mapping, no normalization, no runtime payload checks. Pinia stores own orchestration.
+  - Development ports are fixed: API `http://127.0.0.1:5271`, client `http://127.0.0.1:5180`; the client origin must be listed in `Cors:AllowedOrigins`.
+- Consequences: The client renders the operational status and the kill-switch workflow against live server state. Any future port change or CORS change must be applied together, and the antiforgery renewal step must not be removed.
+

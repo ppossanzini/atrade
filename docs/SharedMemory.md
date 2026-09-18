@@ -20,3 +20,10 @@
 - Validate the operator session server-side on every request; never trust cookie contents alone.
 - Require the `X-CSRF-TOKEN` header on every mutating endpoint and obtain the token from `/api/session/antiforgery-token`.
 - Return fail-closed operational defaults when state cannot be read instead of reporting "safe to trade".
+- Keep the production client self-contained in `client/`: never import code or mock-shaped contracts from `prototipe/`.
+- Declare server contracts as the ambient `server` namespace in `src/@types/server.d.ts`; never duplicate them per feature.
+- Keep services transport-only (one method per endpoint, no mapping) and put orchestration in Pinia stores.
+- Route every mutating call through the session store's antiforgery token refreshed after login and logout.
+- Resolve the API base URL at request time from `src/settings.ts` and `public/settings.json`; never bake it into a constructor.
+- Give every sidebar entry a real route, using the shared Coming Soon view for sections not yet implemented.
+- Split each view/component into three files: markup in `.vue`, logic in `.ts` via `defineComponent`, styles in `.less`.

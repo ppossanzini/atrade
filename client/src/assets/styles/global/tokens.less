@@ -1,0 +1,33 @@
+/**
+ * Semantic design tokens. Component styles reference these variables instead of raw values, so the
+ * visual language stays consistent and centralised.
+ */
+:root {
+  --at-surface-sunken: #0f1114;
+  --at-surface-base: #14161a;
+  --at-surface-raised: #1b1e24;
+  --at-border-subtle: #262b33;
+  --at-border-strong: #333a45;
+  --at-text-primary: #e6e8eb;
+  --at-text-secondary: #9aa2ae;
+  --at-text-muted: #6d7683;
+  --at-status-positive: #3fb950;
+  --at-status-warning: #d29922;
+  --at-status-danger: #f85149;
+
+  --at-radius: 8px;
+  --at-space-xs: 4px;
+  --at-space-sm: 8px;
+  --at-space-md: 16px;
+  --at-space-lg: 24px;
+
+  /* Element Plus token overrides: the native theming mechanism, no component CSS repaint. */
+  --el-color-primary: #4a8cff;
+  --el-bg-color: var(--at-surface-raised);
+  --el-bg-color-overlay: var(--at-surface-raised);
+  --el-text-color-primary: var(--at-text-primary);
+  --el-text-color-regular: var(--at-text-secondary);
+  --el-border-color: var(--at-border-strong);
+  --el-border-color-light: var(--at-border-subtle);
+  --el-fill-color-blank: var(--at-surface-raised);
+}

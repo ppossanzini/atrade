@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AutoTrade.Trading.API
@@ -12,7 +13,10 @@ namespace AutoTrade.Trading.API
     {
       // AddControllersWithViews is required for the built-in antiforgery token filters
       // used by the mutating endpoints ([ValidateAntiForgeryToken]).
-      services.AddControllersWithViews();
+      // Enums travel as names so the HTTP contract stays readable for clients and humans.
+      services
+        .AddControllersWithViews()
+        .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
       return services;
     }
