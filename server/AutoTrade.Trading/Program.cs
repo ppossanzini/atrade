@@ -6,6 +6,7 @@ using AutoTrade.Trading.API.Controllers;
 using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Query.Session;
 using AutoTrade.Trading.Handlers;
+using AutoTrade.Trading.Handlers.Broker;
 using AutoTrade.Trading.Handlers.Model;
 using Hikyaku;
 using Microsoft.AspNetCore.Authentication;
@@ -17,6 +18,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+// Optional untracked override for local secrets; it is listed in .gitignore and wins over the
+// environment files because it is added last. The configuration keys never change.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+
 IConfiguration configuration = builder.Configuration;
 
 // Exactly one mediator for the whole module.
@@ -57,6 +63,16 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 }));
 
 WebApplication app = builder.Build();
+
+// Fail-closed: a broker that is enabled must be fully configured, and a broker that is not configured
+// is a supported state that leaves the rest of the application working.
+BrokerOptions brokerOptions = app.Services.GetRequiredService<BrokerOptions>();
+BrokerConfigurationGuard.EnsureValid(brokerOptions);
+
+if (!brokerOptions.IsClientConfigured)
+{
+  app.Logger.LogWarning("Broker is not configured. Set Trading:Broker:ClientId, ClientSecret, TokenKey and RedirectUri to enable it.");
+}
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {

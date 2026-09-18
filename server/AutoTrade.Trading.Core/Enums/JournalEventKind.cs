@@ -17,6 +17,10 @@ namespace AutoTrade.Trading.Core.Enums
     BasketVersionPublished = 12,
     BasketVersionActivated = 13,
     BasketArchived = 14,
-    BasketOperationRejected = 15
+    BasketOperationRejected = 15,
+    BrokerAuthorizationStarted = 16,
+    BrokerAuthorizationCompleted = 17,
+    BrokerAuthorizationRejected = 18,
+    BrokerAuthorizationRevoked = 19
   }
 }

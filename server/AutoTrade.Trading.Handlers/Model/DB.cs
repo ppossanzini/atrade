@@ -34,6 +34,10 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public DbSet<ActiveBasketVersion> ActiveBasketVersions { get; set; }
 
+    public DbSet<BrokerAuthorization> BrokerAuthorizations { get; set; }
+
+    public DbSet<BrokerAuthorizationAttempt> BrokerAuthorizationAttempts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.Entity<Operator>().HasIndex(item => item.UserName).IsUnique();
@@ -50,6 +54,12 @@ namespace AutoTrade.Trading.Handlers.Model
       modelBuilder.Entity<BasketVersionLeg>().HasIndex(item => new { item.VersionId, item.Ordinal }).IsUnique();
       modelBuilder.Entity<BasketVersionLeg>().HasIndex(item => new { item.VersionId, item.Symbol }).IsUnique();
       modelBuilder.Entity<BasketVersionPolicy>().HasIndex(item => item.VersionId).IsUnique();
+
+      // One grant per environment, and one attempt per correlator: both are uniqueness rules the
+      // database can enforce, so they belong here instead of in a handler.
+      modelBuilder.Entity<BrokerAuthorization>().HasIndex(item => item.Environment).IsUnique();
+      modelBuilder.Entity<BrokerAuthorizationAttempt>().HasIndex(item => item.CorrelationHash).IsUnique();
+      modelBuilder.Entity<BrokerAuthorizationAttempt>().HasIndex(item => item.ExpiresAtUtc);
 
       base.OnModelCreating(modelBuilder);
     }

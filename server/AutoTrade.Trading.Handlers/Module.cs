@@ -21,6 +21,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddScoped<IPasswordHasher<Operator>, PasswordHasher<Operator>>();
       services.AddScoped<TradingDatabaseInitializer>();
       services.AddMapZilla(new[] { typeof(MappingProfile).Assembly });
+      services.AddTradingBroker(configuration);
 
       return services;
     }
