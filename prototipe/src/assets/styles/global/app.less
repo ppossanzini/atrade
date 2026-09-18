@@ -1,0 +1,59 @@
+@import './variables.less';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--ink);
+  background: var(--canvas);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+[role='button'],
+.el-menu-item,
+.el-tabs__item {
+  cursor: pointer;
+}
+
+.data-value {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+}
+
+.section-label {
+  color: var(--ink-muted);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.el-button {
+  border-radius: var(--radius-control);
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--signal);
+  --el-button-border-color: var(--signal);
+  --el-button-hover-bg-color: #115d44;
+  --el-button-hover-border-color: #115d44;
+}

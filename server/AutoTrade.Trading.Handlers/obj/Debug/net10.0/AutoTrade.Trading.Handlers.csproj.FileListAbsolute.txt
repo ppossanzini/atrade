@@ -1,0 +1,15 @@
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/bin/Debug/net10.0/AutoTrade.Trading.Handlers.deps.json
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/bin/Debug/net10.0/AutoTrade.Trading.Handlers.dll
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/bin/Debug/net10.0/AutoTrade.Trading.Handlers.pdb
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/bin/Debug/net10.0/AutoTrade.Trading.Core.dll
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/bin/Debug/net10.0/AutoTrade.Trading.Core.pdb
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrade.Trading.Handlers.csproj.AssemblyReference.cache
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrade.Trading.Handlers.GeneratedMSBuildEditorConfig.editorconfig
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrade.Trading.Handlers.AssemblyInfoInputs.cache
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrade.Trading.Handlers.AssemblyInfo.cs
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrade.Trading.Handlers.csproj.CoreCompileInputs.cache
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrad.376EA45E.Up2Date
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrade.Trading.Handlers.dll
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/refint/AutoTrade.Trading.Handlers.dll
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/AutoTrade.Trading.Handlers.pdb
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Handlers/obj/Debug/net10.0/ref/AutoTrade.Trading.Handlers.dll

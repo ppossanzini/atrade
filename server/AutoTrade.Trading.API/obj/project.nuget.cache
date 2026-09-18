@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "TSdNadJmULA=",
+  "success": true,
+  "projectFilePath": "/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.API/AutoTrade.Trading.API.csproj",
+  "expectedPackageFiles": [
+    "/home/paolo/.nuget/packages/hikyaku/10.0.2/hikyaku.10.0.2.nupkg.sha512",
+    "/home/paolo/.nuget/packages/hikyaku.contracts/9.1.2/hikyaku.contracts.9.1.2.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.aspnetcore.openapi/10.0.12/microsoft.aspnetcore.openapi.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.bcl.asyncinterfaces/9.0.9/microsoft.bcl.asyncinterfaces.9.0.9.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.openapi/2.12.0/microsoft.openapi.2.12.0.nupkg.sha512"
+  ],
+  "logs": []
+}

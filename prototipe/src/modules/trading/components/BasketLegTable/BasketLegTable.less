@@ -1,0 +1,44 @@
+.basket-leg-table {
+  --el-table-border-color: var(--line);
+  --el-table-header-bg-color: var(--surface-inset);
+  --el-table-row-hover-bg-color: #f5f8f5;
+  font-size: 0.75rem;
+}
+
+.symbol-cell {
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    margin-top: 0.125rem;
+    color: var(--ink-muted);
+    font-size: 0.625rem;
+  }
+}
+
+.score {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-weight: 700;
+
+  &--good {
+    color: var(--signal);
+    background: var(--signal-soft);
+  }
+
+  &--weak {
+    color: var(--danger);
+    background: var(--danger-soft);
+  }
+}
+
+:deep(.el-input-number) {
+  width: 7rem;
+}

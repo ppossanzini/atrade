@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hikyaku" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoTrade.Trading.API\AutoTrade.Trading.API.csproj" />
+    <ProjectReference Include="..\AutoTrade.Trading.Core\AutoTrade.Trading.Core.csproj" />
+    <ProjectReference Include="..\AutoTrade.Trading.Handlers\AutoTrade.Trading.Handlers.csproj" />
+  </ItemGroup>
+
+</Project>

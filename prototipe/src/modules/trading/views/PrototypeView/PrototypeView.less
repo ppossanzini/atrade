@@ -1,0 +1,96 @@
+.workspace-page { display: grid; gap: 0.875rem; min-height: 100%; }
+
+.page-heading {
+  display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start;
+  h1 { margin: 0.125rem 0 0; font-size: 1.625rem; line-height: 1.2; font-weight: 650; letter-spacing: 0; }
+  p { margin: 0.25rem 0 0; color: var(--ink-secondary); line-height: 1.45; }
+}
+
+.page-actions, .panel-title { display: flex; gap: 0.5rem; align-items: center; justify-content: space-between; }
+.metric-grid, .dashboard-grid, .basket-lower-grid, .strategy-grid, .execution-grid { margin-bottom: 0 !important; }
+.metric-card, .chart-panel, .exposure-panel, .analysis-card, .policy-card, .strategy-form-card, .promotion-card, .execution-card, .risk-card, .journal-card { height: 100%; border-color: var(--line); border-radius: var(--radius-panel); }
+.metric-card :deep(.el-card__body) { display: grid; gap: 0.25rem; padding: 0.875rem; }
+.metric-value { font-size: 1.5rem; line-height: 1.2; }
+.metric-card small, .promotion-card small, .execution-leg small, .exposure-row small { color: var(--ink-muted); font-size: 0.6875rem; }
+.metric-card small.positive { color: var(--signal); }
+.metric-card small.warning { color: var(--warning); }
+
+.equity-chart {
+  display: flex; gap: 0.25rem; align-items: flex-end; height: 11rem; padding-top: 1rem;
+  border-bottom: 1px solid var(--line-strong);
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 2.65rem, var(--line) 2.7rem);
+  i { flex: 1; min-width: 0.25rem; border-radius: 0.125rem 0.125rem 0 0; background: var(--signal); opacity: 0.78; }
+}
+
+.chart-axis { display: flex; justify-content: space-between; margin-top: 0.5rem; color: var(--ink-muted); font-family: var(--font-data); font-size: 0.625rem; }
+.exposure-row { display: grid; grid-template-columns: 4.5rem minmax(4rem, 1fr) 2.5rem; gap: 0.625rem; align-items: center; min-height: 2.75rem; border-bottom: 1px solid var(--line); strong, small { display: block; } }
+
+.basket-strip {
+  display: grid; grid-template-columns: repeat(4, minmax(7rem, 1fr)) auto; align-items: stretch;
+  border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-raised);
+  > div { display: grid; gap: 0.25rem; padding: 0.75rem 1rem; border-right: 1px solid var(--line); }
+  strong { font-size: 1.125rem; }
+  .el-button { align-self: center; margin: 0 0.5rem; }
+}
+
+.basket-registry { border-color: var(--line); border-radius: var(--radius-panel); }
+.basket-registry :deep(.el-card__body) { display: grid; gap: 0.75rem; }
+.basket-registry :deep(.el-select) { width: 100%; margin-top: 0.25rem; }
+.basket-registry :deep(.el-select-dropdown__item) { display: flex; justify-content: space-between; align-items: center; }
+.basket-identity { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.5rem; align-items: center; }
+.basket-identity .section-label { grid-column: 1 / 3; }
+.basket-registry__actions { display: flex; flex-wrap: wrap; gap: 0.375rem; justify-content: flex-end; }
+.basket-registry__actions .el-button { margin-left: 0; }
+.version-table { width: 100%; }
+.activation-impact { display: grid; gap: 1rem; }
+.activation-impact .el-col { display: grid; gap: 0.25rem; }
+.activation-impact small { color: var(--ink-muted); }
+
+.value-warning { color: var(--warning); }
+.basket-table-panel { height: 21.25rem; overflow: hidden; }
+.analysis-lead { display: grid; grid-template-columns: auto 1fr; gap: 0.875rem; align-items: start; p { margin: 0.25rem 0 0; color: var(--ink-secondary); line-height: 1.45; } }
+.analysis-score { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%; color: var(--signal); background: var(--signal-soft); font-size: 1.125rem; font-weight: 700; }
+.evidence-list { display: grid; gap: 0.5rem; margin-top: 1rem; padding-top: 0.875rem; border-top: 1px solid var(--line); span { display: flex; gap: 0.5rem; align-items: center; color: var(--ink-secondary); font-size: 0.75rem; } }
+.evidence-dot { width: 0.4375rem; height: 0.4375rem; border-radius: 50%; background: var(--ink-muted); &--good { background: var(--signal); } &--warn { background: var(--warning); } }
+.policy-card :deep(.el-form-item:last-child) { margin-bottom: 0; }
+.policy-card :deep(.el-select), .strategy-form-card :deep(.el-select) { width: 100%; }
+.promotion-card small { display: block; margin-top: 0.1875rem; }
+
+.execution-toolbar { display: grid; grid-template-columns: minmax(11rem, 1fr) 1fr 1fr auto; gap: 1rem; align-items: center; padding: 0.75rem; > div { display: grid; gap: 0.25rem; } }
+.execution-leg { display: grid; grid-template-columns: 2rem 6rem minmax(6rem, 1fr) 6.5rem; gap: 0.75rem; align-items: center; min-height: 4rem; border-bottom: 1px solid var(--line); strong, small { display: block; } }
+.execution-order { color: var(--ink-muted); }
+.risk-check { display: grid; grid-template-columns: 1.25rem 1fr auto; gap: 0.5rem; align-items: center; min-height: 2.5rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; }
+.risk-pass { color: var(--signal); }
+.risk-fail { color: var(--danger); }
+.risk-card .el-alert { margin-top: 0.875rem; }
+
+.journal-entry { padding: 0.75rem; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); > div:first-child { display: flex; gap: 0.625rem; align-items: center; } p { margin: 0.625rem 0; color: var(--ink-secondary); line-height: 1.45; } }
+.journal-meta { display: flex; gap: 1rem; color: var(--ink-muted); font-size: 0.6875rem; }
+
+@media (max-width: 60rem) {
+  .basket-registry__actions { justify-content: flex-start; margin-top: 0.75rem; }
+  .basket-strip { grid-template-columns: repeat(2, 1fr); }
+  .basket-strip > div:nth-child(2) { border-right: 0; }
+  .basket-strip .el-button { min-height: 3rem; }
+  .execution-toolbar { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 40rem) {
+  .workspace-page { min-width: 0; }
+  .page-heading { flex-direction: column; }
+  .page-actions { width: 100%; flex-wrap: wrap; }
+  .basket-strip { grid-template-columns: 1fr; }
+  .basket-strip > div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .execution-toolbar { grid-template-columns: minmax(0, 1fr); }
+  .execution-leg {
+    grid-template-columns: 2rem 4.75rem minmax(0, 1fr);
+    padding: 0.625rem 0;
+
+    > .el-tag {
+      grid-column: 2 / 4;
+      justify-self: start;
+    }
+  }
+  .journal-entry > div:first-child,
+  .journal-meta { flex-wrap: wrap; }
+}

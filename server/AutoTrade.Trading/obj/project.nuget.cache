@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "dgSpecHash": "kGWgsGdnx10=",
+  "success": true,
+  "projectFilePath": "/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading/AutoTrade.Trading.csproj",
+  "expectedPackageFiles": [
+    "/home/paolo/.nuget/packages/hikyaku/10.0.2/hikyaku.10.0.2.nupkg.sha512",
+    "/home/paolo/.nuget/packages/hikyaku.contracts/9.1.2/hikyaku.contracts.9.1.2.nupkg.sha512",
+    "/home/paolo/.nuget/packages/mapzilla/9.1.5/mapzilla.9.1.5.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.aspnetcore.openapi/10.0.12/microsoft.aspnetcore.openapi.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.bcl.asyncinterfaces/9.0.9/microsoft.bcl.asyncinterfaces.9.0.9.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.data.sqlite.core/10.0.12/microsoft.data.sqlite.core.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.entityframeworkcore/10.0.12/microsoft.entityframeworkcore.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.entityframeworkcore.abstractions/10.0.12/microsoft.entityframeworkcore.abstractions.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.entityframeworkcore.analyzers/10.0.12/microsoft.entityframeworkcore.analyzers.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.entityframeworkcore.relational/10.0.12/microsoft.entityframeworkcore.relational.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.entityframeworkcore.sqlite/10.0.12/microsoft.entityframeworkcore.sqlite.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.entityframeworkcore.sqlite.core/10.0.12/microsoft.entityframeworkcore.sqlite.core.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.extensions.dependencymodel/10.0.12/microsoft.extensions.dependencymodel.10.0.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/microsoft.openapi/2.12.0/microsoft.openapi.2.12.0.nupkg.sha512",
+    "/home/paolo/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.12/sqlitepclraw.bundle_e_sqlite3.2.1.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/sqlitepclraw.core/2.1.12/sqlitepclraw.core.2.1.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.12/sqlitepclraw.lib.e_sqlite3.2.1.12.nupkg.sha512",
+    "/home/paolo/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.12/sqlitepclraw.provider.e_sqlite3.2.1.12.nupkg.sha512"
+  ],
+  "logs": []
+}

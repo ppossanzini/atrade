@@ -1,0 +1,10 @@
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/bin/Debug/netstandard2.0/AutoTrade.Trading.Core.deps.json
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/bin/Debug/netstandard2.0/AutoTrade.Trading.Core.dll
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/bin/Debug/netstandard2.0/AutoTrade.Trading.Core.pdb
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/obj/Debug/netstandard2.0/AutoTrade.Trading.Core.csproj.AssemblyReference.cache
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/obj/Debug/netstandard2.0/AutoTrade.Trading.Core.GeneratedMSBuildEditorConfig.editorconfig
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/obj/Debug/netstandard2.0/AutoTrade.Trading.Core.AssemblyInfoInputs.cache
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/obj/Debug/netstandard2.0/AutoTrade.Trading.Core.AssemblyInfo.cs
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/obj/Debug/netstandard2.0/AutoTrade.Trading.Core.csproj.CoreCompileInputs.cache
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/obj/Debug/netstandard2.0/AutoTrade.Trading.Core.dll
+/home/paolo/Work/archer/TradingBots/AutoTrade/server/AutoTrade.Trading.Core/obj/Debug/netstandard2.0/AutoTrade.Trading.Core.pdb

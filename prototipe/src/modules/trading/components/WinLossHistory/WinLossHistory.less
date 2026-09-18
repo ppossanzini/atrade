@@ -1,0 +1,36 @@
+.win-loss-history { display: grid; gap: 0.875rem; width: 100%; min-width: 0; }
+.win-loss-history > *,
+.win-loss-history__content,
+.win-loss-history__content .el-col { min-width: 0; }
+.win-loss-history__metrics { margin-bottom: 0 !important; }
+.result-metric { height: 100%; border-color: var(--line); }
+.result-metric :deep(.el-card__body) { display: grid; gap: 0.25rem; padding: 0.875rem; }
+.result-metric strong { font-size: 1.5rem; line-height: 1.2; }
+.result-metric small, .table-secondary { display: block; color: var(--ink-muted); font-size: 0.6875rem; }
+.positive { color: var(--signal); }
+.negative { color: var(--danger); }
+.win-loss-history__filters { display: grid; grid-template-columns: 11rem 13rem 1fr auto; gap: 0.625rem; align-items: center; padding: 0.625rem; }
+.win-loss-history__count { justify-self: end; color: var(--ink-muted); font-size: 0.75rem; }
+.win-loss-history__content { margin-bottom: 0 !important; }
+.win-loss-history__table { height: 26rem; overflow: hidden; }
+.win-loss-history__table :deep(.el-table) { --el-table-header-bg-color: var(--surface-inset); --el-table-row-hover-bg-color: #f5f8f5; font-size: 0.75rem; cursor: pointer; }
+.episode-detail { height: 100%; border-color: var(--line); }
+.episode-detail__header { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; }
+.episode-detail__header strong { display: block; margin-top: 0.125rem; }
+.episode-detail__result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding-bottom: 0.875rem; border-bottom: 1px solid var(--line); }
+.episode-detail__result div { display: grid; gap: 0.25rem; }
+.episode-detail__result span { color: var(--ink-muted); font-size: 0.625rem; }
+.episode-detail__section { padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+.episode-detail__section p { margin: 0.25rem 0 0; color: var(--ink-secondary); font-size: 0.75rem; line-height: 1.45; }
+.episode-detail__rag { display: flex; justify-content: space-between; margin-top: 0.875rem; padding: 0.625rem; border-radius: var(--radius-control); background: var(--signal-soft); color: var(--signal); font-size: 0.75rem; }
+
+@media (max-width: 48rem) {
+  .win-loss-history__filters { grid-template-columns: 1fr 1fr; }
+  .win-loss-history__count { justify-self: start; }
+}
+
+@media (max-width: 40rem) {
+  .win-loss-history__filters { grid-template-columns: minmax(0, 1fr); }
+  .win-loss-history__filters .el-select { width: 100%; min-width: 0; }
+  .win-loss-history__table { height: 22rem; }
+}
