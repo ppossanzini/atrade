@@ -1,14 +1,24 @@
 # Roadmap di implementazione
 
-Status: proposta per Gate 3  
+Status: Slice 0-2 consegnate; Slice 3 in preparazione (decisione dipendenze e input esterni pendenti)
 Strategia: vertical slice demo-first
+
+## Stato di consegna
+
+| Slice | Stato | Evidenza |
+| --- | --- | --- |
+| 0 - Fondazioni | Consegnata | build e test verdi su entrambi i progetti; health `200`; pagina autenticata |
+| 1 - Sessione e stato operativo | Consegnata | login `200` / logout `204` / `401` dopo logout; kill switch persistito con operatore e motivo; 35 test |
+| 2 - Basket lifecycle | Consegnata | 143 test; flusso completo verificato via HTTP e in browser; snapshot immutabili verificati a DB; `InitialCreate` applicata |
+
+Le slice successive restano da consegnare.
 
 ## Principi
 
 - `prototipe/` resta congelato e viene usato solo per confronto UX.
 - Ogni slice termina con server, client, test e criterio osservabile integrati.
 - I contratti server sono definiti prima del client e sono canonici.
-- Nessuna migration EF viene generata o applicata dall'agente.
+- Lo schema appartiene a EF Core migrations, applicate all'avvio con `Database.MigrateAsync()`; `EnsureCreated` non e piu ammesso (ADR-0012).
 - Nessun ordine viene inviato finche autenticazione, persistenza, idempotenza e riconciliazione non sono verificate.
 - Il conto live resta fuori scope fino al gate di promozione.
 
@@ -19,7 +29,7 @@ Output:
 - nuovo `server/` con i quattro progetti, test project e solution;
 - nuovo `client/` Vue 3 TypeScript senza codice del prototipo;
 - configurazione, logging, health check, error pipeline e CI locale;
-- SQLite configurato WAL senza migration generata;
+- SQLite configurato WAL; lo schema e poi passato a EF Core migrations con `InitialCreate` (ADR-0012);
 - shell autenticata minimale e runtime settings Axios.
 
 Exit criteria: build e test di entrambi i progetti; health server; pagina client autenticata; nessun riferimento sorgente a `prototipe/`.
@@ -50,6 +60,10 @@ Copre: AC-02, AC-03, AC-04.
 
 Gate dati umano: approvare chiavi, lunghezze, nullability e soglie della policy prima di creare le entity definitive.
 
+Esito: gate chiuso il 2026-09-18 (nome simbolo come chiave, default di policy del prototipo, set di campi gamba confermato).
+
+Verifica di consegna: build pulita; 143 test verdi; creazione, rinomina, clone, composizione, policy, pubblicazione, attivazione e archiviazione verificati via HTTP con codici `200/400/409`; ordinale delle gambe per risk cap decrescente poi simbolo; una sola versione attiva alla volta; un paniere con versione attiva non e archiviabile (`409`); vista Panieri verificata in browser contro lo stato reale del server.
+
 ## Slice 3 - cTrader connectivity e reconciliation read-only
 
 Output:
@@ -64,6 +78,23 @@ Output:
 Copre: parte di AC-08, AC-12, AC-15.
 
 Exit criteria: restart e reconnect ricostruiscono lo stesso snapshot demo senza duplicati.
+
+### Prerequisiti verificati (2026-09-18)
+
+Fatti raccolti dalla documentazione ufficiale cTrader Open API:
+
+- Consenso: `https://id.ctrader.com/my/settings/openapi/grantingaccess/?client_id=..&redirect_uri=..&scope=..&product=web`; scope ammessi `accounts` (sola lettura) e `trading` (completo).
+- L'authorization code scade in **1 minuto** e va scambiato subito.
+- Token: `https://openapi.ctrader.com/apps/token` con `grant_type=authorization_code` oppure `refresh_token`, piu `client_id` e `client_secret`.
+- Risposta: `accessToken`, `tokenType`, `expiresIn` (default 2.628.000 s, circa 30 giorni), `refreshToken` (senza scadenza).
+- Il refresh **invalida automaticamente** access token e refresh token precedenti: la rotazione deve essere atomica e persistita prima dell'uso.
+- Dopo i token servono `ProtoOAApplicationAuthReq` (clientId e clientSecret), `ProtoOAGetAccountListByAccessTokenReq` (accessToken) e `ProtoOAAccountAuthReq` (`ctidTraderAccountId`).
+
+Questioni aperte da chiudere prima di implementare:
+
+1. **Parametro `state` non documentato.** La documentazione ufficiale dell'authorization URL elenca solo `client_id`, `redirect_uri`, `scope`, `product`: nessun `state` e nessun PKCE. La protezione anti-CSRF del callback prevista dall'analisi tecnica va quindi verificata empiricamente o sostituita da un correlatore generato da noi e validato a prescindere da cTrader. Va deciso prima di scrivere il callback.
+2. **SDK .NET ufficiale non allineato.** `cTrader.OpenAPI.Net` 1.4.4 pubblicato il 2022-05-03, solo `lib/net6.0` (fuori supporto), dipendenze `Google.Protobuf` 3.20.1, `System.Reactive` 5.0.0, `Websocket.Client` 4.4.43. Il repository `spotware/OpenAPI.Net` risulta non archiviato con ultimo push 2024-06-28 ("Updated SDK to cServer 90"). Consumabile da `net10.0`, ma con dipendenze datate. Alternativa: implementare il protocollo direttamente sui messaggi Protobuf ufficiali.
+3. **Input esterni necessari**: registrazione dell'app nel portale Open API con `client_id` e `client_secret`, redirect URI esatta, conto demo cTID abilitato e `ctidTraderAccountId`. Nessun valore puo essere inventato o simulato in produzione.
 
 ## Slice 4 - Risk Engine deterministico
 
@@ -148,7 +179,7 @@ La promozione non fa parte dell'MVP e richiede almeno:
 | Slice | Criteri principali | Evidenza |
 | --- | --- | --- |
 | 0-1 | AC-01, AC-13 | Build, API auth test, browser route guard |
-| 2 | AC-02..04 | Handler/integration test + workflow browser |
+| 2 | AC-02..04 | 143 handler test; flusso HTTP `200/400/409`; snapshot a DB; workflow browser |
 | 3-4 | AC-08, AC-12, AC-17 | Demo reconcile test + risk boundary tests |
 | 5 | AC-09..11 | Demo broker E2E + duplicate/timeout tests |
 | 6 | AC-05..07 | State-machine tests + browser workflow |
