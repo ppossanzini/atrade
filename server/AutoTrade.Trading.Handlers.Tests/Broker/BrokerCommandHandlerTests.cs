@@ -31,6 +31,19 @@ namespace AutoTrade.Trading.Handlers.Tests.Broker
         { "Trading:Broker:TokenKey", Convert.ToBase64String(new byte[32]) },
         { "Trading:Broker:RedirectUri", "http://127.0.0.1:5271/api/broker/callback" },
         { "Trading:Broker:ReturnUri", "http://127.0.0.1:5180/broker" },
+        { "Trading:Broker:Environment", "Demo" },
+        { "Trading:Broker:AllowManualTokenImport", "true" }
+      });
+    }
+
+    private static TradingTestContext CreateContextWithoutTokenImport()
+    {
+      return new TradingTestContext(new Dictionary<string, string>
+      {
+        { "Trading:Broker:ClientId", "client-id" },
+        { "Trading:Broker:ClientSecret", "client-secret" },
+        { "Trading:Broker:TokenKey", Convert.ToBase64String(new byte[32]) },
+        { "Trading:Broker:RedirectUri", "http://127.0.0.1:5271/api/broker/callback" },
         { "Trading:Broker:Environment", "Demo" }
       });
     }
@@ -405,6 +418,142 @@ namespace AutoTrade.Trading.Handlers.Tests.Broker
       bool configured = await context.Hikyaku.Send(new ValidateBrokerClientConfiguration(), CancellationToken.None);
 
       Assert.False(configured);
+    }
+
+    [Fact]
+    public async Task ImportTokens_NormalizesThroughRefreshAndStoresTheRotatedPair()
+    {
+      using TradingTestContext context = CreateContext();
+      context.TokenClient.RefreshResult = FakeBrokerTokenClient.Success("rotated-access", "rotated-refresh", 2628000);
+
+      BrokerAuthorizationResultDto imported = await context.Hikyaku.Send(
+        new ImportBrokerTokens
+        {
+          AccessToken = "playground-access",
+          RefreshToken = "playground-refresh",
+          OperatorId = Guid.CreateVersion7()
+        },
+        CancellationToken.None);
+
+      Assert.Equal(BrokerAuthorizationOutcome.Applied, imported.Outcome);
+      Assert.Equal(new[] { "playground-refresh" }, context.TokenClient.RefreshedTokens.ToArray());
+
+      var authorization = Assert.Single(context.Db.BrokerAuthorizations);
+
+      // What is stored is the rotated pair, not the pasted one, and it is readable only through the key.
+      Assert.Equal("rotated-access", context.TokenProtector.Unprotect(authorization.AccessTokenCipher));
+      Assert.Equal("rotated-refresh", context.TokenProtector.Unprotect(authorization.RefreshTokenCipher));
+      Assert.DoesNotContain("playground-access", authorization.AccessTokenCipher, StringComparison.Ordinal);
+      Assert.Equal(context.Clock.GetUtcNow().UtcDateTime.AddSeconds(2628000), authorization.AccessTokenExpiresAtUtc);
+      Assert.Contains(context.Db.JournalEvents, item => item.Kind == JournalEventKind.BrokerAuthorizationImported);
+    }
+
+    [Fact]
+    public async Task ImportTokens_WhenTheAffordanceIsDisabled_ReportsNotConfiguredWithoutCallingTheProvider()
+    {
+      using TradingTestContext context = CreateContextWithoutTokenImport();
+
+      BrokerAuthorizationResultDto imported = await context.Hikyaku.Send(
+        new ImportBrokerTokens
+        {
+          AccessToken = "playground-access",
+          RefreshToken = "playground-refresh",
+          OperatorId = Guid.CreateVersion7()
+        },
+        CancellationToken.None);
+
+      Assert.Equal(BrokerAuthorizationOutcome.NotConfigured, imported.Outcome);
+      Assert.Empty(context.TokenClient.RefreshedTokens);
+      Assert.Empty(context.Db.BrokerAuthorizations);
+    }
+
+    [Fact]
+    public async Task ImportTokens_WhenTheProviderRejectsThePair_StoresNothing()
+    {
+      using TradingTestContext context = CreateContext();
+      context.TokenClient.RefreshResult = FakeBrokerTokenClient.Failure("invalid_grant");
+
+      BrokerAuthorizationResultDto imported = await context.Hikyaku.Send(
+        new ImportBrokerTokens
+        {
+          AccessToken = "playground-access",
+          RefreshToken = "playground-refresh",
+          OperatorId = Guid.CreateVersion7()
+        },
+        CancellationToken.None);
+
+      Assert.Equal(BrokerAuthorizationOutcome.ProviderRejected, imported.Outcome);
+      Assert.Equal("invalid_grant", imported.Detail);
+      Assert.Empty(context.Db.BrokerAuthorizations);
+      Assert.Contains(context.Db.JournalEvents, item => item.Kind == JournalEventKind.BrokerAuthorizationRejected);
+    }
+
+    [Theory]
+    [InlineData(null, "refresh")]
+    [InlineData("access", null)]
+    [InlineData("", "")]
+    [InlineData("   ", "refresh")]
+    public async Task ImportTokens_WithMissingTokens_ReturnsInvalidRequestWithoutCallingTheProvider(string accessToken, string refreshToken)
+    {
+      using TradingTestContext context = CreateContext();
+
+      BrokerAuthorizationResultDto imported = await context.Hikyaku.Send(
+        new ImportBrokerTokens
+        {
+          AccessToken = accessToken,
+          RefreshToken = refreshToken,
+          OperatorId = Guid.CreateVersion7()
+        },
+        CancellationToken.None);
+
+      Assert.Equal(BrokerAuthorizationOutcome.InvalidRequest, imported.Outcome);
+      Assert.Empty(context.TokenClient.RefreshedTokens);
+      Assert.Empty(context.Db.BrokerAuthorizations);
+    }
+
+    [Fact]
+    public async Task ImportTokens_ReplacesAPreviousGrantInsteadOfCreatingASecondRow()
+    {
+      using TradingTestContext context = CreateContext();
+      context.TokenClient.ExchangeResult = FakeBrokerTokenClient.Success("first-access", "first-refresh", 2628000);
+      context.TokenClient.RefreshResult = FakeBrokerTokenClient.Success("second-access", "second-refresh", 2628000);
+
+      BrokerAuthorizationStartDto start = await StartAsync(context);
+      await context.Hikyaku.Send(
+        new CompleteBrokerAuthorization { Code = "auth-code", CorrelationId = start.CorrelationId },
+        CancellationToken.None);
+
+      await context.Hikyaku.Send(
+        new ImportBrokerTokens
+        {
+          AccessToken = "playground-access",
+          RefreshToken = "playground-refresh",
+          OperatorId = Guid.CreateVersion7()
+        },
+        CancellationToken.None);
+
+      // One grant per environment: the import replaces the consent result.
+      var authorization = Assert.Single(context.Db.BrokerAuthorizations);
+      Assert.Equal("second-access", context.TokenProtector.Unprotect(authorization.AccessTokenCipher));
+    }
+
+    [Fact]
+    public async Task ValidateBrokerTokenImport_IsReadOnlyAndRejectsBlanks()
+    {
+      using TradingTestContext context = CreateContext();
+
+      bool complete = await context.Hikyaku.Send(
+        new ValidateBrokerTokenImport { AccessToken = "access", RefreshToken = "refresh" },
+        CancellationToken.None);
+
+      bool blank = await context.Hikyaku.Send(
+        new ValidateBrokerTokenImport { AccessToken = "  ", RefreshToken = "refresh" },
+        CancellationToken.None);
+
+      Assert.True(complete);
+      Assert.False(blank);
+      Assert.Empty(context.Db.BrokerAuthorizations);
+      Assert.Empty(context.Db.BrokerAuthorizationAttempts);
     }
   }
 }

@@ -28,5 +28,8 @@ namespace AutoTrade.Trading.Core.Configuration
     public const string TokenEndpoint = "Trading:Broker:TokenEndpoint";
 
     public const string CorrelationLifetimeMinutes = "Trading:Broker:CorrelationLifetimeMinutes";
+
+    /// <summary>Development affordance: enables the Playground token import.</summary>
+    public const string AllowManualTokenImport = "Trading:Broker:AllowManualTokenImport";
   }
 }

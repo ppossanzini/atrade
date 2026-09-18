@@ -46,6 +46,12 @@ namespace AutoTrade.Trading.Handlers.Broker
     /// <summary>A provider authorization code expires in one minute, so the correlator is short lived too.</summary>
     public int CorrelationLifetimeMinutes { get; set; } = 10;
 
+    /// <summary>
+    /// Allows importing a token pair issued outside the consent flow, which is how the official Playground
+    /// provides credentials while an application is awaiting approval. Disabled unless explicitly enabled.
+    /// </summary>
+    public bool AllowManualTokenImport { get; set; }
+
     public bool IsClientConfigured
     {
       get { return !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret); }

@@ -50,6 +50,12 @@ namespace AutoTrade.Trading.Handlers.Tests
 
     public FakeBrokerTokenClient TokenClient { get; } = new FakeBrokerTokenClient();
 
+    /// <summary>Exposed so tests can prove what actually reached the database.</summary>
+    public AutoTrade.Trading.Handlers.Broker.IBrokerTokenProtector TokenProtector
+    {
+      get { return _scope.ServiceProvider.GetRequiredService<AutoTrade.Trading.Handlers.Broker.IBrokerTokenProtector>(); }
+    }
+
     public FakeTimeProvider Clock { get; }
 
     public DB Db { get; }

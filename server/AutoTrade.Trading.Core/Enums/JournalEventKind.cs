@@ -21,6 +21,7 @@ namespace AutoTrade.Trading.Core.Enums
     BrokerAuthorizationStarted = 16,
     BrokerAuthorizationCompleted = 17,
     BrokerAuthorizationRejected = 18,
-    BrokerAuthorizationRevoked = 19
+    BrokerAuthorizationRevoked = 19,
+    BrokerAuthorizationImported = 20
   }
 }

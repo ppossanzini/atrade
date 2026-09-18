@@ -46,4 +46,17 @@ Accept: application/json
 POST {{host}}/api/broker/authorization/revoke
 X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
 
+### 9. Import dei token da Playground (solo in Development)
+# Percorso alternativo al consenso OAuth, utile finche l'app non e approvata.
+# Prendi access token e refresh token dal Playground nel portale Open API e incollali qui.
+# La coppia viene validata tramite refresh e ruotata prima di essere salvata cifrata.
+POST {{host}}/api/broker/tokens
+Content-Type: application/json
+X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
+
+{
+  "accessToken": "INCOLLA_QUI_L_ACCESS_TOKEN_DEL_PLAYGROUND",
+  "refreshToken": "INCOLLA_QUI_IL_REFRESH_TOKEN_DEL_PLAYGROUND"
+}
+
 ###

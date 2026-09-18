@@ -100,6 +100,39 @@ namespace AutoTrade.Trading.API.Controllers
       return Ok(result);
     }
 
+    /// <summary>
+    /// Imports a token pair issued outside the consent flow, which is how the official Playground provides
+    /// credentials while an application awaits approval. The endpoint reports not found when the
+    /// affordance is disabled, so a disabled deployment does not advertise it.
+    /// </summary>
+    [HttpPost("tokens")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    [ProducesResponseType(typeof(BrokerAuthorizationResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ImportTokens([FromBody] BrokerTokenImportDto request, CancellationToken cancellationToken)
+    {
+      BrokerAuthorizationResultDto result = await hikyaku.Send(new ImportBrokerTokens
+      {
+        AccessToken = request.AccessToken,
+        RefreshToken = request.RefreshToken,
+        OperatorId = ReadOperatorId()
+      }, cancellationToken);
+
+      if (result.Outcome == BrokerAuthorizationOutcome.Applied)
+      {
+        return Ok(result);
+      }
+
+      if (result.Outcome == BrokerAuthorizationOutcome.NotConfigured)
+      {
+        return NotFound();
+      }
+
+      return BadRequest(result);
+    }
+
     private static string ToReturnFlag(BrokerAuthorizationOutcome outcome)
     {
       switch (outcome)

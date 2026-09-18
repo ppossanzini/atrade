@@ -28,7 +28,8 @@ namespace AutoTrade.Trading.Handlers.Broker
         Environment = ParseEnvironment(configuration[BrokerConfigurationKeys.Environment]),
         Scope = ValueOrDefault(configuration[BrokerConfigurationKeys.Scope], BrokerOptions.AccountsScope),
         AuthorizationEndpoint = ValueOrDefault(configuration[BrokerConfigurationKeys.AuthorizationEndpoint], BrokerOptions.DefaultAuthorizationEndpoint),
-        TokenEndpoint = ValueOrDefault(configuration[BrokerConfigurationKeys.TokenEndpoint], BrokerOptions.DefaultTokenEndpoint)
+        TokenEndpoint = ValueOrDefault(configuration[BrokerConfigurationKeys.TokenEndpoint], BrokerOptions.DefaultTokenEndpoint),
+        AllowManualTokenImport = ParseBool(configuration[BrokerConfigurationKeys.AllowManualTokenImport])
       };
 
       int lifetimeMinutes;
@@ -59,6 +60,14 @@ namespace AutoTrade.Trading.Handlers.Broker
     private static string ValueOrDefault(string value, string fallback)
     {
       return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    /// <summary>Anything other than an explicit true leaves the affordance disabled.</summary>
+    private static bool ParseBool(string value)
+    {
+      bool parsed;
+
+      return !string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out parsed) && parsed;
     }
   }
 }
