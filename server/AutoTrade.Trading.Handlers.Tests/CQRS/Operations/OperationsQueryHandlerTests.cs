@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Enums;
 using AutoTrade.Trading.Core.Query.Operations;
-using AutoTrade.Trading.Handlers.CQRS.Operations;
 using AutoTrade.Trading.Handlers.Model;
-using MapZilla;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace AutoTrade.Trading.Handlers.Tests.CQRS.Operations
