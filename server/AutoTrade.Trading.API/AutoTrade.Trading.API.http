@@ -65,4 +65,16 @@ X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
 POST {{host}}/api/broker/probe
 X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
 
+### 11. Soglie di rischio in vigore, una voce per mercato
+# Ogni mercato del catalogo e riportato, anche quando non e configurato: isConfigured dice quali
+# soglie mancano ancora, e nessun mercato eredita il valore di un altro (ADR-0013).
+GET {{host}}/api/risk/limits
+Accept: application/json
+
+### 12. Decisione di rischio del paniere attivo
+# Riporta il verdetto aggregato e ogni gate con codice, valore osservato, soglia e mercato.
+# Il paniere deve esistere, altrimenti la risposta e 404.
+GET {{host}}/api/risk/baskets/INSERISCI_IL_BASKET_ID
+Accept: application/json
+
 ###

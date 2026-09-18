@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoTrade.Trading.Core.Dto;
+using AutoTrade.Trading.Core.Enums;
 using AutoTrade.Trading.Core.Query.Risk;
 using AutoTrade.Trading.Handlers.Risk;
 using AutoTrade.Trading.Handlers.Model;
@@ -83,6 +85,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Risk
           input.Legs.Add(new RiskEvaluationLeg
           {
             Symbol = leg.Symbol,
+            Market = leg.Market,
             Weight = leg.Weight,
             IsExecutable = false
           });
@@ -103,11 +106,27 @@ namespace AutoTrade.Trading.Handlers.CQRS.Risk
 
     public Task<RiskLimitsDto> Handle(GetRiskLimits request, CancellationToken cancellationToken)
     {
+      List<MarketRiskLimitsDto> markets = new List<MarketRiskLimitsDto>();
+
+      // Every market of the catalogue is reported, including the ones still unconfigured: the operator
+      // must see the gap, not just the limits that happen to be filled in.
+      foreach (MarketKind market in Enum.GetValues(typeof(MarketKind)))
+      {
+        MarketLegLimits limits = thresholds.ForMarket(market);
+
+        markets.Add(new MarketRiskLimitsDto
+        {
+          Market = market,
+          LegSpreadMaxPips = limits.LegSpreadMaxPips,
+          LegVolatilityMaxPercent = limits.LegVolatilityMaxPercent,
+          IsConfigured = limits.IsFullyConfigured
+        });
+      }
+
       return Task.FromResult(new RiskLimitsDto
       {
         SnapshotMaxAgeSeconds = thresholds.SnapshotMaxAgeSeconds,
-        LegSpreadMaxPips = thresholds.LegSpreadMaxPips,
-        LegVolatilityMaxPercent = thresholds.LegVolatilityMaxPercent,
+        Markets = markets,
         IsFullyConfigured = thresholds.IsFullyConfigured
       });
     }

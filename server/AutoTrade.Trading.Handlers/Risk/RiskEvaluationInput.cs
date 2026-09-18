@@ -12,6 +12,9 @@ namespace AutoTrade.Trading.Handlers.Risk
   {
     public string Symbol { get; set; }
 
+    /// <summary>Market the symbol belongs to. The leg limits are resolved from it, never assumed.</summary>
+    public MarketKind Market { get; set; }
+
     public int Weight { get; set; }
 
     public double? SpreadPips { get; set; }

@@ -336,9 +336,15 @@ Verdetto della decisione: `Block` se almeno un gate blocca, altrimenti `Review` 
 | `RISK_COVERAGE_BELOW_MINIMUM` | copertura eseguibile delle gambe selezionate | `MinimumCoverage` (%) | policy del paniere (approvata) | Block o Review secondo `FailurePolicy` |
 | `RISK_RISK_PER_BASKET_EXCEEDED` | rischio aggregato del paniere | `RiskPerBasket` (%) | policy del paniere (approvata) | Block |
 | `RISK_DAILY_LOSS_EXCEEDED` | perdita giornaliera realizzata piu aperta | `DailyLossLimit` (%) | policy del paniere (approvata) | Block |
-| `RISK_LEG_SPREAD_EXCEEDED` | spread per gamba | `Trading:Risk:LegSpreadMaxPips` | configurazione, **da decidere** | Block sulla gamba |
-| `RISK_LEG_VOLATILITY_EXCEEDED` | volatilita per gamba | `Trading:Risk:LegVolatilityMaxPercent` | configurazione, **da decidere** | Block sulla gamba |
+| `RISK_LEG_SPREAD_EXCEEDED` | spread per gamba | `Trading:Risk:Markets:{Market}:LegSpreadMaxPips` | configurazione, **da decidere per mercato** | Block sulla gamba |
+| `RISK_LEG_VOLATILITY_EXCEEDED` | volatilita per gamba | `Trading:Risk:Markets:{Market}:LegVolatilityMaxPercent` | configurazione, **da decidere per mercato** | Block sulla gamba |
 | `RISK_LEG_DATA_MISSING` | dato di mercato per gamba mancante | - | - | Block |
+
+`{Market}` e il valore di `MarketKind` della gamba (`Fx`, `Metal`, `Index`), lo stesso enum persistito su `BasketVersionLeg.Market` e mostrato al momento della composizione: la soglia applicata a una gamba e quella del suo mercato, mai quella di un altro.
+
+Soglie per mercato: le soglie di gamba sono differenziate per mercato (ADR-0013). La finestra di validita dello snapshot resta **globale**, perche una versione porta un solo snapshot: se in futuro lo snapshot diventera per mercato, anche questa soglia lo diventera. In ogni caso il valore osservato e il limite applicato sono riportati su ogni gate, quindi l'operatore vede sempre quale numero e stato usato.
+
+Per ogni mercato del catalogo il Risk Engine richiede **entrambe** le soglie di gamba. Un mercato non configurato, o configurato a meta, non prende in prestito la soglia di un altro mercato: le gambe di quel mercato bloccano con `RISK_THRESHOLD_NOT_CONFIGURED` e il gate porta il mercato a cui si riferisce. `IsFullyConfigured` di `GET /api/risk/limits` e vero solo quando la finestra dello snapshot e tutte le soglie di tutti i mercati del catalogo sono configurate, anche quelli non usati dal paniere attivo.
 
 Traduzione della policy di esecuzione incompleta gia approvata in verdetto:
 
@@ -349,6 +355,6 @@ Traduzione della policy di esecuzione incompleta gia approvata in verdetto:
 | `RequireConfirmation` | almeno `MinimumCoverage` ma sotto 100% | Review |
 | qualsiasi | 100% | nessuna violazione |
 
-Soglie non ancora decise: finche `Trading:Risk:SnapshotMaxAgeSeconds`, `LegSpreadMaxPips` e `LegVolatilityMaxPercent` non sono configurate, i rispettivi gate bloccano. Non esistono valori predefiniti nel codice: un default silenzioso sarebbe una decisione di rischio presa dall'implementazione invece che dall'operatore.
+Soglie non ancora decise: finche `Trading:Risk:SnapshotMaxAgeSeconds` e le soglie di gamba dei mercati non sono configurate, i rispettivi gate bloccano. Non esistono valori predefiniti nel codice: un default silenzioso sarebbe una decisione di rischio presa dall'implementazione invece che dall'operatore.
 - .NET support policy: https://dotnet.microsoft.com/platform/support/policy
 - SQLite WAL: https://sqlite.org/wal.html

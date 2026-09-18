@@ -198,42 +198,46 @@ namespace AutoTrade.Trading.Handlers.Risk
 
     private RiskGateResultDto EvaluateLegSpread(RiskEvaluationLeg leg, DateTime now)
     {
+      MarketLegLimits limits = thresholds.ForMarket(leg.Market);
+
       if (!leg.SpreadPips.HasValue)
       {
-        return CreateGate(RiskGateCode.LegDataMissing, RiskGateVerdict.Block, leg.Symbol, null, thresholds.LegSpreadMaxPips, PipsUnit, now, "The spread is not available for this leg.");
+        return CreateGate(RiskGateCode.LegDataMissing, RiskGateVerdict.Block, leg.Symbol, leg.Market, null, limits.LegSpreadMaxPips, PipsUnit, now, "The spread is not available for this leg.");
       }
 
-      if (!thresholds.LegSpreadMaxPips.HasValue)
+      if (!limits.LegSpreadMaxPips.HasValue)
       {
-        return CreateGate(RiskGateCode.ThresholdNotConfigured, RiskGateVerdict.Block, leg.Symbol, leg.SpreadPips, null, PipsUnit, now, "The maximum spread per leg is not configured.");
+        return CreateGate(RiskGateCode.ThresholdNotConfigured, RiskGateVerdict.Block, leg.Symbol, leg.Market, leg.SpreadPips, null, PipsUnit, now, "The maximum spread for market " + leg.Market + " is not configured.");
       }
 
       double observed = leg.SpreadPips.Value;
-      double limit = thresholds.LegSpreadMaxPips.Value;
+      double limit = limits.LegSpreadMaxPips.Value;
 
       return observed > limit
-        ? CreateGate(RiskGateCode.LegSpreadExceeded, RiskGateVerdict.Block, leg.Symbol, observed, limit, PipsUnit, now, "The spread exceeds the configured limit for this leg.")
-        : CreateGate(RiskGateCode.LegSpreadExceeded, RiskGateVerdict.Allow, leg.Symbol, observed, limit, PipsUnit, now, "The spread is within the configured limit.");
+        ? CreateGate(RiskGateCode.LegSpreadExceeded, RiskGateVerdict.Block, leg.Symbol, leg.Market, observed, limit, PipsUnit, now, "The spread exceeds the limit configured for market " + leg.Market + ".")
+        : CreateGate(RiskGateCode.LegSpreadExceeded, RiskGateVerdict.Allow, leg.Symbol, leg.Market, observed, limit, PipsUnit, now, "The spread is within the limit configured for market " + leg.Market + ".");
     }
 
     private RiskGateResultDto EvaluateLegVolatility(RiskEvaluationLeg leg, DateTime now)
     {
+      MarketLegLimits limits = thresholds.ForMarket(leg.Market);
+
       if (!leg.VolatilityPercent.HasValue)
       {
-        return CreateGate(RiskGateCode.LegDataMissing, RiskGateVerdict.Block, leg.Symbol, null, thresholds.LegVolatilityMaxPercent, PercentUnit, now, "The volatility is not available for this leg.");
+        return CreateGate(RiskGateCode.LegDataMissing, RiskGateVerdict.Block, leg.Symbol, leg.Market, null, limits.LegVolatilityMaxPercent, PercentUnit, now, "The volatility is not available for this leg.");
       }
 
-      if (!thresholds.LegVolatilityMaxPercent.HasValue)
+      if (!limits.LegVolatilityMaxPercent.HasValue)
       {
-        return CreateGate(RiskGateCode.ThresholdNotConfigured, RiskGateVerdict.Block, leg.Symbol, leg.VolatilityPercent, null, PercentUnit, now, "The maximum volatility per leg is not configured.");
+        return CreateGate(RiskGateCode.ThresholdNotConfigured, RiskGateVerdict.Block, leg.Symbol, leg.Market, leg.VolatilityPercent, null, PercentUnit, now, "The maximum volatility for market " + leg.Market + " is not configured.");
       }
 
       double observed = leg.VolatilityPercent.Value;
-      double limit = thresholds.LegVolatilityMaxPercent.Value;
+      double limit = limits.LegVolatilityMaxPercent.Value;
 
       return observed > limit
-        ? CreateGate(RiskGateCode.LegVolatilityExceeded, RiskGateVerdict.Block, leg.Symbol, observed, limit, PercentUnit, now, "The volatility exceeds the configured limit for this leg.")
-        : CreateGate(RiskGateCode.LegVolatilityExceeded, RiskGateVerdict.Allow, leg.Symbol, observed, limit, PercentUnit, now, "The volatility is within the configured limit.");
+        ? CreateGate(RiskGateCode.LegVolatilityExceeded, RiskGateVerdict.Block, leg.Symbol, leg.Market, observed, limit, PercentUnit, now, "The volatility exceeds the limit configured for market " + leg.Market + ".")
+        : CreateGate(RiskGateCode.LegVolatilityExceeded, RiskGateVerdict.Allow, leg.Symbol, leg.Market, observed, limit, PercentUnit, now, "The volatility is within the limit configured for market " + leg.Market + ".");
     }
 
     /// <summary>Blocking wins over review, review wins over allow: the aggregate is derived, never chosen.</summary>
@@ -268,11 +272,21 @@ namespace AutoTrade.Trading.Handlers.Risk
 
     private static RiskGateResultDto CreateGate(RiskGateCode code, RiskGateVerdict verdict, string subject, double? observedValue, double? thresholdValue, string unit, DateTime now, string detail)
     {
+      return CreateGate(code, verdict, subject, null, observedValue, thresholdValue, unit, now, detail);
+    }
+
+    /// <summary>
+    /// Market is set only by the leg gates: the basket gates judge the basket as a whole, and reporting a
+    /// market on them would suggest a limit that was never applied.
+    /// </summary>
+    private static RiskGateResultDto CreateGate(RiskGateCode code, RiskGateVerdict verdict, string subject, MarketKind? market, double? observedValue, double? thresholdValue, string unit, DateTime now, string detail)
+    {
       return new RiskGateResultDto
       {
         Code = code,
         Verdict = verdict,
         Subject = subject,
+        Market = market,
         ObservedValue = observedValue,
         ThresholdValue = thresholdValue,
         Unit = unit,

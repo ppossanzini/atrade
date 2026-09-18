@@ -156,3 +156,17 @@
   - A database created by `EnsureCreated` has no `__EFMigrationsHistory` and cannot be migrated in place: it must be reset (or baselined with a dedicated migration) before the next start.
 - Consequences: Schema changes require a migration, and the model-to-schema drift is caught by the migration diff instead of surfacing as a missing-table error at runtime. Any database file created before this ADR must be reset once; after that, starts are idempotent and the applied migration is recorded in `__EFMigrationsHistory`.
 
+## ADR-0013 - Per-market leg risk limits
+
+- Date: 2026-09-19
+- Status: Accepted
+- Context: The Risk Engine needed leg thresholds (maximum spread, maximum volatility) and the open question was whether one global value per threshold was enough. It is not: a spread that is normal on an index makes a major FX pair untradeable, and a table of values spanning both either blocks healthy legs or admits unhealthy ones. The market of a leg already exists in the model (`BasketVersionLeg.Market`, `MarketKind`), so the differentiation needs no new concept.
+- Decision:
+  - Leg thresholds are per market and are configured under `Trading:Risk:Markets:{Market}:LegSpreadMaxPips` and `Trading:Risk:Markets:{Market}:LegVolatilityMaxPercent`, where `{Market}` is the `MarketKind` name (`Fx`, `Metal`, `Index`).
+  - `RiskThresholds` holds a `Dictionary<MarketKind, MarketLegLimits>`; the factory materialises one entry per declared market, and `ForMarket` never returns null. A market that was never configured yields an unconfigured set, so its legs block instead of borrowing another market's limit.
+  - `RiskEvaluationLeg` carries `Market`; the engine resolves every leg threshold from that market only. `RiskGateResultDto` exposes the market a gate refers to (null for the basket-level gates, which are market agnostic).
+  - `IsFullyConfigured` requires the snapshot window plus both thresholds of **every** declared market, including markets the active basket does not use: an unconfigured market must stay visible rather than silently ignored.
+  - The snapshot validity window (`Trading:Risk:SnapshotMaxAgeSeconds`) stays global, because a basket version carries a single market snapshot. If snapshots become per market, this threshold becomes per market in the same change.
+  - No threshold has a default in code, and no market inherits another market's value. An unconfigured limit produces `RISK_THRESHOLD_NOT_CONFIGURED` with a blocking verdict.
+- Consequences: Adding a market to `MarketKind` immediately creates a configuration obligation, and `IsFullyConfigured` stays false until its limits are decided. `GET /api/risk/limits` reports one entry per market with `IsConfigured`, so the operator can see exactly which market is still undecided, and the sample `appsettings.json` ships the key structure with empty values that keep every gate blocking until real numbers are chosen.
+
