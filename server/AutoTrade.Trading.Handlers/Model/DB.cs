@@ -20,12 +20,36 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public DbSet<JournalEvent> JournalEvents { get; set; }
 
+    public DbSet<Basket> Baskets { get; set; }
+
+    public DbSet<BasketDraftLeg> BasketDraftLegs { get; set; }
+
+    public DbSet<BasketDraftPolicy> BasketDraftPolicies { get; set; }
+
+    public DbSet<BasketVersion> BasketVersions { get; set; }
+
+    public DbSet<BasketVersionLeg> BasketVersionLegs { get; set; }
+
+    public DbSet<BasketVersionPolicy> BasketVersionPolicies { get; set; }
+
+    public DbSet<ActiveBasketVersion> ActiveBasketVersions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.Entity<Operator>().HasIndex(item => item.UserName).IsUnique();
       modelBuilder.Entity<OperatorSession>().HasIndex(item => item.SessionToken).IsUnique();
       modelBuilder.Entity<JournalEvent>().HasIndex(item => item.Sequence).IsUnique();
       modelBuilder.Entity<JournalEvent>().HasIndex(item => item.OccurredAtUtc);
+
+      // Name uniqueness is scoped to non-archived baskets, which a database index cannot express,
+      // so it stays a handler rule. The index only serves lookups.
+      modelBuilder.Entity<Basket>().HasIndex(item => item.Name);
+      modelBuilder.Entity<BasketDraftLeg>().HasIndex(item => item.BasketId);
+      modelBuilder.Entity<BasketDraftPolicy>().HasIndex(item => item.BasketId);
+      modelBuilder.Entity<BasketVersion>().HasIndex(item => new { item.BasketId, item.Number }).IsUnique();
+      modelBuilder.Entity<BasketVersionLeg>().HasIndex(item => new { item.VersionId, item.Ordinal }).IsUnique();
+      modelBuilder.Entity<BasketVersionLeg>().HasIndex(item => new { item.VersionId, item.Symbol }).IsUnique();
+      modelBuilder.Entity<BasketVersionPolicy>().HasIndex(item => item.VersionId).IsUnique();
 
       base.OnModelCreating(modelBuilder);
     }

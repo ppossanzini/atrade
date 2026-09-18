@@ -8,6 +8,15 @@ namespace AutoTrade.Trading.Core.Enums
     KillSwitchEngaged = 3,
     KillSwitchReleased = 4,
     KillSwitchEngagementBlocked = 5,
-    KillSwitchReleaseBlocked = 6
+    KillSwitchReleaseBlocked = 6,
+    BasketCreated = 7,
+    BasketRenamed = 8,
+    BasketCloned = 9,
+    BasketCompositionUpdated = 10,
+    BasketPolicyUpdated = 11,
+    BasketVersionPublished = 12,
+    BasketVersionActivated = 13,
+    BasketArchived = 14,
+    BasketOperationRejected = 15
   }
 }

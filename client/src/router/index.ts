@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import TradingShell from '@/layouts/TradingShell/TradingShell.vue'
 import LoginView from '@/modules/auth/views/LoginView/LoginView.vue'
 import OperationalStatusView from '@/modules/operations/views/OperationalStatusView/OperationalStatusView.vue'
+import BasketBuilderView from '@/modules/basket/views/BasketBuilderView/BasketBuilderView.vue'
 import ComingSoonView from '@/modules/common/views/ComingSoonView/ComingSoonView.vue'
 import { useSessionStore } from '@/stores/session'
 
@@ -9,12 +10,6 @@ import { useSessionStore } from '@/stores/session'
  * Sections that are not implemented yet still have a route, so no sidebar entry is ever dead.
  */
 const pendingSections: RouteRecordRaw[] = [
-  {
-    path: 'basket',
-    name: 'basket',
-    component: ComingSoonView,
-    meta: { titleKey: 'navigation.basket' },
-  },
   {
     path: 'strategy',
     name: 'strategy',
@@ -65,6 +60,12 @@ const routes: RouteRecordRaw[] = [
         name: 'status',
         component: OperationalStatusView,
         meta: { titleKey: 'navigation.status' },
+      },
+      {
+        path: 'basket',
+        name: 'basket',
+        component: BasketBuilderView,
+        meta: { titleKey: 'navigation.basket' },
       },
       ...pendingSections,
     ],

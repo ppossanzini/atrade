@@ -11,6 +11,9 @@ namespace AutoTrade.Trading.Handlers
       CreateMap<KillSwitchState, KillSwitchStatusDto>();
       CreateMap<TradingAccount, TradingAccountStatusDto>();
       CreateMap<MarketManagerState, MarketManagerStatusDto>();
+
+      CreateMap<BasketDraftLeg, BasketCompositionLegDto>();
+      CreateMap<BasketDraftPolicy, BasketPolicyDto>();
     }
   }
 }

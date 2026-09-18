@@ -1,0 +1,9 @@
+.basket-leg-table {
+  width: 100%;
+
+  // The grid holds editable controls, so it must keep enough room for every column on narrow
+  // viewports instead of squeezing the controls into unusable widths.
+  :deep(.el-table__cell) {
+    vertical-align: middle;
+  }
+}

@@ -17,6 +17,7 @@
 - Keep one `Module.cs` per backend tier; the composition root registers the single mediator with the Handlers assembly.
 - Group DB handlers per entity and name files `{EntityType}CommandHandler.cs` / `{EntityType}QueryHandler.cs`.
 - Persist the functional journal as an append-only table with a monotonic sequence and a service-owned writer.
+- Own the schema through EF Core migrations applied with `Database.MigrateAsync()` at startup; never create it implicitly with `EnsureCreated`. Migrations live in the Handlers project next to the `DB` context and are generated with `dotnet ef migrations add`, never hand-edited.
 - Validate the operator session server-side on every request; never trust cookie contents alone.
 - Require the `X-CSRF-TOKEN` header on every mutating endpoint and obtain the token from `/api/session/antiforgery-token`.
 - Return fail-closed operational defaults when state cannot be read instead of reporting "safe to trade".

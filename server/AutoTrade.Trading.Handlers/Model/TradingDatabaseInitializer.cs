@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace AutoTrade.Trading.Handlers.Model
 {
   /// <summary>
-  /// Creates the local development schema and the singleton operational rows.
+  /// Applies the schema migrations and creates the singleton operational rows.
   /// The bootstrap operator password is never stored in configuration files: it must come from
   /// environment variables or a secret store, otherwise no operator is created.
   /// </summary>
@@ -21,10 +21,8 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-      if (configuration.GetValue<bool>("Database:EnsureCreatedOnStartup"))
-      {
-        await db.Database.EnsureCreatedAsync(cancellationToken);
-      }
+      // The schema is owned by migrations; nothing is created implicitly from the model.
+      await db.Database.MigrateAsync(cancellationToken);
 
       await EnsureKillSwitchAsync(cancellationToken);
       await EnsureMarketManagerStateAsync(cancellationToken);
