@@ -13,3 +13,10 @@
 - Archive baskets non-destructively so historical orders, episodes, journal events, and JigenDB evidence retain valid references.
 - Keep continuous market analysis separate from basket approval and composition changes.
 - Route order proposals through a deterministic Market Manager with manual, supervised, and automatic modes; supervised is the default.
+- Register backend tiers through explicit `IServiceCollection` extensions (`AddTradingApi`, `AddTradingHandlers`) from the composition root; no MEF loader and no private NuGet feed.
+- Keep one `Module.cs` per backend tier; the composition root registers the single mediator with the Handlers assembly.
+- Group DB handlers per entity and name files `{EntityType}CommandHandler.cs` / `{EntityType}QueryHandler.cs`.
+- Persist the functional journal as an append-only table with a monotonic sequence and a service-owned writer.
+- Validate the operator session server-side on every request; never trust cookie contents alone.
+- Require the `X-CSRF-TOKEN` header on every mutating endpoint and obtain the token from `/api/session/antiforgery-token`.
+- Return fail-closed operational defaults when state cannot be read instead of reporting "safe to trade".

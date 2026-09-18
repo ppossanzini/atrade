@@ -1,0 +1,11 @@
+# Local transactional state (SQLite WAL): never commit runtime data.
+*.db
+*.db-wal
+*.db-shm
+
+# Frontend dependencies and build output.
+node_modules/
+dist/
+
+# Local secrets override.
+appsettings.Local.json

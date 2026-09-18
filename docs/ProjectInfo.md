@@ -88,3 +88,42 @@
   - Use Vue 3 with TypeScript in `client/`; do not migrate or adapt the prototype JavaScript store.
   - Make server REST contracts canonical and integrate the client directly against them without mock compatibility adapters.
 - Consequences: Prototype and production have independent dependency graphs and build outputs. Behavioral traceability is maintained through acceptance criteria rather than source-code reuse.
+
+## ADR-0008 - Standard ASP.NET Core DI instead of the organization MEF module loader
+
+- Date: 2026-09-18
+- Status: Accepted
+- Context: The organization reference templates register modules through a MEF loader (`System.Composition`, `[Export(typeof(IModule))]`, `Loader.Current`) whose types come from `Wise.Core` / `Agricolus.Common`. Those packages are not published on nuget.org, the organization profile expects the private `wisetown2022` feed, and no `nuget.config` exists in this repository. The approved project is an autonomous single-operator application.
+- Decision:
+  - AutoTrade is not a Teamdev/Wisetown module and does not use the private feed or the MEF loader.
+  - Each tier exposes a `Module` class with a plain `IServiceCollection` extension: `AddTradingApi` and `AddTradingHandlers`.
+  - The composition root registers both tiers explicitly and registers the single mediator with the Handlers assembly.
+  - Layer boundaries stay unchanged: `API` never references `Handlers`; the composition root depends on both.
+- Consequences: Module composition is explicit and readable, with no need for a private feed. If the project later joins the organization, migration to the loader is a controlled change requiring a new Gate 1 approval.
+
+## ADR-0009 - SQLite persistence deviations
+
+- Date: 2026-09-18
+- Status: Accepted
+- Context: The platform skill assumes a relational provider with schema support and requires a default schema name, while the approved persistence is EF Core with SQLite WAL, which has no schema concept.
+- Decision:
+  - Do not set a default schema in `DB.cs`; SQLite treats `schema.table` as an attached database and would reject it.
+  - Table names are mapped explicitly with `[Table]`; uniqueness and lookup indexes are configured in `OnModelCreating`.
+  - `Database.EnsureCreatedOnStartup` creates the local development schema only, and it defaults to `false`; production schema is owned by human-authored migrations.
+  - The agent never generates nor applies EF Core migrations.
+  - Relational integrity is enforced in command handlers, not through ORM foreign keys, following the platform convention.
+- Consequences: Local development needs no migration step, while production remains under human-controlled schema evolution. Adding a second persistence provider later would require reintroducing a schema strategy.
+
+## ADR-0010 - Local session, CSRF contract, and implementation watch-outs
+
+- Date: 2026-09-18
+- Status: Accepted
+- Context: The MVP requires an audited local operator session protecting a JSON API reached same-site from the SPA, and implementation details surfaced during runtime verification are easy to regress.
+- Decision:
+  - The authentication cookie carries only opaque claims (`operator_id`, `session_token`); the authoritative session lives in SQLite and is re-validated on every request through `CookieAuthenticationEvents.OnValidatePrincipal`, so logout, expiry and operator deactivation take effect immediately.
+  - Mutating endpoints require a token-based antiforgery token delivered in the `X-CSRF-TOKEN` header, obtained from `GET /api/session/antiforgery-token`.
+  - `AddControllersWithViews` must stay in use: `AddControllers` does not register the antiforgery filter services, so `[ValidateAntiForgeryToken]` fails at request time.
+  - Fail-closed defaults: a missing kill-switch row is reported as engaged, and data that cannot be read never yields "safe to trade".
+  - Watch-out: the `Operator` entity type shares its name with the `CQRS.Operator` namespace, so handlers for it need a `using OperatorEntity = ...` alias. Renaming the entity to `OperatorAccount` is the recommended follow-up to remove the trap.
+- Consequences: Security behaviour is explicit and verified at runtime. Operators must bootstrap credentials through environment variables or a secret store, never through committed configuration.
+
