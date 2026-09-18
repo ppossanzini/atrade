@@ -9,8 +9,6 @@ namespace AutoTrade.Trading.Handlers.Broker
   /// </summary>
   public class BrokerOptions
   {
-    public const string SectionName = "Trading:Broker";
-
     /// <summary>Consent page from the official documentation.</summary>
     public const string DefaultAuthorizationEndpoint = "https://id.ctrader.com/my/settings/openapi/grantingaccess/";
 
@@ -30,6 +28,12 @@ namespace AutoTrade.Trading.Handlers.Broker
     public string TokenKey { get; set; }
 
     public string RedirectUri { get; set; }
+
+    /// <summary>
+    /// Where the provider callback sends the browser once the exchange is done. The callback is a
+    /// cross-site navigation, so it must land on the client application, not on an API route.
+    /// </summary>
+    public string ReturnUri { get; set; }
 
     public TradingEnvironment Environment { get; set; }
 

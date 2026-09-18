@@ -11,6 +11,7 @@ namespace AutoTrade.Trading.Core.Enums
     InvalidRequest = 2,
     InvalidCorrelation = 3,
     ProviderRejected = 4,
-    Failed = 5
+    Failed = 5,
+    NotFound = 6
   }
 }

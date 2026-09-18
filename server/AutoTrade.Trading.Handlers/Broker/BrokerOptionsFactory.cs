@@ -1,4 +1,5 @@
 using System;
+using AutoTrade.Trading.Core.Configuration;
 using AutoTrade.Trading.Core.Enums;
 using Microsoft.Extensions.Configuration;
 
@@ -17,22 +18,21 @@ namespace AutoTrade.Trading.Handlers.Broker
         throw new ArgumentNullException(nameof(configuration));
       }
 
-      IConfigurationSection section = configuration.GetSection(BrokerOptions.SectionName);
-
       BrokerOptions options = new BrokerOptions
       {
-        ClientId = section["ClientId"],
-        ClientSecret = section["ClientSecret"],
-        TokenKey = section["TokenKey"],
-        RedirectUri = section["RedirectUri"],
-        Environment = ParseEnvironment(section["Environment"]),
-        Scope = ValueOrDefault(section["Scope"], BrokerOptions.AccountsScope),
-        AuthorizationEndpoint = ValueOrDefault(section["AuthorizationEndpoint"], BrokerOptions.DefaultAuthorizationEndpoint),
-        TokenEndpoint = ValueOrDefault(section["TokenEndpoint"], BrokerOptions.DefaultTokenEndpoint)
+        ClientId = configuration[BrokerConfigurationKeys.ClientId],
+        ClientSecret = configuration[BrokerConfigurationKeys.ClientSecret],
+        TokenKey = configuration[BrokerConfigurationKeys.TokenKey],
+        RedirectUri = configuration[BrokerConfigurationKeys.RedirectUri],
+        ReturnUri = configuration[BrokerConfigurationKeys.ReturnUri],
+        Environment = ParseEnvironment(configuration[BrokerConfigurationKeys.Environment]),
+        Scope = ValueOrDefault(configuration[BrokerConfigurationKeys.Scope], BrokerOptions.AccountsScope),
+        AuthorizationEndpoint = ValueOrDefault(configuration[BrokerConfigurationKeys.AuthorizationEndpoint], BrokerOptions.DefaultAuthorizationEndpoint),
+        TokenEndpoint = ValueOrDefault(configuration[BrokerConfigurationKeys.TokenEndpoint], BrokerOptions.DefaultTokenEndpoint)
       };
 
       int lifetimeMinutes;
-      if (int.TryParse(section["CorrelationLifetimeMinutes"], out lifetimeMinutes) && lifetimeMinutes > 0)
+      if (int.TryParse(configuration[BrokerConfigurationKeys.CorrelationLifetimeMinutes], out lifetimeMinutes) && lifetimeMinutes > 0)
       {
         options.CorrelationLifetimeMinutes = lifetimeMinutes;
       }

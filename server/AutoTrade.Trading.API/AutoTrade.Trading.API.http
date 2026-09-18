@@ -1,6 +1,49 @@
-@AutoTrade.Trading.API_HostAddress = http://localhost:5069
+@host = http://127.0.0.1:5271
+@userName = operator
+@password = INSERISCI_LA_PASSWORD_DEL_BOOTSTRAP
 
-GET {{AutoTrade.Trading.API_HostAddress}}/weatherforecast/
+### 1. Token antiforgery prima del login
+# @name antiforgeryBeforeLogin
+GET {{host}}/api/session/antiforgery-token
 Accept: application/json
+
+### 2. Login
+POST {{host}}/api/session/login
+Content-Type: application/json
+X-CSRF-TOKEN: {{antiforgeryBeforeLogin.response.body.$.token}}
+
+{
+  "userName": "{{userName}}",
+  "password": "{{password}}"
+}
+
+### 3. Token antiforgery dopo il login
+# Il token e legato all'identita del chiamante, quindi va rinnovato dopo l'accesso (ADR-0011).
+# @name antiforgeryAfterLogin
+GET {{host}}/api/session/antiforgery-token
+Accept: application/json
+
+### 4. Stato operativo
+GET {{host}}/api/operations/status
+Accept: application/json
+
+### 5. Stato del broker: isClientConfigured e isAuthorized
+GET {{host}}/api/broker/status
+Accept: application/json
+
+### 6. Avvio dell'autorizzazione
+# Restituisce authorizationUrl: aprila nel browser e concedi l'accesso con il tuo cTID.
+# Il provider reindirizza poi su /api/broker/callback, che completa lo scambio dei token.
+POST {{host}}/api/broker/authorization
+X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
+
+### 7. Verifica dopo il consenso: isAuthorized deve essere true
+GET {{host}}/api/broker/status
+Accept: application/json
+
+### 8. Dimentica l'autorizzazione locale
+# Il grant resta valido sul provider: qui si elimina solo la copia locale.
+POST {{host}}/api/broker/authorization/revoke
+X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
 
 ###

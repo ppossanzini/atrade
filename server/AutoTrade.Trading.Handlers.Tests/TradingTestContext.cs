@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using AutoTrade.Trading.Handlers;
+using AutoTrade.Trading.Handlers.Broker.OAuth;
 using AutoTrade.Trading.Handlers.CQRS.Journal;
 using AutoTrade.Trading.Handlers.Model;
+using AutoTrade.Trading.Handlers.Tests.Broker;
 using Hikyaku;
 using MapZilla;
 using Microsoft.AspNetCore.Identity;
@@ -36,10 +38,17 @@ namespace AutoTrade.Trading.Handlers.Tests
       services.AddMapZilla(new[] { typeof(MappingProfile).Assembly });
       services.AddHikyaku(hikyaku => hikyaku.RegisterServicesFromAssembly(typeof(Module).Assembly));
 
+      // The broker tier is registered for real, including the token protector, so tests exercise the same
+      // cryptography as production; only the provider endpoint is replaced by the fake transport.
+      services.AddTradingBroker(configuration);
+      services.AddSingleton<IBrokerTokenClient>(TokenClient);
+
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();
       Db = _scope.ServiceProvider.GetRequiredService<DB>();
     }
+
+    public FakeBrokerTokenClient TokenClient { get; } = new FakeBrokerTokenClient();
 
     public FakeTimeProvider Clock { get; }
 

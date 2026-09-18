@@ -1,5 +1,7 @@
 using System;
+using System.Net.Http;
 using AutoTrade.Trading.Handlers.Broker;
+using AutoTrade.Trading.Handlers.Broker.OAuth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +13,8 @@ namespace AutoTrade.Trading.Handlers
   /// </summary>
   public static class BrokerModule
   {
+    private const int BrokerHttpTimeoutSeconds = 30;
+
     public static IServiceCollection AddTradingBroker(this IServiceCollection services, IConfiguration configuration)
     {
       BrokerOptions options = BrokerOptionsFactory.FromConfiguration(configuration);
@@ -29,6 +33,12 @@ namespace AutoTrade.Trading.Handlers
       {
         services.AddSingleton<IBrokerTokenProtector, UnconfiguredBrokerTokenProtector>();
       }
+
+      // A single long lived client serves the fixed provider endpoint, so there is no per request socket
+      // churn and no handler rotation to manage.
+      services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(BrokerHttpTimeoutSeconds) });
+      services.AddSingleton<IBrokerTokenClient, BrokerTokenClient>();
+      services.AddScoped<IBrokerAuthorizationCorrelator, BrokerAuthorizationCorrelator>();
 
       return services;
     }
