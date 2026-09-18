@@ -29,7 +29,8 @@ namespace AutoTrade.Trading.Handlers.Broker
         Scope = ValueOrDefault(configuration[BrokerConfigurationKeys.Scope], BrokerOptions.AccountsScope),
         AuthorizationEndpoint = ValueOrDefault(configuration[BrokerConfigurationKeys.AuthorizationEndpoint], BrokerOptions.DefaultAuthorizationEndpoint),
         TokenEndpoint = ValueOrDefault(configuration[BrokerConfigurationKeys.TokenEndpoint], BrokerOptions.DefaultTokenEndpoint),
-        AllowManualTokenImport = ParseBool(configuration[BrokerConfigurationKeys.AllowManualTokenImport])
+        AllowManualTokenImport = ParseBool(configuration[BrokerConfigurationKeys.AllowManualTokenImport]),
+        AllowDiagnostics = ParseBool(configuration[BrokerConfigurationKeys.AllowDiagnostics])
       };
 
       int lifetimeMinutes;

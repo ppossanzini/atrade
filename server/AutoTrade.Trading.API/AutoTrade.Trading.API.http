@@ -59,4 +59,10 @@ X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
   "refreshToken": "INCOLLA_QUI_IL_REFRESH_TOKEN_DEL_PLAYGROUND"
 }
 
+### 10. Probe di connettivita verso l'endpoint demo
+# Apre una connessione reale a wss://demo.ctraderapi.com:5035, esegue la application auth e, se esiste
+# un grant salvato, chiede la lista conti. Non restituisce mai una credenziale.
+POST {{host}}/api/broker/probe
+X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
+
 ###

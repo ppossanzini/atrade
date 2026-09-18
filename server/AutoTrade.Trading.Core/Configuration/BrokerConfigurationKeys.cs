@@ -31,5 +31,8 @@ namespace AutoTrade.Trading.Core.Configuration
 
     /// <summary>Development affordance: enables the Playground token import.</summary>
     public const string AllowManualTokenImport = "Trading:Broker:AllowManualTokenImport";
+
+    /// <summary>Diagnostic affordance: enables the connectivity probe.</summary>
+    public const string AllowDiagnostics = "Trading:Broker:AllowDiagnostics";
   }
 }

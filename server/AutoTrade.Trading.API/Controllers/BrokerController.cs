@@ -133,6 +133,32 @@ namespace AutoTrade.Trading.API.Controllers
       return BadRequest(result);
     }
 
+    /// <summary>
+    /// Opens a real connection to the broker endpoint and reports how far the handshake gets. It uses the
+    /// application credentials plus, when a grant exists, the stored account authorization; it never
+    /// returns a credential and never writes state.
+    /// </summary>
+    [HttpPost("probe")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    [ProducesResponseType(typeof(BrokerProbeResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ProbeConnection(CancellationToken cancellationToken)
+    {
+      BrokerProbeResultDto result = await hikyaku.Send(new ProbeBrokerConnection
+      {
+        OperatorId = ReadOperatorId()
+      }, cancellationToken);
+
+      // Diagnostics disabled: the endpoint does not exist as far as the outside world is concerned.
+      if (!result.IsAuthenticated && string.IsNullOrEmpty(result.Description))
+      {
+        return NotFound();
+      }
+
+      return Ok(result);
+    }
+
     private static string ToReturnFlag(BrokerAuthorizationOutcome outcome)
     {
       switch (outcome)

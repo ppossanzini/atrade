@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using AutoTrade.Trading.Handlers.Broker;
 using AutoTrade.Trading.Handlers.Broker.OAuth;
+using AutoTrade.Trading.Handlers.Broker.Protocol;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,6 +40,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(BrokerHttpTimeoutSeconds) });
       services.AddSingleton<IBrokerTokenClient, BrokerTokenClient>();
       services.AddScoped<IBrokerAuthorizationCorrelator, BrokerAuthorizationCorrelator>();
+      services.AddSingleton<ICtraderProtocolClientFactory, CtraderProtocolClientFactory>();
 
       return services;
     }

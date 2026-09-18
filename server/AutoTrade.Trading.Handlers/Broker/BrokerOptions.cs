@@ -52,6 +52,12 @@ namespace AutoTrade.Trading.Handlers.Broker
     /// </summary>
     public bool AllowManualTokenImport { get; set; }
 
+    /// <summary>
+    /// Enables the connectivity probe. Separated from the import affordance so a deployment can allow one
+    /// without the other.
+    /// </summary>
+    public bool AllowDiagnostics { get; set; }
+
     public bool IsClientConfigured
     {
       get { return !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret); }

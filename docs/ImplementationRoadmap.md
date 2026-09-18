@@ -79,6 +79,24 @@ Copre: parte di AC-08, AC-12, AC-15.
 
 Exit criteria: restart e reconnect ricostruiscono lo stesso snapshot demo senza duplicati.
 
+### Blocco verificato: approvazione dell'applicazione (2026-09-19)
+
+Il 19 settembre 2026 il probe di connettività ha contattato `demo.ctraderapi.com:5035` e ha ricevuto:
+
+```
+errorCode: CH_CLIENT_AUTH_FAILURE
+description: OA client is not in active state
+```
+
+Segue che **il Playground non aggira l'approvazione**: i token che emette servono per un'applicazione gia attiva, e senza stato attivo il provider rifiuta persino la `ProtoOAApplicationAuthReq`. Finche l'app non e approvata, nessuna verifica live e possibile su demo, che resta comunque l'ambiente corretto di destinazione.
+
+Conseguenza sulla pianificazione: le parti di Slice 3 che richiedono una connessione reale restano non verificabili. Le attivita che non dipendono dal provider sono:
+
+- contratti, stato macchina e test di riconciliazione read-only;
+- rinnovo token, reconnect e stati degradati;
+- pannello di connessione e stati degradati nel client;
+- Slice 4 (Risk Engine), interamente deterministico e indipendente da cTrader.
+
 ### Prerequisiti verificati (2026-09-18)
 
 Fatti raccolti dalla documentazione ufficiale cTrader Open API:
