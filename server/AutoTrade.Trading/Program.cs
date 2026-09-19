@@ -7,6 +7,7 @@ using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Query.Session;
 using AutoTrade.Trading.Handlers;
 using AutoTrade.Trading.Handlers.Broker;
+using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
 using Hikyaku;
 using Microsoft.AspNetCore.Authentication;
@@ -68,6 +69,13 @@ WebApplication app = builder.Build();
 // is a supported state that leaves the rest of the application working.
 BrokerOptions brokerOptions = app.Services.GetRequiredService<BrokerOptions>();
 BrokerConfigurationGuard.EnsureValid(brokerOptions);
+
+// Fail-closed: the market data source must be usable. None means no data, which the gates report as
+// blocking; selecting a source that cannot work aborts startup instead of pretending a feed exists.
+MarketDataOptions marketDataOptions = app.Services.GetRequiredService<MarketDataOptions>();
+MarketDataModule.EnsureSourceIsUsable(marketDataOptions, brokerOptions);
+
+app.Logger.LogInformation("Market data source in force: {Provider}.", marketDataOptions.Provider);
 
 if (!brokerOptions.IsClientConfigured)
 {

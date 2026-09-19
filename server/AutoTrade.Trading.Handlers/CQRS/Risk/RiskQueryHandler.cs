@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Enums;
 using AutoTrade.Trading.Core.Query.Risk;
+using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Risk;
 using AutoTrade.Trading.Handlers.Model;
 using Hikyaku;
@@ -15,10 +16,12 @@ using BasketVersionEntity = AutoTrade.Trading.Handlers.Model.BasketVersion;
 namespace AutoTrade.Trading.Handlers.CQRS.Risk
 {
   /// <summary>
-  /// Builds the risk input from stored state and hands it to the engine. Read-only: evaluating risk never
-  /// changes anything, and the missing market data is reported as a blocking gate rather than assumed.
+  /// Builds the risk input from stored state and one market capture, then hands it to the engine.
+  /// Read-only: evaluating risk never changes anything, and missing data is reported as a blocking gate
+  /// rather than assumed. The capture comes from the configured source, so this handler is identical
+  /// whichever source is in force.
   /// </summary>
-  public class RiskQueryHandler(DB db, RiskThresholds thresholds, RiskEngine engine) : IRequestHandler<GetBasketRiskDecision, RiskDecisionDto>,
+  public class RiskQueryHandler(DB db, RiskThresholds thresholds, RiskEngine engine, IMarketDataSource marketDataSource) : IRequestHandler<GetBasketRiskDecision, RiskDecisionDto>,
                                                                                    IRequestHandler<GetRiskLimits, RiskLimitsDto>
   {
     private const int ActiveVersionSlotId = 1;
@@ -41,17 +44,13 @@ namespace AutoTrade.Trading.Handlers.CQRS.Risk
 
       bool holdsActiveVersion = activeVersion != null && activeVersion.BasketId == basket.Id;
 
-      RiskEvaluationInput input = new RiskEvaluationInput
+      RiskCandidate candidate = new RiskCandidate
       {
         HasActiveVersion = holdsActiveVersion,
         KillSwitchEngaged = await db.KillSwitchStates
           .AsNoTracking()
           .AnyAsync(item => item.Id == KillSwitchSingletonId && item.IsEngaged, cancellationToken),
-
-        // Market data arrives with the analysis pipeline; until then no snapshot exists and the engine
-        // blocks. Nothing here fabricates a healthy market.
-        MarketDataCapturedAtUtc = null,
-        Legs = new List<RiskEvaluationLeg>()
+        Legs = new List<RiskCandidateLeg>()
       };
 
       if (holdsActiveVersion)
@@ -72,36 +71,59 @@ namespace AutoTrade.Trading.Handlers.CQRS.Risk
 
         if (policy != null)
         {
-          input.FailurePolicy = policy.FailurePolicy;
-          input.MinimumCoverage = policy.MinimumCoverage;
-          input.RiskPerBasketLimit = policy.RiskPerBasket;
-          input.DailyLossLimit = policy.DailyLossLimit;
+          candidate.FailurePolicy = policy.FailurePolicy;
+          candidate.MinimumCoverage = policy.MinimumCoverage;
+          candidate.RiskPerBasketLimit = policy.RiskPerBasket;
+          candidate.DailyLossLimit = policy.DailyLossLimit;
         }
 
-        input.VersionNumber = version.Number;
+        candidate.VersionNumber = version.Number;
 
         foreach (BasketVersionLeg leg in versionLegs)
         {
-          input.Legs.Add(new RiskEvaluationLeg
+          candidate.Legs.Add(new RiskCandidateLeg
           {
             Symbol = leg.Symbol,
             Market = leg.Market,
             Weight = leg.Weight,
-            IsExecutable = false
+            RiskCap = leg.RiskCap
           });
         }
-
-        RiskDecisionDto decision = engine.Evaluate(input);
-        decision.BasketId = basket.Id;
-        decision.BasketVersionId = version.Id;
-
-        return decision;
       }
 
-      RiskDecisionDto inactive = engine.Evaluate(input);
-      inactive.BasketId = basket.Id;
+      MarketDataCapture capture = await marketDataSource.CaptureAsync(CreateSymbolRequests(candidate), cancellationToken);
+      RiskEvaluationInput input = RiskInputFactory.Create(candidate, capture);
 
-      return inactive;
+      RiskDecisionDto decision = engine.Evaluate(input);
+      decision.BasketId = basket.Id;
+
+      if (holdsActiveVersion)
+      {
+        decision.BasketVersionId = activeVersion.VersionId;
+      }
+
+      return decision;
+    }
+
+    private static List<SymbolRequest> CreateSymbolRequests(RiskCandidate candidate)
+    {
+      List<SymbolRequest> requests = new List<SymbolRequest>();
+
+      if (candidate.Legs == null)
+      {
+        return requests;
+      }
+
+      foreach (RiskCandidateLeg leg in candidate.Legs)
+      {
+        requests.Add(new SymbolRequest
+        {
+          Symbol = leg.Symbol,
+          Market = leg.Market
+        });
+      }
+
+      return requests;
     }
 
     public Task<RiskLimitsDto> Handle(GetRiskLimits request, CancellationToken cancellationToken)

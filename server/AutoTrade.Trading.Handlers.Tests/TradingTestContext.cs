@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoTrade.Trading.Handlers;
 using AutoTrade.Trading.Handlers.Broker.OAuth;
 using AutoTrade.Trading.Handlers.CQRS.Journal;
+using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
 using AutoTrade.Trading.Handlers.Tests.Broker;
 using Hikyaku;
@@ -42,6 +43,10 @@ namespace AutoTrade.Trading.Handlers.Tests
       // cryptography as production; only the provider endpoint is replaced by the fake transport.
       services.AddTradingBroker(configuration);
       services.AddSingleton<IBrokerTokenClient>(TokenClient);
+
+      // The market data tier is registered for real too, so the configured provider decides which source
+      // the handlers use exactly as it does in production.
+      services.AddTradingMarketData(configuration);
 
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();

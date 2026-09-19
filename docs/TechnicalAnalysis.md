@@ -356,5 +356,67 @@ Traduzione della policy di esecuzione incompleta gia approvata in verdetto:
 | qualsiasi | 100% | nessuna violazione |
 
 Soglie non ancora decise: finche `Trading:Risk:SnapshotMaxAgeSeconds` e le soglie di gamba dei mercati non sono configurate, i rispettivi gate bloccano. Non esistono valori predefiniti nel codice: un default silenzioso sarebbe una decisione di rischio presa dall'implementazione invece che dall'operatore.
+
+## Appendice B - Market Manager: contratti, dati e ciclo di analisi
+
+Superficie dello Slice 6. Copre AC-05, AC-06, AC-07 con il motore di rischio dello Slice 4 come unica autorita sui verdetto.
+
+### B.1 Contratti (Core)
+
+Vocabolario: `RiskGateVerdict` viene riusato senza duplicazione, quindi `Pass` (linguaggio funzionale) e `Allow` (contratto) sono la stessa cosa.
+
+| Tipo | Contenuto |
+| --- | --- |
+| `ProposalAction` | `Entry`, `Reduce` |
+| `ProposalStatus` | `NeedsReview`, `AutoApproved`, `Blocked`, `Approved`, `Rejected`, `Suspended`, `Expired` |
+| `ProposalDecisionOutcome` | `Applied`, `NotDecidable`, `Expired`, `GateRegressed`, `AlreadyDecided`, `NotFound` |
+
+Comandi (`Command/Market`), uno per tipo di validazione e uno per ambito di aggiornamento:
+
+- `SetMarketManagerMode` + `SetMarketManagerModeValidation`
+- `SetAnalysisState` + `SetAnalysisStateValidation`
+- `ApproveProposal`, `RejectProposal`, `SuspendProposal` + `DecideProposalValidation`
+
+Query (`Query/Market`): `GetMarketManagerState`, `GetProposalQueue`, `GetProposalDetail`.
+
+DTO: `MarketManagerStateDto` (modalita, analisi attiva, ultimo ciclo, paniere e versione attiva), `ProposalSummaryDto`, `ProposalDetailDto`, `ProposalDecisionResultDto`.
+
+API: `GET /api/market/manager`, `PUT /api/market/manager/mode`, `PUT /api/market/manager/analysis`, `GET /api/market/proposals`, `GET /api/market/proposals/{id}`, `POST /api/market/proposals/{id}/approve|reject|suspend`.
+
+### B.2 Modello dati e migrazione
+
+- `Proposal` (`Id`, `BasketId`, `BasketVersionId`, `VersionNumber`, `Action`, `Gate`, `Status`, `Confidence`, `ExpectedRiskPercent`, `ProposedAtUtc`, `ExpiresAtUtc`, `DecidedAtUtc`, `DecidedByOperatorId`, `DecisionReason`, `Rationale`, `CycleSequence`).
+- `ProposalLeg` (`ProposalId`, `Ordinal`, `Symbol`, `Market`, `Direction`, `Weight`, `IsAffected`).
+- Indici: `(Status, ProposedAtUtc)` per la coda, `BasketId` per la correlazione.
+- Migrazione EF dedicata, generata con `dotnet ef migrations add` come le precedenti.
+- `MarketManagerState` viene esteso con `LastCycleAtUtc`: modalita e stato di analisi sono gia persistiti.
+- Nuovi tipi di journal: `ProposalGenerated`, `ProposalAutoDispatched`, `ProposalApproved`, `ProposalRejected`, `ProposalSuspended`, `ProposalExpired`, `MarketManagerModeChanged`, `AnalysisStarted`, `AnalysisStopped`, `ProposalUndecidable`.
+
+### B.3 Ciclo di analisi
+
+Primo servizio in background del progetto.
+
+- Registrato con `AddTradingAnalysis(configuration)` invocato dal `Module` dei handlers, come `AddTradingBroker` e `AddTradingRisk`.
+- Configurazione sotto `Trading:Market:`: intervallo del ciclo e TTL della proposta.
+- Ogni ciclo: legge stato (modalita, analisi attiva, versione attiva), chiede un candidato a `IProposalSource`, lo valuta con il `RiskEngine`, applica la matrice di instradamento, persiste e scrive il journal.
+- `IProposalSource` nello Slice 6 e deterministico e senza LLM: senza uno snapshot di mercato la proposta nasce `Blocked` su `SnapshotMissing`, che e il comportamento corretto e non un difetto. Con la sorgente dati simulata dello Slice 4 lo snapshot esiste, quindi il ciclo giudica davvero spread, volatilita, copertura, rischio paniere e perdita giornaliera.
+- SQLite resta a un solo scrittore: il ciclo usa transazioni brevi e non tiene lock fra un ciclo e il successivo.
+
+### B.4 Percorsi non bloccati e come verificarli
+
+I percorsi `Pass` e `Review` dipendono dai valori di mercato e dal rischio dichiarato. Due evidenze, nessuna delle quali introduce dati finti fuori dalla sorgente configurata:
+
+- test handler deterministici su matrice di instradamento, TTL, rivalutazione alla decisione e idempotenza;
+- esercizio simulato: con `Trading:MarketData:Provider` su `Simulated` (default `None`) il ciclo e la valutazione di rischio lavorano su una sorgente simulata dietro la seam, quindi la matrice e osservabile dall'esterno senza che nessun contratto o schermo sappia da dove arrivano i valori (ADR-0015).
+- Un percorso verde richiede inoltre che il rischio dichiarato dal paniere rispetti la sua policy: se la somma dei risk cap delle gambe supera `RiskPerBasket`, il gate blocca e il rimedio e una decisione dell'operatore (alzare il cap di policy o ridurre i risk cap), non una modifica al codice.
+
+### B.5 Rischi dello slice
+
+| Rischio | Mitigazione |
+| --- | --- |
+| Doppia esecuzione del ciclo se il processo parte due volte | Il ciclo e idempotente per sequenza e legge lo stato prima di ogni iterazione |
+| Concorrenza fra ciclo e API su SQLite | Transazioni brevi e WAL, nessun lock trattenuto fra cicli |
+| TTL e intervallo non decisi | Il ciclo non parte senza valori configurati: fail-closed, nessun default in codice |
+| Un `Review` che diventa `Pass` senza nuova valutazione | La decisione rivaluta il gate e respinge se il verdetto e peggiorato |
 - .NET support policy: https://dotnet.microsoft.com/platform/support/policy
 - SQLite WAL: https://sqlite.org/wal.html

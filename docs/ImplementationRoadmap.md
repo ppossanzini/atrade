@@ -15,6 +15,18 @@ Strategia: vertical slice demo-first
 
 Le slice successive restano da consegnare.
 
+### Cambio di scope controllato (2026-09-19)
+
+Slice 3 e bloccata da un'approvazione esterna (app cTrader non attiva), che a cascata rende non giudicabili i gate di mercato dello Slice 4 e non verificabili i percorsi verdi dello Slice 6. Per non sospendere lo sviluppo su un evento fuori dal nostro controllo si introduce una sorgente dati simulata dietro la seam `IMarketDataSource` (ADR-0015, in attesa di approvazione dei confini).
+
+Effetti attesi:
+
+- i gate su snapshot, spread, volatilita, copertura, rischio per paniere e perdita giornaliera diventano giudicabili e visibili in esercizio simulato;
+- il percorso `Allow`/`Review` diventa raggiungibile senza inventare dati reali, quindi non serve piu l'iniezione di sviluppo inizialmente prevista per lo Slice 6;
+- nessun ordine e nessun conto live possono essere raggiunti da una cattura simulata, e la simulazione e inerte finche `Trading:MarketData:Source` non la abilita esplicitamente.
+
+Resta invariato: la verifica del protocollo cTrader e della riconciliazione non e coperta dalla simulazione e attende l'approvazione dell'app.
+
 ## Principi
 
 - `prototipe/` resta congelato e viene usato solo per confronto UX.

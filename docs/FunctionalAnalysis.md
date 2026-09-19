@@ -225,3 +225,45 @@ Il Decision Journal e append-only e registra transizioni, input deterministici, 
 - Tipi di ordine, time-in-force, slippage e protezioni SL/TP consentite.
 - Comportamento quando JigenDB e indisponibile.
 - Durata sessione e policy di blocco dopo tentativi login falliti.
+
+## 9. Market Manager - regole funzionali (Slice 6)
+
+Perimetro: instradamento deterministico delle proposte. Nessun LLM, nessuna evidenza semantica e nessun accesso al gateway ordini: arrivano nello Slice 7 e nello Slice 5.
+
+### 9.1 Ciclo di analisi
+
+- Il ciclo usa solo la versione attiva, uno snapshot di mercato entro la finestra di validita e le evidenze disponibili.
+- Ogni ciclo produce al massimo una proposta con azione, gambe interessate, confidenza informativa, rischio atteso, scadenza e motivazione.
+- Il gate della proposta e la decisione del Risk Engine sullo stesso input: il Market Manager non valuta rischio per conto proprio e non puo migliorare un verdetto.
+- Avvio e arresto dell'analisi sono comandi dell'operatore e sono auditati. L'arresto non annulla le proposte gia emesse.
+
+### 9.2 Instradamento
+
+| Modalita | Gate `Pass` | Gate `Review` | Gate `Block` |
+| --- | --- | --- | --- |
+| Manual | Attesa operatore | Attesa operatore | Bloccata |
+| Supervised (default) | Inoltro automatico | Attesa operatore | Bloccata |
+| Automatic | Inoltro automatico | Vietata: richiede rivalutazione a `Pass` | Bloccata |
+
+- `Pass` e `Allow` sono lo stesso verdetto: il vocabolario funzionale usa `Pass`, il contratto usa `RiskGateVerdict.Allow`.
+- In `Automatic` una proposta `Review` non e decidibile dall'operatore: nessun percorso trasforma una revisione in permesso implicito.
+- `Automatic` resta disabilitata sul conto live finche il gate di promozione non la approva (AC-17).
+
+### 9.3 Stati della proposta
+
+`NeedsReview`, `AutoApproved`, `Blocked`, `Approved`, `Rejected`, `Suspended`, `Expired`. Gli stati finali (`Rejected`, `Suspended`, `Expired`) non sono piu decidibili; `Blocked` non e decidibile in nessuna modalita.
+
+### 9.4 Decisioni dell'operatore
+
+- E' decidibile solo una proposta in `NeedsReview`, non scaduta e con la versione ancora attiva.
+- Approvazione, rifiuto e sospensione sono comandi distinti; rifiuto e sospensione richiedono una motivazione.
+- La decisione rivaluta il gate al momento della decisione: se nel frattempo il verdetto peggiora, la decisione e respinta e la proposta non viene inoltrata.
+- La decisione e idempotente: una seconda decisione sulla stessa proposta viene respinta come conflitto.
+
+### 9.5 Scadenza
+
+Ogni proposta nasce con una scadenza. Alla scadenza diventa `Expired`: non e piu decidibile ne inoltrabile. La scadenza e valutata sia alla lettura sia alla decisione, e il passaggio a `Expired` viene registrato nel journal.
+
+### 9.6 Audit
+
+Generazione, inoltro automatico, decisione, rifiuto, sospensione, scadenza, cambio modalita e avvio/arresto dell'analisi producono un evento di journal correlato a paniere, versione e proposta.

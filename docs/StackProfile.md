@@ -14,6 +14,7 @@ Detected: 2026-09-18 | Evidence: greenfield workspace and confirmed user choices
 | styling | LESS and semantic CSS tokens | Element Plus conventions | fe-vue-element-plus |
 | data source | Local mock data in prototype; REST API in production | Gate 1 approval | fe-axios-dev |
 | backend platform | .NET 10 LTS, ASP.NET Core Web API and Worker Services | Gate 1 approval | be-dotnet-dev |
+| market data source | `IMarketDataSource` with a simulated implementation for development; broker implementation behind the same seam once cTrader approves the app | Controlled change 2026-09-19: development must not wait for an external approval | td-backend-dev |
 | mediator | Hikyaku CQRS | Gate 1 approval | be-dotnet-hikyaku |
 | mapping | MapZilla | Backend organization convention | be-dotnet-dev |
 | persistence | EF Core with SQLite WAL on one Linux host | Gate 1 approval | be-dotnet-dev |

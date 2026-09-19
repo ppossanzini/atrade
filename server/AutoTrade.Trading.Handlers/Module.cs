@@ -1,4 +1,5 @@
 using AutoTrade.Trading.Handlers.CQRS.Journal;
+using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
 using MapZilla;
 using Microsoft.AspNetCore.Identity;
@@ -22,6 +23,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddScoped<TradingDatabaseInitializer>();
       services.AddMapZilla(new[] { typeof(MappingProfile).Assembly });
       services.AddTradingBroker(configuration);
+      services.AddTradingMarketData(configuration);
       services.AddTradingRisk(configuration);
 
       return services;

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoTrade.Trading.Core.Enums;
+using AutoTrade.Trading.Handlers.MarketData;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +15,7 @@ namespace AutoTrade.Trading.Handlers.Model
   /// The bootstrap operator password is never stored in configuration files: it must come from
   /// environment variables or a secret store, otherwise no operator is created.
   /// </summary>
-  public class TradingDatabaseInitializer(DB db, IPasswordHasher<Operator> passwordHasher, IConfiguration configuration, TimeProvider timeProvider, ILogger<TradingDatabaseInitializer> logger)
+  public class TradingDatabaseInitializer(DB db, IPasswordHasher<Operator> passwordHasher, IConfiguration configuration, TimeProvider timeProvider, ILogger<TradingDatabaseInitializer> logger, MarketDataOptions marketDataOptions)
   {
     private const int KillSwitchStateId = 1;
     private const int MarketManagerStateId = 1;
@@ -27,6 +28,31 @@ namespace AutoTrade.Trading.Handlers.Model
       await EnsureKillSwitchAsync(cancellationToken);
       await EnsureMarketManagerStateAsync(cancellationToken);
       await EnsureBootstrapOperatorAsync(cancellationToken);
+      await EnsureMarketDataSourceIsAdmissibleAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// A source that is not the broker must never be able to feed a live account. The check runs at
+    /// startup, before any request can be served, so a misconfigured deployment fails instead of
+    /// reporting an account state nobody observed.
+    /// </summary>
+    private async Task EnsureMarketDataSourceIsAdmissibleAsync(CancellationToken cancellationToken)
+    {
+      if (marketDataOptions.Provider == MarketDataProviderKind.None)
+      {
+        return;
+      }
+
+      bool hasLiveAccount = await db.TradingAccounts.AnyAsync(item => item.Environment == TradingEnvironment.Live, cancellationToken);
+
+      if (!hasLiveAccount)
+      {
+        return;
+      }
+
+      logger.LogCritical("Market data provider {Provider} cannot be used with a live account. Remove the live account or configure the broker source.", marketDataOptions.Provider);
+
+      throw new InvalidOperationException("A market data source other than the broker cannot be used while a live account exists.");
     }
 
     private async Task EnsureKillSwitchAsync(CancellationToken cancellationToken)
