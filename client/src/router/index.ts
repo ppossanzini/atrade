@@ -3,6 +3,7 @@ import TradingShell from '@/layouts/TradingShell/TradingShell.vue'
 import LoginView from '@/modules/auth/views/LoginView/LoginView.vue'
 import OperationalStatusView from '@/modules/operations/views/OperationalStatusView/OperationalStatusView.vue'
 import BasketBuilderView from '@/modules/basket/views/BasketBuilderView/BasketBuilderView.vue'
+import MarketManagerView from '@/modules/market/views/MarketManagerView/MarketManagerView.vue'
 import ComingSoonView from '@/modules/common/views/ComingSoonView/ComingSoonView.vue'
 import { useSessionStore } from '@/stores/session'
 
@@ -15,12 +16,6 @@ const pendingSections: RouteRecordRaw[] = [
     name: 'strategy',
     component: ComingSoonView,
     meta: { titleKey: 'navigation.strategy' },
-  },
-  {
-    path: 'market',
-    name: 'market',
-    component: ComingSoonView,
-    meta: { titleKey: 'navigation.market' },
   },
   {
     path: 'execution',
@@ -66,6 +61,12 @@ const routes: RouteRecordRaw[] = [
         name: 'basket',
         component: BasketBuilderView,
         meta: { titleKey: 'navigation.basket' },
+      },
+      {
+        path: 'market',
+        name: 'market',
+        component: MarketManagerView,
+        meta: { titleKey: 'navigation.market' },
       },
       ...pendingSections,
     ],

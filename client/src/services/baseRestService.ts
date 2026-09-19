@@ -47,6 +47,10 @@ export abstract class BaseRestService {
     return this.send<TResponse>({ method: 'PATCH', url: this.resolve(path), data: body })
   }
 
+  protected put<TResponse>(path: string, body: unknown): Promise<TResponse> {
+    return this.send<TResponse>({ method: 'PUT', url: this.resolve(path), data: body })
+  }
+
   protected delete<TResponse>(path: string): Promise<TResponse> {
     return this.send<TResponse>({ method: 'DELETE', url: this.resolve(path) })
   }

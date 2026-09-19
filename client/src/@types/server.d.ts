@@ -45,6 +45,7 @@ declare namespace server {
   interface MarketManagerStatus {
     mode: MarketManagerMode
     isAnalysisRunning: boolean
+    lastCycleAtUtc: IsoDateTime | null
   }
 
   interface OperationalStatus {
@@ -193,5 +194,59 @@ declare namespace server {
     snapshotMaxAgeSeconds: number | null
     markets: MarketRiskLimits[]
     isFullyConfigured: boolean
+  }
+
+  type ProposalAction = 'Entry' | 'Reduce' | 'Exit'
+
+  type ProposalStatus =
+    'NeedsReview' | 'AutoApproved' | 'Blocked' | 'Approved' | 'Rejected' | 'Suspended' | 'Expired'
+
+  type ProposalDecisionOutcome =
+    'Applied' | 'NotFound' | 'NotDecidable' | 'Expired' | 'GateRegressed' | 'AlreadyDecided'
+
+  /**
+   * One row of the operator queue. Decidability is computed by the server for the current mode, so the
+   * client never infers it from the status alone.
+   */
+  interface ProposalSummary {
+    proposalId: string
+    basketId: string
+    basketName: string
+    versionNumber: number
+    action: ProposalAction
+    status: ProposalStatus
+    gate: RiskGateVerdict
+    confidence: number
+    expectedRiskPercent: number
+    proposedAtUtc: IsoDateTime
+    expiresAtUtc: IsoDateTime
+    isDecidable: boolean
+  }
+
+  interface ProposalLeg {
+    symbol: string
+    market: MarketKind
+    direction: LegDirection
+    weight: number
+    riskCap: number
+  }
+
+  interface ProposalDetail extends ProposalSummary {
+    snapshotId: string | null
+    snapshotCapturedAtUtc: IsoDateTime | null
+    cycleSequence: number
+    rationale: string
+    decidedAtUtc: IsoDateTime | null
+    decidedByOperatorId: string | null
+    decisionReason: string | null
+    legs: ProposalLeg[]
+    gates: RiskGateResult[]
+  }
+
+  interface ProposalDecisionResult {
+    proposalId: string
+    outcome: ProposalDecisionOutcome
+    status: ProposalStatus
+    decidedAtUtc: IsoDateTime
   }
 }

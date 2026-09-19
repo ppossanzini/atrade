@@ -1,0 +1,23 @@
+// The queue holds many columns, so the identity cell stacks the basket and the short proposal id instead
+// of widening the row.
+.proposal-queue {
+  :deep(.el-table__cell) {
+    vertical-align: middle;
+  }
+}
+
+.proposal-queue__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  small {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--at-text-muted);
+  }
+}
+
+.proposal-queue__expired {
+  color: var(--at-status-warning);
+}
