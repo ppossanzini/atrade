@@ -1,6 +1,6 @@
 # Roadmap di implementazione
 
-Status: Slice 0-2 consegnate; Slice 3 in preparazione (decisione dipendenze e input esterni pendenti)
+Status: Slice 0-2 consegnate; Slice 3 parzialmente consegnata e bloccata dall'approvazione cTrader; Slice 4 consegnata con gate umano sulle soglie ancora aperto
 Strategia: vertical slice demo-first
 
 ## Stato di consegna
@@ -10,6 +10,8 @@ Strategia: vertical slice demo-first
 | 0 - Fondazioni | Consegnata | build e test verdi su entrambi i progetti; health `200`; pagina autenticata |
 | 1 - Sessione e stato operativo | Consegnata | login `200` / logout `204` / `401` dopo logout; kill switch persistito con operatore e motivo; 35 test |
 | 2 - Basket lifecycle | Consegnata | 143 test; flusso completo verificato via HTTP e in browser; snapshot immutabili verificati a DB; `InitialCreate` applicata |
+| 3 - Broker demo | Parziale, bloccata da fuori | codice completo e test verde; reachability TCP/wss e errore provider reali (`OA client is not in active state`); autenticazione, snapshot, riconciliazione e rinnovo token non verificabili finche l'app non e approvata |
+| 4 - Risk Engine | Consegnata (gate umano aperto) | 269 test; 12 codici gate con codice, valore osservato, soglia e timestamp; limiti per mercato (ADR-0013); pannelli Risk gate e Soglie di verifica in browser, incluso il ciclo kill switch ingaggiato/rilasciato riflesso nei gate |
 
 Le slice successive restano da consegnare.
 
@@ -128,6 +130,13 @@ Copre: AC-08, AC-13, AC-17.
 
 Gate funzionale umano: approvare formule, soglie, timezone e sizing elencati in `FunctionalAnalysis.md`.
 
+Stato al 2026-09-19: consegnata lato server e client.
+
+- Snapshot input versionato, gate strutturati e test a tabella sui boundary sono implementati; `Database.MigrateAsync()` e l'unico proprietario dello schema.
+- La visualizzazione e nel client come pannello `Risk gate` (verdetto, versione e snapshot valutati, elenco gate con codice, oggetto, mercato, valore osservato, soglia, unita, timestamp e motivazione) piu il pannello `Soglie di rischio` (finestra snapshot e limiti per mercato con stato configurato/non configurato). Nessuno dei due duplica la logica del motore: la decisione arriva da `GET /api/risk/baskets/{basketId}` e le soglie da `GET /api/risk/limits`.
+- Fail-closed confermato in esercizio: senza snapshot di mercato il verdetto e `Block` su `SnapshotMissing`; con il kill switch ingaggiato si aggiunge `Block` su `KillSwitchEngaged`; al rilascio il gate torna `Allow`.
+- Resta aperto il gate umano: senza soglie configurate i gate sulle gambe restano bloccanti per progetto (ADR-0013) e nessun valore puo essere inventato in codice.
+
 ## Slice 5 - Execution Engine demo
 
 Output:
@@ -198,7 +207,7 @@ La promozione non fa parte dell'MVP e richiede almeno:
 | --- | --- | --- |
 | 0-1 | AC-01, AC-13 | Build, API auth test, browser route guard |
 | 2 | AC-02..04 | 143 handler test; flusso HTTP `200/400/409`; snapshot a DB; workflow browser |
-| 3-4 | AC-08, AC-12, AC-17 | Demo reconcile test + risk boundary tests |
+| 3-4 | AC-08, AC-12, AC-17 | Demo reconcile test + risk boundary tests; verifica in browser del pannello Risk gate (gate bloccanti su snapshot mancante e kill switch, con ritorno a `Allow` al rilascio) |
 | 5 | AC-09..11 | Demo broker E2E + duplicate/timeout tests |
 | 6 | AC-05..07 | State-machine tests + browser workflow |
 | 7 | AC-16 | Adapter failure tests + dependency check |

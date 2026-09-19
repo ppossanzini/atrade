@@ -102,6 +102,36 @@ body {
   color: var(--at-text-muted);
 }
 
+/*
+ * Panel composition contract: a title row with its action group plus the body states any panel can
+ * show. Components keep only genuine layout deltas on top of these classes.
+ */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--at-space-md);
+  margin-bottom: var(--at-space-sm);
+}
+
+.panel-header .panel-title {
+  margin-bottom: 0;
+}
+
+.panel-title--spaced {
+  margin-top: var(--at-space-lg);
+}
+
+.panel-alert {
+  margin: var(--at-space-md) 0;
+}
+
+.panel-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--at-text-muted);
+}
+
 .page-header {
   display: flex;
   align-items: flex-start;

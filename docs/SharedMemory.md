@@ -28,3 +28,8 @@
 - Resolve the API base URL at request time from `src/settings.ts` and `public/settings.json`; never bake it into a constructor.
 - Give every sidebar entry a real route, using the shared Coming Soon view for sections not yet implemented.
 - Split each view/component into three files: markup in `.vue`, logic in `.ts` via `defineComponent`, styles in `.less`.
+- Read the risk decision and the configured thresholds from the server (`/api/risk/limits`, `/api/risk/baskets/{id}`); never recompute a gate verdict or cache it per basket in the client.
+- Surface the risk gate where the operator decides about baskets, and keep the panels presentational: the view owns the load and the store owns the state.
+- Give every panel the shared composition contract (`panel`, `panel-header`, `panel-title`, `panel-alert`, `panel-empty`) and keep component `.less` files to genuine layout deltas only.
+- Do not set `width: 100%` on a panel root: the project has no `box-sizing: border-box` reset, so an explicit full width plus padding widens the page.
+- Render missing measurements as `n.d.` and unconfigured thresholds as `Non configurata`; never substitute a zero or a default for a datum the server did not provide.

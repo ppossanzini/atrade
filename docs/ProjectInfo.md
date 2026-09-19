@@ -170,3 +170,16 @@
   - No threshold has a default in code, and no market inherits another market's value. An unconfigured limit produces `RISK_THRESHOLD_NOT_CONFIGURED` with a blocking verdict.
 - Consequences: Adding a market to `MarketKind` immediately creates a configuration obligation, and `IsFullyConfigured` stays false until its limits are decided. `GET /api/risk/limits` reports one entry per market with `IsConfigured`, so the operator can see exactly which market is still undecided, and the sample `appsettings.json` ships the key structure with empty values that keep every gate blocking until real numbers are chosen.
 
+## ADR-0014 - Risk decision is read only and rendered as-is
+
+- Date: 2026-09-19
+- Status: Accepted
+- Context: Slice 4 requires the gates and their reasons to be visible in the client. The Risk Engine already produces the decision server side, so the open question was what the client owns: recomputing or summarising the verdict would create a second source of truth, and caching a decision per basket would let the UI show a verdict the server no longer holds.
+- Decision:
+  - The client reads two read-only endpoints, `GET /api/risk/limits` (thresholds in force, one entry per market, including the unconfigured ones) and `GET /api/risk/baskets/{basketId}` (aggregate verdict plus every gate). It never evaluates a threshold and never derives a verdict.
+  - The gate panel is bound to the basket selected for editing, not to the active one: the gates name the version they evaluated (`versionNumber`, `basketVersionId`), and a basket that does not hold the active version reports it through `ActiveVersionMissing` instead of hiding the state.
+  - The decision is reloaded whenever the selected basket or its stored detail changes, so a mutation followed by a registry reload cannot leave a stale verdict on screen.
+  - Every gate renders code, subject, market, observed value, threshold, unit and timestamp. A missing measurement is rendered as `n.d.` and an unconfigured threshold as `Non configurata`: neither is replaced by a zero or by a default, because the operator must be able to tell "no data" from "no limit".
+  - The `detail` text produced by the engine is displayed verbatim as the audit narrative. It is currently English while the operator UI is Italian; localising explanations by gate code in the client is the pending follow-up, and the engine text stays untouched so journal payloads remain stable.
+- Consequences: The UI can never disagree with the recorded decision, and a blocked verdict is always explainable from the screen. Conversely the panel can only be as informative as the server contract: a new gate code needs an i18n label and, until then, renders with the raw code name.
+

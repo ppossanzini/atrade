@@ -2,7 +2,10 @@ import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import BasketLegTable from '@/modules/basket/components/BasketLegTable/BasketLegTable.vue'
+import RiskGatePanel from '@/modules/risk/components/RiskGatePanel/RiskGatePanel.vue'
+import RiskLimitsPanel from '@/modules/risk/components/RiskLimitsPanel/RiskLimitsPanel.vue'
 import { useBasketsStore, type BasketMutationOutcome } from '@/stores/baskets'
+import { useRiskStore } from '@/stores/risk'
 
 type DialogMode = 'create' | 'rename' | 'clone' | 'publish' | 'activate' | 'archive'
 
@@ -15,10 +18,11 @@ const defaultPolicy = (): server.BasketPolicy => ({
 
 export default defineComponent({
   name: 'BasketBuilderView',
-  components: { BasketLegTable },
+  components: { BasketLegTable, RiskGatePanel, RiskLimitsPanel },
   setup() {
     const { t } = useI18n()
     const basketsStore = useBasketsStore()
+    const riskStore = useRiskStore()
 
     const draftLegs = ref<server.BasketCompositionLeg[]>([])
     const draftPolicy = ref<server.BasketPolicy>(defaultPolicy())
@@ -100,6 +104,15 @@ export default defineComponent({
       draftPolicy.value = value?.draftPolicy ? { ...value.draftPolicy } : defaultPolicy()
       versionNote.value = ''
     })
+
+    // The decision is produced by the server from stored state, so it follows both the selected
+    // basket and every stored change the basket store applies after a mutation.
+    watch(
+      () => [basketsStore.selectedBasketId, basketsStore.detail] as const,
+      () => {
+        void loadRisk()
+      },
+    )
 
     function statusTagType(status: server.BasketStatus): 'success' | 'info' | 'warning' {
       if (status === 'Active') {
@@ -398,8 +411,13 @@ export default defineComponent({
       await basketsStore.selectBasket(basketId)
     }
 
+    async function loadRisk(): Promise<void> {
+      await riskStore.load(basketsStore.selectedBasketId)
+    }
+
     async function refresh(): Promise<void> {
       await basketsStore.loadRegistry()
+      await loadRisk()
     }
 
     onMounted(refresh)
@@ -407,6 +425,7 @@ export default defineComponent({
     return {
       t,
       basketsStore,
+      riskStore,
       draftLegs,
       draftPolicy,
       newLegSymbol,
@@ -439,6 +458,7 @@ export default defineComponent({
       closeDialog,
       confirmDialog,
       selectBasket,
+      loadRisk,
       refresh,
     }
   },

@@ -264,6 +264,22 @@
       </el-form>
     </div>
 
+    <RiskGatePanel
+      v-if="detail"
+      class="panel basket-panel"
+      :decision="riskStore.decision"
+      :is-loading="riskStore.isLoading"
+      :has-load-failure="riskStore.hasLoadFailure"
+      @refresh="loadRisk"
+    />
+
+    <RiskLimitsPanel
+      v-if="detail"
+      class="panel basket-panel"
+      :limits="riskStore.limits"
+      :is-loading="riskStore.isLoading"
+    />
+
     <el-dialog
       :model-value="dialogMode !== null"
       :title="dialogTitle"

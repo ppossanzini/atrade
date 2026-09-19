@@ -135,4 +135,63 @@ declare namespace server {
   interface BasketVersionPublication {
     note: string
   }
+
+  type RiskGateVerdict = 'Allow' | 'Review' | 'Block'
+
+  /**
+   * Stable gate codes. The names are part of the audit contract, so a code is never reused for a
+   * different rule and the client never invents a label for an unknown one.
+   */
+  type RiskGateCode =
+    | 'ActiveVersionMissing'
+    | 'KillSwitchEngaged'
+    | 'SnapshotMissing'
+    | 'SnapshotStale'
+    | 'CoverageBelowMinimum'
+    | 'RiskPerBasketExceeded'
+    | 'DailyLossExceeded'
+    | 'LegSpreadExceeded'
+    | 'LegVolatilityExceeded'
+    | 'LegDataMissing'
+    | 'BasketDataMissing'
+    | 'ThresholdNotConfigured'
+
+  /**
+   * One evaluated gate. Code, observed value, threshold and timestamp are always present as fields;
+   * a missing measurement is null, never an omitted property.
+   */
+  interface RiskGateResult {
+    code: RiskGateCode
+    verdict: RiskGateVerdict
+    subject: string
+    market: MarketKind | null
+    observedValue: number | null
+    thresholdValue: number | null
+    unit: string | null
+    evaluatedAtUtc: IsoDateTime
+    detail: string
+  }
+
+  interface RiskDecision {
+    verdict: RiskGateVerdict
+    evaluatedAtUtc: IsoDateTime
+    basketId: string | null
+    basketVersionId: string | null
+    versionNumber: number
+    snapshotCapturedAtUtc: IsoDateTime | null
+    gates: RiskGateResult[]
+  }
+
+  interface MarketRiskLimits {
+    market: MarketKind
+    legSpreadMaxPips: number | null
+    legVolatilityMaxPercent: number | null
+    isConfigured: boolean
+  }
+
+  interface RiskLimits {
+    snapshotMaxAgeSeconds: number | null
+    markets: MarketRiskLimits[]
+    isFullyConfigured: boolean
+  }
 }
