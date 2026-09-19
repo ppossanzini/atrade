@@ -291,6 +291,11 @@ namespace AutoTrade.Trading.Handlers.Tests.Execution
 
       Assert.Equal(ExecutionOutcome.AlreadyExecuted, second.Outcome);
       Assert.Single(context.Db.Executions.Where(item => item.ProposalId == proposalId));
+
+      // The refused attempt is part of the record: the operator asked and the answer was no.
+      JournalEvent refusal = Assert.Single(context.Db.JournalEvents.Where(item => item.Kind == JournalEventKind.ExecutionStartRefused));
+      Assert.Contains("proposal_already_executed", refusal.Payload);
+      Assert.Equal(proposalId, refusal.EntityId);
     }
 
     [Fact]
@@ -307,6 +312,10 @@ namespace AutoTrade.Trading.Handlers.Tests.Execution
 
       Assert.Equal(ExecutionOutcome.NotAuthorized, result.Outcome);
       Assert.Empty(context.Db.Executions);
+
+      JournalEvent refusal = Assert.Single(context.Db.JournalEvents.Where(item => item.Kind == JournalEventKind.ExecutionStartRefused));
+      Assert.Contains("proposal_not_approved:NeedsReview", refusal.Payload);
+      Assert.Equal(proposalId, refusal.EntityId);
     }
 
     [Fact]
@@ -349,7 +358,9 @@ namespace AutoTrade.Trading.Handlers.Tests.Execution
       Assert.Equal(LegDirection.Short, compensationLegs.Single(item => item.Symbol == "EURUSD").Direction);
       Assert.Equal(LegDirection.Long, compensationLegs.Single(item => item.Symbol == "XAUUSD").Direction);
       Assert.Equal(75000, compensationLegs.Single(item => item.Symbol == "EURUSD").VolumeUnits);
-      Assert.Equal(16, compensationLegs.Single(item => item.Symbol == "XAUUSD").VolumeUnits);
+
+      // The plan asked for 16, the provider filled 9: the compensation mirrors what really happened, not the intent.
+      Assert.Equal(9, compensationLegs.Single(item => item.Symbol == "XAUUSD").VolumeUnits);
 
       // The provider fills gold partially again, so the compensation is itself incomplete and says so: a
       // compensation is a new sequence exposed to the same market, never an atomic rollback.

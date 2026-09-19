@@ -52,24 +52,22 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
 
       if (proposal == null)
       {
-        return Refused(ExecutionOutcome.NotFound, "proposal_not_found");
+        return await RefuseAsync(request.OperatorId, request.ProposalId, ExecutionOutcome.NotFound, "proposal_not_found", cancellationToken);
       }
 
       if (proposal.Status != ProposalStatus.Approved)
       {
-        await JournalRefusalAsync(request.OperatorId, null, "proposal_not_approved:" + proposal.Status, cancellationToken);
-
-        return Refused(ExecutionOutcome.NotAuthorized, "proposal_not_approved");
+        return await RefuseAsync(request.OperatorId, proposal.Id, ExecutionOutcome.NotAuthorized, "proposal_not_approved:" + proposal.Status, cancellationToken);
       }
 
       if (await db.Executions.AnyAsync(item => item.ProposalId == proposal.Id, cancellationToken))
       {
-        return Refused(ExecutionOutcome.AlreadyExecuted, "proposal_already_executed");
+        return await RefuseAsync(request.OperatorId, proposal.Id, ExecutionOutcome.AlreadyExecuted, "proposal_already_executed", cancellationToken);
       }
 
       if (executionOptions.Provider == ExecutionProviderKind.None)
       {
-        return Refused(ExecutionOutcome.NotConfigured, "execution_provider_not_configured");
+        return await RefuseAsync(request.OperatorId, proposal.Id, ExecutionOutcome.NotConfigured, "execution_provider_not_configured", cancellationToken);
       }
 
       if (await db.KillSwitchStates.AsNoTracking().AnyAsync(item => item.Id == KillSwitchSingletonId && item.IsEngaged, cancellationToken))
@@ -87,7 +85,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
 
       if (versionLegs.Count == 0)
       {
-        return Refused(ExecutionOutcome.NotConfigured, "version_has_no_legs");
+        return await RefuseAsync(request.OperatorId, proposal.Id, ExecutionOutcome.NotConfigured, "version_has_no_legs", cancellationToken);
       }
 
       BasketVersionPolicy policy = await db.BasketVersionPolicies
@@ -102,7 +100,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
 
       if (!capture.IsAvailable || !capture.CapturedAtUtc.HasValue || capture.Account == null)
       {
-        return Refused(ExecutionOutcome.NotConfigured, "market_data_unavailable");
+        return await RefuseAsync(request.OperatorId, proposal.Id, ExecutionOutcome.NotConfigured, "market_data_unavailable", cancellationToken);
       }
 
       List<SymbolSpecification> specifications = await marketDataSource.DescribeAsync(requests, cancellationToken);
@@ -127,9 +125,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
         // exposure nobody decided, and a written execution the operator cannot retry after fixing the input.
         if (!sizing.IsSized)
         {
-          await JournalRefusalAsync(request.OperatorId, proposal.Id, versionLeg.Symbol + ":" + sizing.Reason, cancellationToken);
-
-          return Refused(ExecutionOutcome.NotConfigured, versionLeg.Symbol + ":" + sizing.Reason);
+          return await RefuseAsync(request.OperatorId, proposal.Id, ExecutionOutcome.NotConfigured, versionLeg.Symbol + ":" + sizing.Reason, cancellationToken);
         }
 
         legs.Add(new ExecutionLeg
@@ -514,9 +510,16 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
       return "AT-" + executionId.ToString("N").Substring(0, 12) + "-" + ordinal;
     }
 
-    private async Task JournalRefusalAsync(Guid operatorId, Guid? entityId, string reason, CancellationToken cancellationToken)
+    /// <summary>
+    /// Every refused start leaves a trace. An attempt the operator made and that produced no execution is a
+    /// transition of its own: without the journal row the absence of an execution is indistinguishable from a
+    /// request that never arrived, and the refusal reason would be lost.
+    /// </summary>
+    private async Task<ExecutionStartResultDto> RefuseAsync(Guid operatorId, Guid entityId, ExecutionOutcome outcome, string reason, CancellationToken cancellationToken)
     {
       await journalWriter.AppendOperatorEventAsync(operatorId, JournalEventKind.ExecutionStartRefused, ExecutionEntityType, entityId, "reason=" + reason, cancellationToken);
+
+      return Refused(outcome, reason);
     }
 
     private static ExecutionStartResultDto Refused(ExecutionOutcome outcome, string reason)
