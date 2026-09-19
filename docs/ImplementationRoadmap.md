@@ -12,12 +12,14 @@ Strategia: vertical slice demo-first
 | 2 - Basket lifecycle | Consegnata | 143 test; flusso completo verificato via HTTP e in browser; snapshot immutabili verificati a DB; `InitialCreate` applicata |
 | 3 - Broker demo | Parziale, bloccata da fuori | codice completo e test verde; reachability TCP/wss e errore provider reali (`OA client is not in active state`); autenticazione, snapshot, riconciliazione e rinnovo token non verificabili finche l'app non e approvata |
 | 4 - Risk Engine | Consegnata (gate umano aperto) | 269 test; 12 codici gate con codice, valore osservato, soglia e timestamp; limiti per mercato (ADR-0013); pannelli Risk gate e Soglie di verifica in browser, incluso il ciclo kill switch ingaggiato/rilasciato riflesso nei gate |
+| 5 - Execution Engine | Non iniziata | richiede un conto demo autorizzato e la riconciliazione; la parte persist-first/idempotenza e costruibile prima (vedi nota di scope) |
+| 6 - Market Manager | Consegnata | 340 test; ciclo di analisi reale con proposte, snapshot persistito e 10 valutazioni di gate per proposta; matrice di instradamento a tabella; decisioni con rivalutazione del gate e rispetto della modalita (ADR-0017); vista operatore verificata in browser (coda, dettaglio, rifiuto con motivazione obbligatoria) |
 
 Le slice successive restano da consegnare.
 
 ### Cambio di scope controllato (2026-09-19)
 
-Slice 3 e bloccata da un'approvazione esterna (app cTrader non attiva), che a cascata rende non giudicabili i gate di mercato dello Slice 4 e non verificabili i percorsi verdi dello Slice 6. Per non sospendere lo sviluppo su un evento fuori dal nostro controllo si introduce una sorgente dati simulata dietro la seam `IMarketDataSource` (ADR-0015, in attesa di approvazione dei confini).
+Slice 3 e bloccata da un'approvazione esterna (app cTrader non attiva), che a cascata rende non giudicabili i gate di mercato dello Slice 4 e non verificabili i percorsi verdi dello Slice 6. Per non sospendere lo sviluppo su un evento fuori dal nostro controllo si introduce una sorgente dati simulata dietro la seam `IMarketDataSource` (ADR-0015, accettata).
 
 Effetti attesi:
 
@@ -221,6 +223,6 @@ La promozione non fa parte dell'MVP e richiede almeno:
 | 2 | AC-02..04 | 143 handler test; flusso HTTP `200/400/409`; snapshot a DB; workflow browser |
 | 3-4 | AC-08, AC-12, AC-17 | Demo reconcile test + risk boundary tests; verifica in browser del pannello Risk gate (gate bloccanti su snapshot mancante e kill switch, con ritorno a `Allow` al rilascio) |
 | 5 | AC-09..11 | Demo broker E2E + duplicate/timeout tests |
-| 6 | AC-05..07 | State-machine tests + browser workflow |
+| 6 | AC-05..07 | 340 handler test (matrice di instradamento, TTL, rivalutazione del gate, idempotenza) + flusso operatore verificato in browser |
 | 7 | AC-16 | Adapter failure tests + dependency check |
 | 8 | AC-14..15 | Reconciled episode test + audit trace |

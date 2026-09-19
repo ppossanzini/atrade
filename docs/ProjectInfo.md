@@ -88,6 +88,18 @@
   - Consequence accepted: framing, correlation, reconnection and error mapping are our responsibility and must be tested as such. The vendored schema is never edited; if upstream changes, the schema is re-vendored, not patched.
 - Consequences: The broker tier owns its transport, which is where the reconciliation dedup and the reconnect rules have to live anyway. Serialization and correlation are covered by tests of the protocol client, and the upstream protocol stays the single source of truth for message shapes. ADR-0006's SDK sentence is superseded by this record; the stack profile states the same.
 
+## ADR-0017 - In Automatic the operator does not decide
+
+- Date: 2026-09-19
+- Status: Accepted
+- Context: The approved routing matrix says that in Automatic a proposal with a `Review` gate is "forbidden until it is redefined as `Pass`". Read literally, a review in Automatic can never be approved by hand; read loosely, the mode would only describe automatic forwarding and the operator could always decide. The difference matters, because it decides whether the mode is a rule or a label.
+- Decision:
+  - The mode governs **who decides**, and Automatic means the operator has delegated the decisions. A proposal in `NeedsReview` is not decidable in Automatic, and the operator must switch to Supervised or Manual on purpose, with a journalled change, before acting on it.
+  - Everything else about routing is unchanged: `Block` is terminal in every mode, `Allow` is forwarded automatically in Supervised and Automatic, and a review always waits for a person.
+  - The server computes decidability per read from the current mode instead of storing it, so a proposal never becomes decidable because it was once stored that way. The queue reports it, and the interface disables the actions accordingly.
+  - A refusal is journalled with its reason (`mode_requires_operator`, `gate_regressed`, a missing reason or an expired window), so the operator can always tell why an action was not accepted.
+- Consequences: The mode is a real constraint with an observable cost — one deliberate, audited mode change before a manual decision. In exchange, no delegation is silently revoked and no review becomes a permission by accident. The rule is pinned by table tests over the whole matrix and by a handler test that proves an approval is refused in Automatic.
+
 ## ADR-0007 - Freeze the prototype and create production projects from scratch
 
 - Date: 2026-09-18
