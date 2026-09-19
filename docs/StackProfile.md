@@ -21,8 +21,8 @@ Detected: 2026-09-18 | Evidence: greenfield workspace and confirmed user choices
 | test stack | xUnit with handler and integration tests | Gate 1 approval | be-dotnet-dev |
 | broker integration | Official cTrader Open API **protobuf schema** vendored and driven by our own protocol client (`Google.Protobuf` + `Grpc.Tools`), not the official C# SDK | ADR-0016 supersedes the SDK choice of ADR-0006 | td-backend-dev |
 | background processing | .NET Worker Services in the deployed backend process | Gate 1 approval | be-dotnet-dev |
-| RAG | JigenDB embedded, isolated from transactional persistence | User constraint | td-backend-dev |
-| local LLM | Ollama over local-only HTTP | Gate 1 approval | td-backend-dev |
+| RAG | `Jigen.Store` 1.3.1 (+ `Jigen.Primitives` 1.3.1, MessagePack 3.1.7) embedded, isolated from transactional persistence, behind `IJigenEvidenceStore` | User constraint; version pinned by ADR-0023 (the pre-1.3.1 family is not published and is not referenceable) | td-backend-dev |
+| local LLM | Ollama over local-only HTTP, model still to be chosen: no model is downloaded, the seam is implemented against a fake transport until a download is authorised | User constraint; open decision | td-backend-dev |
 | deployment | Single Linux host, continuously running | Gate 1 approval | td-backend-dev |
 | account rollout | One demo account, live enabled only through promotion gate | Gate 1 approval | td-backend-dev |
 | authentication | Local operator login with audited session | Gate 1 approval | fe-security-layer-constraints |

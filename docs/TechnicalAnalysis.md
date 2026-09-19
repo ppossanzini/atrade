@@ -231,7 +231,11 @@ La strategia non ha una tabella propria: e la policy della versione (`BasketDraf
 
 `IOllamaAnalysisClient` riceve un input versionato e restituisce JSON aderente a uno schema. Timeout, dimensione, modello e temperatura sono configurati. Output non deserializzabile, campi fuori range o simboli non consentiti vengono scartati. Il rationale non puo modificare i valori calcolati dal Risk Engine.
 
-L'API e il pacchetto .NET effettivi di JigenDB devono essere validati con uno spike prima della slice RAG; fino ad allora l'adapter rimane un contratto e non una dipendenza assunta.
+Lo spike e stato superato: `Jigen.Store` 1.3.1 e una dipendenza reale, risolta da nuget.org, con `Jigen.Primitives` 1.3.1 (la famiglia precedente non era pubblicata e non e referenziabile). L'adapter e registrato come singleton e si assume due comportamenti del motore: non crea la directory del database e, se manca, la segnala come doppio writer (causa sbagliata); un percorso e apribile da un solo `Store` alla volta.
+
+La disponibilita viaggia nel risultato (`EvidenceSearchResult.IsAvailable`), quindi store non configurato non viene mai letto come nessuna corrispondenza. `EnsureProviderIsUsable` piu risoluzione eager all'avvio fermano l'host se lo store configurato non si apre. Non esiste un'API di backup: il backup e una copia coerente della directory a store chiuso.
+
+La memoria semantica non conserva stato transazionale, non decide alcun verdetto e non raggiunge il gateway ordini. Il fail-closed su store o modello fermi e responsabilita del consumatore, non dello store.
 
 ## 9. Sicurezza
 

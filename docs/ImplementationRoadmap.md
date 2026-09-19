@@ -193,6 +193,8 @@ Prerequisito: spike JigenDB superato con API, persistenza, backup e retrieval ve
 
 Altri rilievi su 1.2.3, da tenere presenti nell'adapter: `DataBasePath` deve esistere (lo store non crea la directory) e una directory mancante viene riportata come "già aperto in un'altra istanza", che indica la causa sbagliata.
 
+**Esito dello spike (2026-09-19, `Jigen.Store` 1.3.1): superato su nuget.org.** Chiuso il blocco, lo spike è stato ripetuto risolvendo **solo** da nuget.org: `Jigen.Primitives` esiste **unicamente alla versione 1.3.1**, quindi le versioni precedenti restano non ripristinabili e non referenziabili. Su 1.3.1 i cinque controlli passano: ranking su vettori noti, persistenza attraverso riapertura, backup per copia della directory che risponde in modo identico, rifiuto del secondo writer e collezione tipizzata. La dipendenza è stata quindi promossa da "contratto" a pacchetto reale (ADR-0023).
+
 Output:
 
 - evidence store isolato;
