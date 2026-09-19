@@ -182,6 +182,17 @@ Copre: AC-05, AC-06, AC-07.
 
 Prerequisito: spike JigenDB superato con API, persistenza, backup e retrieval verificati.
 
+**Esito dello spike (2026-09-19, `Jigen.Store` 1.2.3): superato.** Su 1.2.3, con artefatti pacchettizzati localmente dal tag `v1.2.3`:
+
+- **API**: `Store` con WAL, `AppendContent`, `Search` con similarità coseno e `VectorCollection<T>` tipizzata; su tre vettori noti il ranking è quello atteso (`1.0000`, `0.9701`, `0.0000`).
+- **Persistenza**: `SaveChangesAsync` + `Close` + riapertura + `ReconcileIndexAsync` restituiscono gli stessi hit.
+- **Backup**: non esiste una API di backup; una copia consistente della directory a database chiuso (4 file: content, vectors, index, wal) si riapre e risponde come l'originale. La procedura va quindi definita esplicitamente.
+- **Vincolo**: un database è apribile da un solo `Store` per path; il secondo tentativo fallisce con `IOException`. Va previsto nel ciclo di vita dell'host.
+
+**Blocco lato pubblicazione (esterno ad AutoTrade).** `Jigen.Store` e `Jigen.Indexer.HNSW` dichiarano `Jigen.Primitives` come dipendenza, ma quel pacchetto **non è pubblicato su nuget.org a nessuna versione** (verificato per 1.2.3 e 1.3.0) né è presente sul feed `wisetown2022`: `dotnet add package Jigen.Store` non si risolve (`NU1101`). Il progetto si pacchettizza correttamente, quindi è un buco di pubblicazione, non di codice. Nella pipeline `.github/workflows/build-packages-and-container.yml` lo step aggiunto per `Jigen.Primitives` punta a `src/Client/Jigen.Primitives/...`, che non esiste: il progetto è in `src/Jigen/Jigen.Primitives/...` e `dotnet pack` esce con `MSB1009: Project file does not exist`. Poiché la pubblicazione avviene solo su push di tag, correggere il percorso non basta: la dipendenza **1.2.3** va ripubblicata rieseguendo il workflow sul ref del tag `v1.2.3` (con `--skip-duplicate` pubblica solo il pacchetto mancante), altrimenti AutoTrade deve passare a una versione la cui `Primitives` sia stata pubblicata.
+
+Altri rilievi su 1.2.3, da tenere presenti nell'adapter: `DataBasePath` deve esistere (lo store non crea la directory) e una directory mancante viene riportata come "già aperto in un'altra istanza", che indica la causa sbagliata.
+
 Output:
 
 - evidence store isolato;
