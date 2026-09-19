@@ -128,6 +128,7 @@ export default {
     decisionReasonPlaceholder: 'Motivazione obbligatoria',
     decisionReasonOptional: 'Motivazione facoltativa',
     legs: 'Gambe della proposta',
+    stopMissing: 'da decidere',
     rationale: 'Sintesi della valutazione',
     confirmTitle: 'Conferma decisione',
     confirm: {
