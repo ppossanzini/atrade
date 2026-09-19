@@ -22,6 +22,16 @@ namespace AutoTrade.Trading.Core.Enums
     BrokerAuthorizationCompleted = 17,
     BrokerAuthorizationRejected = 18,
     BrokerAuthorizationRevoked = 19,
-    BrokerAuthorizationImported = 20
+    BrokerAuthorizationImported = 20,
+    MarketManagerModeChanged = 21,
+    AnalysisStarted = 22,
+    AnalysisStopped = 23,
+    ProposalGenerated = 24,
+    ProposalAutoApproved = 25,
+    ProposalApproved = 26,
+    ProposalRejected = 27,
+    ProposalSuspended = 28,
+    ProposalExpired = 29,
+    ProposalDecisionRefused = 30
   }
 }

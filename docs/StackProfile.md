@@ -19,7 +19,7 @@ Detected: 2026-09-18 | Evidence: greenfield workspace and confirmed user choices
 | mapping | MapZilla | Backend organization convention | be-dotnet-dev |
 | persistence | EF Core with SQLite WAL on one Linux host | Gate 1 approval | be-dotnet-dev |
 | test stack | xUnit with handler and integration tests | Gate 1 approval | be-dotnet-dev |
-| broker integration | Official cTrader Open API C# SDK with Protobuf | Official API support and Gate 1 approval | td-backend-dev |
+| broker integration | Official cTrader Open API **protobuf schema** vendored and driven by our own protocol client (`Google.Protobuf` + `Grpc.Tools`), not the official C# SDK | ADR-0016 supersedes the SDK choice of ADR-0006 | td-backend-dev |
 | background processing | .NET Worker Services in the deployed backend process | Gate 1 approval | be-dotnet-dev |
 | RAG | JigenDB embedded, isolated from transactional persistence | User constraint | td-backend-dev |
 | local LLM | Ollama over local-only HTTP | Gate 1 approval | td-backend-dev |

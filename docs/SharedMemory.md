@@ -33,3 +33,11 @@
 - Give every panel the shared composition contract (`panel`, `panel-header`, `panel-title`, `panel-alert`, `panel-empty`) and keep component `.less` files to genuine layout deltas only.
 - Do not set `width: 100%` on a panel root: the project has no `box-sizing: border-box` reset, so an explicit full width plus padding widens the page.
 - Render missing measurements as `n.d.` and unconfigured thresholds as `Non configurata`; never substitute a zero or a default for a datum the server did not provide.
+- Give the frontend no mock source of its own: when the backend needs stand-in data, it lives behind a backend seam (`IMarketDataSource`) and the frontend consumes the API as if it were real.
+- Require a captured market before proposing anything: a proposal that cannot be judged is not a proposal (AC-05), so the cycle reports why it stayed silent instead of recording a row.
+- Persist the capture a proposal was judged on (`MarketSnapshot`) and make the proposal reference it; keep `GateEvaluation` append-only so a re-evaluation adds rows instead of rewriting history.
+- Keep the deterministic Market Manager rules in `AnalysisRules` (routing, decidability, confidence, rationale) so the matrix is tested by table and cannot be interpreted in two places.
+- Keep hosted services in the composition root `AutoTrade.Trading/` (the host owns the lifecycle and the hosting abstractions) and their logic in the handlers tier behind a command.
+- Group the contracts of one behaviour family in one file when they are tiny and always used together (`Command/Market/MarketManagerCommands.cs`); keep one file per entity and per handler.
+- Use the entity aliases (`BasketEntity`, `BasketVersionEntity`) in the market tier: the `CQRS.Basket*` namespaces shadow the entity names.
+- The client folder reality is `src/stores/`, `src/modules/<module>/{components,views}` and `src/services`; there is no `src/store/`, `src/components/` or `src/composables/` yet, so new shared pieces go in the module that owns them until a real second consumer exists.

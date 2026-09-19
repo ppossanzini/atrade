@@ -25,6 +25,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddTradingBroker(configuration);
       services.AddTradingMarketData(configuration);
       services.AddTradingRisk(configuration);
+      services.AddTradingMarket(configuration);
 
       return services;
     }

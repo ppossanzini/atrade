@@ -48,6 +48,11 @@ namespace AutoTrade.Trading.Handlers.Tests
       // the handlers use exactly as it does in production.
       services.AddTradingMarketData(configuration);
 
+      // The risk and market tiers keep the same registration as the host, so the tests exercise the real
+      // engine, the real threshold reading and the real routing rules instead of stand-ins.
+      services.AddTradingRisk(configuration);
+      services.AddTradingMarket(configuration);
+
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();
       Db = _scope.ServiceProvider.GetRequiredService<DB>();
@@ -120,6 +125,11 @@ namespace AutoTrade.Trading.Handlers.Tests
     public void Advance(TimeSpan amount)
     {
       _utcNow = _utcNow.Add(amount);
+    }
+
+    public void Set(DateTime utcNow)
+    {
+      _utcNow = new DateTimeOffset(DateTime.SpecifyKind(utcNow, DateTimeKind.Utc), TimeSpan.Zero);
     }
   }
 }

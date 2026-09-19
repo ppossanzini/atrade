@@ -38,6 +38,16 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public DbSet<BrokerAuthorizationAttempt> BrokerAuthorizationAttempts { get; set; }
 
+    public DbSet<MarketSnapshot> MarketSnapshots { get; set; }
+
+    public DbSet<MarketSnapshotLeg> MarketSnapshotLegs { get; set; }
+
+    public DbSet<Proposal> Proposals { get; set; }
+
+    public DbSet<ProposalLeg> ProposalLegs { get; set; }
+
+    public DbSet<GateEvaluation> GateEvaluations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.Entity<Operator>().HasIndex(item => item.UserName).IsUnique();
@@ -60,6 +70,15 @@ namespace AutoTrade.Trading.Handlers.Model
       modelBuilder.Entity<BrokerAuthorization>().HasIndex(item => item.Environment).IsUnique();
       modelBuilder.Entity<BrokerAuthorizationAttempt>().HasIndex(item => item.CorrelationHash).IsUnique();
       modelBuilder.Entity<BrokerAuthorizationAttempt>().HasIndex(item => item.ExpiresAtUtc);
+
+      // The operator queue reads open proposals by recency, and every proposal lookup starts from the
+      // basket or from the snapshot it refers to.
+      modelBuilder.Entity<Proposal>().HasIndex(item => new { item.Status, item.ProposedAtUtc });
+      modelBuilder.Entity<Proposal>().HasIndex(item => item.BasketId);
+      modelBuilder.Entity<Proposal>().HasIndex(item => item.SnapshotId);
+      modelBuilder.Entity<ProposalLeg>().HasIndex(item => new { item.ProposalId, item.Ordinal }).IsUnique();
+      modelBuilder.Entity<GateEvaluation>().HasIndex(item => new { item.ProposalId, item.Ordinal }).IsUnique();
+      modelBuilder.Entity<MarketSnapshotLeg>().HasIndex(item => new { item.SnapshotId, item.Ordinal }).IsUnique();
 
       base.OnModelCreating(modelBuilder);
     }

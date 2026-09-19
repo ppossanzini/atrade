@@ -1,6 +1,7 @@
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoTrade.Trading;
 using AutoTrade.Trading.API;
 using AutoTrade.Trading.API.Controllers;
 using AutoTrade.Trading.Core.Dto;
@@ -32,6 +33,10 @@ builder.Services.AddHikyaku(hikyaku => hikyaku.RegisterServicesFromAssembly(type
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddTradingApi();
 builder.Services.AddTradingHandlers(configuration);
+
+// The analysis cycle is host infrastructure: it owns the wake up interval and dispatches the cycle command,
+// which owns the rules. Without configured timing it stops instead of choosing a pace of its own.
+builder.Services.AddHostedService<AnalysisCycleService>();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 

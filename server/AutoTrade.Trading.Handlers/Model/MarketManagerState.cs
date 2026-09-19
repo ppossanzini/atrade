@@ -15,6 +15,9 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public bool IsAnalysisRunning { get; set; }
 
+    /// <summary>Instant of the last completed analysis cycle, null when the analysis never ran.</summary>
+    public DateTime? LastCycleAtUtc { get; set; }
+
     public DateTime UpdatedAtUtc { get; set; }
   }
 }

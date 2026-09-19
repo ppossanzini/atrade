@@ -367,7 +367,7 @@ Vocabolario: `RiskGateVerdict` viene riusato senza duplicazione, quindi `Pass` (
 
 | Tipo | Contenuto |
 | --- | --- |
-| `ProposalAction` | `Entry`, `Reduce` |
+| `ProposalAction` | `Entry`, `Reduce`, `Exit` |
 | `ProposalStatus` | `NeedsReview`, `AutoApproved`, `Blocked`, `Approved`, `Rejected`, `Suspended`, `Expired` |
 | `ProposalDecisionOutcome` | `Applied`, `NotDecidable`, `Expired`, `GateRegressed`, `AlreadyDecided`, `NotFound` |
 
@@ -385,12 +385,15 @@ API: `GET /api/market/manager`, `PUT /api/market/manager/mode`, `PUT /api/market
 
 ### B.2 Modello dati e migrazione
 
-- `Proposal` (`Id`, `BasketId`, `BasketVersionId`, `VersionNumber`, `Action`, `Gate`, `Status`, `Confidence`, `ExpectedRiskPercent`, `ProposedAtUtc`, `ExpiresAtUtc`, `DecidedAtUtc`, `DecidedByOperatorId`, `DecisionReason`, `Rationale`, `CycleSequence`).
-- `ProposalLeg` (`ProposalId`, `Ordinal`, `Symbol`, `Market`, `Direction`, `Weight`, `IsAffected`).
-- Indici: `(Status, ProposedAtUtc)` per la coda, `BasketId` per la correlazione.
+- `MarketSnapshot` (`Id`, `CapturedAtUtc`, `AccountEquity`, `AccountBalance`, `RealizedPnlToday`, `UnrealizedPnl`) + `MarketSnapshotLeg` (`SnapshotId`, `Symbol`, `Market`, `Price`, `SpreadPips`, `VolatilityPercent`, `IsTradable`). La cattura della sorgente viene **persistita** e la proposta la referenzia: la decisione resta ricostruibile e riproducibile, non solo spiegata a parole (richiesto da AC-15).
+- `Proposal` (`Id`, `BasketId`, `BasketVersionId`, `VersionNumber`, `SnapshotId`, `Action`, `Gate`, `Status`, `Confidence`, `ExpectedRiskPercent`, `ProposedAtUtc`, `ExpiresAtUtc`, `DecidedAtUtc`, `DecidedByOperatorId`, `DecisionReason`, `Rationale`, `CycleSequence`).
+- `ProposalLeg` (`ProposalId`, `Ordinal`, `Symbol`, `Market`, `Direction`, `Weight`, `RiskCap`).
+- `GateEvaluation` (`ProposalId`, `Code`, `Verdict`, `Subject`, `Market`, `ObservedValue`, `ThresholdValue`, `Unit`, `EvaluatedAtUtc`, `Detail`), append-only: e la fotografia dei gate su cui la proposta e stata instradata.
+- Indici: `(Status, ProposedAtUtc)` per la coda, `BasketId` per la correlazione, `(ProposalId, Code)` per i gate.
+- Nessun `WorkerCheckpoint` in questo slice: il ciclo e guidato dallo stato (`MarketManagerState.Mode`/`IsAnalysisRunning`/`LastCycleAtUtc`), quindi la riga di stato e essa stessa il cursore del worker.
 - Migrazione EF dedicata, generata con `dotnet ef migrations add` come le precedenti.
-- `MarketManagerState` viene esteso con `LastCycleAtUtc`: modalita e stato di analisi sono gia persistiti.
-- Nuovi tipi di journal: `ProposalGenerated`, `ProposalAutoDispatched`, `ProposalApproved`, `ProposalRejected`, `ProposalSuspended`, `ProposalExpired`, `MarketManagerModeChanged`, `AnalysisStarted`, `AnalysisStopped`, `ProposalUndecidable`.
+- `MarketManagerState` viene esteso con `LastCycleAtUtc`.
+- Nuovi tipi di journal: `ProposalGenerated`, `ProposalAutoApproved`, `ProposalApproved`, `ProposalRejected`, `ProposalSuspended`, `ProposalExpired`, `MarketManagerModeChanged`, `AnalysisStarted`, `AnalysisStopped`, `ProposalDecisionRefused`.
 
 ### B.3 Ciclo di analisi
 

@@ -76,6 +76,18 @@
   - Execute basket legs sequentially by risk priority and provide a local operator login with audited actions.
 - Consequences: The MVP favors single-host operability and simple recovery. Multi-instance deployment, PostgreSQL, multiple accounts, and reviewer roles remain later controlled extensions.
 
+## ADR-0016 - Own protocol client on the vendored protobuf schema
+
+- Date: 2026-09-19
+- Status: Accepted
+- Context: ADR-0006 chose the official cTrader C# SDK. On inspection the published package (`cTrader.OpenAPI.Net` 1.4.4) dates to 2022, ships only `lib/net6.0` (out of support on .NET 10), and pins `Google.Protobuf` 3.20.1, `System.Reactive` 5.0.0 and `Websocket.Client` 4.4.43. Taking it would mean carrying an unmaintained runtime and three dated transitive dependencies into the tier that talks to the broker, and the SDK would still hide the message flow the risk and reconciliation work depends on.
+- Decision:
+  - The official **protobuf schema** is vendored from `spotware/openapi-proto-messages` at a pinned commit, with its MIT licence, under `Handlers/Broker/Proto/` and a `PROVENANCE.md` recording source, commit, retrieval date and the one additive line per file (a `csharp_namespace` option, needed because the upstream files declare no `package`).
+  - The protocol client is ours: application authentication, account authentication, account list, request/response correlation by `clientMsgId`, heartbeat and error mapping, built directly on `Google.Protobuf` and `ClientWebSocket`.
+  - Only protobuf runtime packages are taken (`Google.Protobuf`, `Grpc.Tools` at build time), so the dependency surface stays small and maintained.
+  - Consequence accepted: framing, correlation, reconnection and error mapping are our responsibility and must be tested as such. The vendored schema is never edited; if upstream changes, the schema is re-vendored, not patched.
+- Consequences: The broker tier owns its transport, which is where the reconciliation dedup and the reconnect rules have to live anyway. Serialization and correlation are covered by tests of the protocol client, and the upstream protocol stays the single source of truth for message shapes. ADR-0006's SDK sentence is superseded by this record; the stack profile states the same.
+
 ## ADR-0007 - Freeze the prototype and create production projects from scratch
 
 - Date: 2026-09-18

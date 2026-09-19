@@ -29,8 +29,7 @@ namespace AutoTrade.Trading.API.Controllers
 
     [HttpPost("kill-switch/engage")]
     [ValidateAntiForgeryToken]
-    [ProducesResponseType(typeof(KillSwitchChangeResult), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+  [ProducesResponseType(typeof(KillSwitchChangeResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> EngageKillSwitch([FromBody] KillSwitchEngagementDto request, CancellationToken cancellationToken)
     {
       KillSwitchChangeResult result = await hikyaku.Send(new EngageKillSwitch
