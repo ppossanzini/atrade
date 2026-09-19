@@ -48,6 +48,12 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public DbSet<GateEvaluation> GateEvaluations { get; set; }
 
+    public DbSet<Execution> Executions { get; set; }
+
+    public DbSet<ExecutionLeg> ExecutionLegs { get; set; }
+
+    public DbSet<BrokerEvent> BrokerEvents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.Entity<Operator>().HasIndex(item => item.UserName).IsUnique();
@@ -79,6 +85,16 @@ namespace AutoTrade.Trading.Handlers.Model
       modelBuilder.Entity<ProposalLeg>().HasIndex(item => new { item.ProposalId, item.Ordinal }).IsUnique();
       modelBuilder.Entity<GateEvaluation>().HasIndex(item => new { item.ProposalId, item.Ordinal }).IsUnique();
       modelBuilder.Entity<MarketSnapshotLeg>().HasIndex(item => new { item.SnapshotId, item.Ordinal }).IsUnique();
+
+      // One proposal produces at most one execution, one leg owns exactly one client order id, and a broker
+      // event is applied once: these three invariants are what makes a retry safe, so the database holds them
+      // instead of relying on the handler remembering them.
+      modelBuilder.Entity<Execution>().HasIndex(item => item.ProposalId).IsUnique();
+      modelBuilder.Entity<Execution>().HasIndex(item => new { item.Status, item.CreatedAtUtc });
+      modelBuilder.Entity<ExecutionLeg>().HasIndex(item => item.ClientOrderId).IsUnique();
+      modelBuilder.Entity<ExecutionLeg>().HasIndex(item => new { item.ExecutionId, item.Ordinal }).IsUnique();
+      modelBuilder.Entity<BrokerEvent>().HasIndex(item => item.BrokerEventId).IsUnique();
+      modelBuilder.Entity<BrokerEvent>().HasIndex(item => item.ExecutionId);
 
       base.OnModelCreating(modelBuilder);
     }

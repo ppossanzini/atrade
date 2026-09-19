@@ -32,6 +32,21 @@ namespace AutoTrade.Trading.Core.Enums
     ProposalRejected = 27,
     ProposalSuspended = 28,
     ProposalExpired = 29,
-    ProposalDecisionRefused = 30
+    ProposalDecisionRefused = 30,
+    ExecutionCreated = 31,
+    ExecutionLegDispatched = 32,
+    ExecutionLegAccepted = 33,
+    ExecutionLegPartiallyFilled = 34,
+    ExecutionLegFilled = 35,
+    ExecutionLegRejected = 36,
+    ExecutionLegTimedOut = 37,
+    ExecutionReconciliationRequired = 38,
+    ExecutionCompletedNominal = 39,
+    ExecutionCompletedPartial = 40,
+    ExecutionCompensationRequired = 41,
+    ExecutionCompensationConfirmed = 42,
+    ExecutionStartRefused = 43,
+    ExecutionBlocked = 44,
+    BrokerEventDuplicateIgnored = 45
   }
 }

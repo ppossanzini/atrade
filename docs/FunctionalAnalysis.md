@@ -267,3 +267,46 @@ Ogni proposta nasce con una scadenza. Alla scadenza diventa `Expired`: non e piu
 ### 9.6 Audit
 
 Generazione, inoltro automatico, decisione, rifiuto, sospensione, scadenza, cambio modalita e avvio/arresto dell'analisi producono un evento di journal correlato a paniere, versione e proposta.
+
+## 10. Execution Engine - regole funzionali (Slice 5)
+
+Perimetro: trasformare una proposta autorizzata in una sequenza di ordini governata, con persistenza prima dell'invio. L'esecuzione non decide rischio e non puo migliorare un verdetto.
+
+### 10.1 Una proposta, una esecuzione
+
+- Una proposta puo generare **al massimo una esecuzione** (AC-09). Un secondo tentativo sulla stessa proposta viene respinto come conflitto.
+- L'esecuzione congela gli input al momento della creazione: versione, gambe, ordine delle gambe, volumi, policy e lo snapshot di mercato su cui e stata decisa.
+- L'esecuzione nasce **prima** dell'invio: prima viene persistita, poi si parla con il broker. Un riavvio in mezzo non perde nulla e non duplica (AC-12).
+
+### 10.2 Ordine delle gambe e invio sequenziale
+
+- Le gambe sono inviate **una alla volta** nell'ordine deterministico approvato: per risk cap decrescente, a parita di risk cap per simbolo (AC-10).
+- La gamba successiva parte solo quando la precedente raggiunge uno stato terminale, oppure quando la policy autorizza il proseguimento (copertura minima raggiunta).
+- Ogni gamba porta un `clientOrderId` idempotente, generato e persistito prima dell'invio: un reinvio con lo stesso identificativo non puo produrre un secondo ordine (AC-09).
+
+### 10.3 Esito broker, timeout e riconciliazione
+
+- Il broker e l'autorita su accettazione, fill, deal e posizione.
+- Un **timeout o una disconnessione non equivalgono a un rifiuto**: portano la gamba e l'esecuzione a `ReconciliationRequired` e bloccano ogni nuovo invio finche l'esito non e noto (AC-11).
+- Nessun reinvio automatico senza riconciliazione: e il divieto di retry cieco.
+
+### 10.4 Fill parziali e policy
+
+- Un fill parziale e un esito reale, non un errore: la copertura e la somma dei volumi effettivamente riempiti sulle gambe previste.
+- La policy della versione decide cosa succede sotto copertura piena: `MinimumCoverage` prosegue finche la copertura richiesta e raggiunta, `AllOrNothing` richiede il 100%, `RequireConfirmation` sospende e chiede una decisione esplicita.
+- Una policy violata porta l'esecuzione a `CompensationRequired`; non produce mai una chiusura silenziosa.
+
+### 10.5 Compensazione esplicita
+
+- La compensazione **non e un rollback atomico**: e una nuova sequenza di ordini, soggetta a mercato e a audit, e puo lasciare esposizione residua.
+- La compensazione la conferma l'operatore, sempre, anche in modalita Automatica: tocca posizioni reali e non e una decisione delegabile.
+- Se la compensazione non e confermata, l'esposizione residua resta visibile e l'esecuzione resta in `CompensationRequired`.
+
+### 10.6 Kill switch e riavvio
+
+- Il kill switch blocca nuove esecuzioni e nuovi invii. Non chiude posizioni esistenti e non annulla un'esecuzione gia in corso.
+- Dopo un riavvio il sistema resta fail-closed per le nuove esecuzioni finche la riconciliazione non e aggiornata; le esecuzioni incomplete restano visibili con il loro stato reale.
+
+### 10.7 Gate di sicurezza prima del primo ordine con effetto reale
+
+- Prima di qualsiasi invio verso il conto demo devono essere approvati **l'ordine minimo** e **l'elenco dei simboli consentiti**. Senza questi valori l'esecuzione non prepara nemmeno la prima gamba: fail-closed, nessun default in codice.

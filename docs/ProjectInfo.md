@@ -100,6 +100,31 @@
   - A refusal is journalled with its reason (`mode_requires_operator`, `gate_regressed`, a missing reason or an expired window), so the operator can always tell why an action was not accepted.
 - Consequences: The mode is a real constraint with an observable cost — one deliberate, audited mode change before a manual decision. In exchange, no delegation is silently revoked and no review becomes a permission by accident. The rule is pinned by table tests over the whole matrix and by a handler test that proves an approval is refused in Automatic.
 
+## ADR-0018 - Order execution behind the same transparent seam
+
+- Date: 2026-09-19
+- Status: Accepted
+- Context: The Execution Engine has to be built and verified before the cTrader application is approved, otherwise it stays unverifiable for weeks. The alternative, waiting, leaves the most dangerous code in the project (the one that sends orders) written only on paper. ADR-0015 already established how this is solved for market data: one seam, two implementations, and no part of the application knowing which one is in force.
+- Decision:
+  - `IExecutionGateway` exposes the two operations the engine actually needs: send one leg with its `clientOrderId`, and read the current state of an order for reconciliation.
+  - Two implementations live behind it: the simulated gateway now and the cTrader gateway when the application is approved. The simulated one is deterministic and profile driven — it accepts, rejects, partially fills, never answers (to exercise the timeout) and repeats an event (to exercise dedup).
+  - The same boundary as ADR-0015 holds: no contract, no decision, no journal payload and no screen carries a marker of which implementation is active. Where the outcomes come from is an operational fact, answered by configuration.
+  - The gateway never writes transactional state: persistence belongs to the handler and happens before the send.
+  - What the simulation does **not** replace: reconciliation against a real account. Every rule that needs the real broker (dedup of true broker identities, reconnect without duplicates, deal reconstruction) stays unverified until the application is approved, and no claim is made about it.
+- Consequences: The engine, its state machine, idempotency, sequencing, timeout handling and compensation become buildable and verifiable now, with the simulated gateway as the only thing to delete later. In exchange, the project must be explicit that reconciliation is verified only in its logic, not against the real provider, and the promotion gate keeps that distinction visible.
+
+## ADR-0019 - Compensation is an explicit operator action, never a rollback
+
+- Date: 2026-09-19
+- Status: Accepted
+- Context: A basket that is only partially executed leaves real exposure. The tempting shortcut is to treat compensation as an atomic rollback of the executed legs, but no broker offers atomicity across sequential orders, and a silent closure would be a trading decision taken by the implementation instead of the operator.
+- Decision:
+  - Compensation is a **new sequence of orders** with its own execution, its own `clientOrderId` values and its own audit trail. The original execution is never rewritten.
+  - It is always confirmed by the operator, in every mode including Automatic: it touches real exposure and is not a delegable decision.
+  - A violated policy puts the execution in `CompensationRequired` and leaves it visible with its real coverage; the system never closes positions on its own, not even to "fix" a partial fill.
+  - If compensation is not confirmed, the residual exposure stays visible as a degraded state instead of disappearing from the operator's view.
+- Consequences: The residual exposure of a partial execution is an explicit, auditable state rather than a hidden invariant, and the kill switch keeps its meaning (it blocks new openings and never closes what exists). The cost is an operator action on the critical path, which is the intended trade for the most dangerous operation in the system.
+
 ## ADR-0007 - Freeze the prototype and create production projects from scratch
 
 - Date: 2026-09-18

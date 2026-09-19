@@ -421,5 +421,59 @@ I percorsi `Pass` e `Review` dipendono dai valori di mercato e dal rischio dichi
 | Concorrenza fra ciclo e API su SQLite | Transazioni brevi e WAL, nessun lock trattenuto fra cicli |
 | TTL e intervallo non decisi | Il ciclo non parte senza valori configurati: fail-closed, nessun default in codice |
 | Un `Review` che diventa `Pass` senza nuova valutazione | La decisione rivaluta il gate e respinge se il verdetto e peggiorato |
+
+## Appendice C - Execution Engine: contratti, dati e seam degli ordini
+
+Superficie dello Slice 5. Copre AC-09..AC-12 con lo stesso principio dello Slice 4: il codice applicativo non sa da chi arrivano gli esiti, e la sorgente reale si innesta senza toccare nulla sopra la seam.
+
+### C.1 Contratti (Core)
+
+| Tipo | Contenuto |
+| --- | --- |
+| `ExecutionStatus` | `Pending`, `Dispatching`, `AwaitingBroker`, `ReconciliationRequired`, `CompensationRequired`, `Compensating`, `CompletedNominal`, `CompletedPartial`, `Blocked`, `Failed` |
+| `ExecutionLegStatus` | `Pending`, `Dispatched`, `Accepted`, `PartiallyFilled`, `Filled`, `Rejected`, `TimedOut`, `ReconciliationRequired`, `Compensated` |
+| `ExecutionOutcome` | `Applied`, `NotFound`, `NotAuthorized`, `AlreadyExecuted`, `NotConfigured`, `Blocked`, `Conflict` |
+
+Comandi (`Command/Execution`): `StartExecution` (da una proposta approvata), `ConfirmCompensation`, `CancelExecution`? Non previsto: un'esecuzione non si annulla, si compensa o si lascia in riconciliazione. Validazioni: `ValidateExecutionStartable`, `ValidateCompensationConfirmable`.
+
+Query (`Query/Execution`): `GetExecutionQueue`, `GetExecutionDetail`.
+
+DTO: `ExecutionSummaryDto`, `ExecutionDetailDto`, `ExecutionLegDto`, `ExecutionEventDto`, `ExecutionStartResultDto`.
+
+API: `GET /api/execution/executions`, `GET /api/execution/executions/{id}`, `POST /api/execution/proposals/{proposalId}/start`, `POST /api/execution/executions/{id}/compensate`.
+
+### C.2 Modello dati
+
+- `Execution` (`Id`, `ProposalId` unico, `BasketVersionId`, `SnapshotId`, `Status`, `FailurePolicy`, `MinimumCoverage`, `Coverage`, `CreatedAtUtc`, `StartedAtUtc`, `CompletedAtUtc`, `CompensationOfExecutionId`).
+- `ExecutionLeg` (`Id`, `ExecutionId`, `Ordinal`, `Symbol`, `Market`, `Direction`, `VolumeUnits`, `ClientOrderId` unico, `Status`, `BrokerOrderId`, `FilledVolumeUnits`, `AveragePrice`, `LastEventAtUtc`, `ErrorCode`).
+- `BrokerEvent` (`Id`, `ExecutionId`, `LegId`, `BrokerEventId` unico quando presente, `Kind`, `Payload`, `ReceivedAtUtc`): la deduplica di AC-11/AC-12 vive qui, e un evento gia visto non viene applicato due volte.
+- Indici: `ProposalId` unico su `Execution`, `ClientOrderId` unico su `ExecutionLeg`, `BrokerEventId` unico su `BrokerEvent`, `(Status, CreatedAtUtc)` per la coda.
+- Migrazione EF dedicata.
+
+### C.3 Seam degli ordini
+
+- `IExecutionGateway` espone quello che l'Execution Engine usa davvero: invio di una gamba con il suo `clientOrderId`, e lettura dello stato di un ordine per la riconciliazione.
+- Dietro la seam stanno `SimulatedExecutionGateway` (ora) e il gateway cTrader (quando l'applicazione sara approvata). Vale lo stesso confine dell'ADR-0015: **nessun contratto, nessuna decisione, nessun payload e nessuna schermata sa quale dei due e attivo**; la sorgente si sceglie da configurazione e si butta quando arriva quella reale.
+- Il gateway simulato e deterministico e pilotato da profili: accetta, rifiuta, riempie parzialmente, non risponde mai (per esercitare il timeout) e risponde con un evento duplicato (per esercitare la deduplica), in base al simbolo e a una sequenza configurata.
+- Nessuna scrittura di stato transazionale nel gateway: la persistenza e dell'handler, prima dell'invio.
+
+### C.4 Persist-first e idempotenza
+
+1. L'handler crea `Execution` e le sue gambe con `clientOrderId` e stato `Pending`, e le salva.
+2. Solo dopo comincia l'invio, una gamba alla volta nell'ordine congelato.
+3. Ogni evento broker viene registrato in `BrokerEvent` con il proprio identificativo: se l'identificativo esiste gia, l'evento viene scartato come duplicato e non muove lo stato.
+4. Un timeout porta la gamba a `TimedOut` e l'esecuzione a `ReconciliationRequired`; il ciclo successivo chiede lo stato dell'ordine al gateway e solo allora decide se il fill e avvenuto.
+5. Al riavvio, le esecuzioni non terminali vengono riprese in riconciliazione, mai reinviate.
+
+### C.5 Configurazione e gate di sicurezza
+
+- `Trading:Execution:AllowedSymbols` (elenco), `Trading:Execution:MinimumVolumeUnits`, `Trading:Execution:VolumeStepUnits`, `Trading:Execution:DefaultVolumeUnitsPerSymbol`.
+- Senza simboli consentiti e senza volume minimo l'esecuzione non parte: validation fallita con `NotConfigured`, nessun invio parziale e nessun default nel codice.
+- Il volume resta una decisione di configurazione in questo slice: la formula di sizing richiede stop e conversione valutaria, che non esistono ancora, e inventarla ora significherebbe fissare una regola di rischio senza approvazione.
+- La compensazione e sempre un ordine nuovo con un nuovo `clientOrderId`: mai il riuso di quello originale.
+
+### C.6 Client
+
+Vista `execution` con: coda delle esecuzioni (stato, copertura, gambe riempite, esito), dettaglio con la sequenza delle gambe e la cronologia degli eventi broker, e il comando di compensazione con conferma esplicita e motivazione. Nessuna schermata mostra un'attesa come se fosse un successo: `ReconciliationRequired` e uno stato visibile, non un caricamento.
 - .NET support policy: https://dotnet.microsoft.com/platform/support/policy
 - SQLite WAL: https://sqlite.org/wal.html
