@@ -35,5 +35,11 @@ namespace AutoTrade.Trading.Handlers.Model
 
     /// <summary>Stop distance of the leg in pips, frozen with the version.</summary>
     public double StopDistancePips { get; set; }
+
+    /// <summary>Widest spread tolerated on this leg, in pips, frozen with the version.</summary>
+    public double MaxSpreadPips { get; set; }
+
+    /// <summary>Highest volatility tolerated on this leg, as a percentage, frozen with the version.</summary>
+    public double MaxVolatilityPercent { get; set; }
   }
 }

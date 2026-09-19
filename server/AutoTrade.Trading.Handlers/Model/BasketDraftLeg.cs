@@ -31,6 +31,12 @@ namespace AutoTrade.Trading.Handlers.Model
     /// <summary>Stop distance of the leg in pips, decided with the leg and published with the version.</summary>
     public double StopDistancePips { get; set; }
 
+    /// <summary>Widest spread tolerated on this leg, in pips. Zero means not decided yet.</summary>
+    public double MaxSpreadPips { get; set; }
+
+    /// <summary>Highest volatility tolerated on this leg, as a percentage. Zero means not decided yet.</summary>
+    public double MaxVolatilityPercent { get; set; }
+
     public bool IsSelected { get; set; }
   }
 }

@@ -120,6 +120,38 @@
       </template>
     </el-table-column>
 
+    <el-table-column :label="t('basket.maxSpread')" width="152">
+      <template #default="scope">
+        <el-input-number
+          :model-value="scope.row.maxSpreadPips"
+          :disabled="disabled"
+          :min="0"
+          :max="100000"
+          :step="0.5"
+          :precision="1"
+          size="small"
+          controls-position="right"
+          @update:model-value="patchLeg(scope.$index, { maxSpreadPips: Number($event) })"
+        />
+      </template>
+    </el-table-column>
+
+    <el-table-column :label="t('basket.maxVolatility')" width="152">
+      <template #default="scope">
+        <el-input-number
+          :model-value="scope.row.maxVolatilityPercent"
+          :disabled="disabled"
+          :min="0"
+          :max="100"
+          :step="0.05"
+          :precision="2"
+          size="small"
+          controls-position="right"
+          @update:model-value="patchLeg(scope.$index, { maxVolatilityPercent: Number($event) })"
+        />
+      </template>
+    </el-table-column>
+
     <el-table-column width="96" align="right">
       <template #default="scope">
         <el-button

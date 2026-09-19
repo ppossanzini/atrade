@@ -64,7 +64,9 @@ namespace AutoTrade.Trading.Handlers.Risk
             // executable leg, it is a leg that reduces coverage.
             IsExecutable = quote != null && quote.IsTradable,
             SpreadPips = quote != null ? quote.SpreadPips : null,
-            VolatilityPercent = quote != null ? quote.VolatilityPercent : null
+            VolatilityPercent = quote != null ? quote.VolatilityPercent : null,
+            SpreadLimit = Limit(leg.MaxSpreadPips),
+            VolatilityLimit = Limit(leg.MaxVolatilityPercent)
           });
         }
 
@@ -94,11 +96,22 @@ namespace AutoTrade.Trading.Handlers.Risk
           Weight = leg.Weight,
           IsExecutable = false,
           SpreadPips = null,
-          VolatilityPercent = null
+          VolatilityPercent = null,
+          SpreadLimit = Limit(leg.MaxSpreadPips),
+          VolatilityLimit = Limit(leg.MaxVolatilityPercent)
         });
       }
 
       return legs;
+    }
+
+    /// <summary>
+    /// Zero is how a leg says "not decided", because a limit of zero would tolerate nothing at all. It
+    /// becomes null so the engine refuses the leg instead of judging it against nothing.
+    /// </summary>
+    private static double? Limit(double value)
+    {
+      return value > 0 ? value : null;
     }
 
     private static SymbolCapture FindSymbol(MarketDataCapture capture, string symbol)

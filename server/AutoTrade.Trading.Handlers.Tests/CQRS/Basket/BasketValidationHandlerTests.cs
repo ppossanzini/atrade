@@ -28,7 +28,9 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.Basket
       bool isSelected = true,
       LegDirection direction = LegDirection.Long,
       MarketKind market = MarketKind.Fx,
-      TimeFrame timeFrame = TimeFrame.H1)
+      TimeFrame timeFrame = TimeFrame.H1,
+      double maxSpreadPips = 0,
+      double maxVolatilityPercent = 0)
     {
       return new BasketCompositionLegDto
       {
@@ -38,6 +40,8 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.Basket
         TimeFrame = timeFrame,
         Weight = weight,
         RiskCap = riskCap,
+        MaxSpreadPips = maxSpreadPips,
+        MaxVolatilityPercent = maxVolatilityPercent,
         IsSelected = isSelected
       };
     }
@@ -327,6 +331,50 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.Basket
         Legs = new List<BasketCompositionLegDto>
         {
           CreateLeg("EURUSD", 100, riskCap)
+        }
+      }, CancellationToken.None);
+
+      Assert.True(result);
+    }
+
+    [Theory]
+    [InlineData(-1.0, 0.0)]
+    [InlineData(100000.01, 0.0)]
+    [InlineData(0.0, -1.0)]
+    [InlineData(0.0, 100.01)]
+    public async Task ValidateBasketCompositionSymbols_RejectsLegLimitsThatCannotMeanAnything(
+      double maxSpreadPips,
+      double maxVolatilityPercent)
+    {
+      using TradingTestContext context = CreateContext();
+
+      bool result = await context.Hikyaku.Send(new ValidateBasketCompositionSymbols
+      {
+        Legs = new List<BasketCompositionLegDto>
+        {
+          CreateLeg("EURUSD", 100, 1.0, maxSpreadPips: maxSpreadPips, maxVolatilityPercent: maxVolatilityPercent)
+        }
+      }, CancellationToken.None);
+
+      Assert.False(result);
+    }
+
+    [Theory]
+    [InlineData(0.0, 0.0)]
+    [InlineData(1.5, 0.35)]
+    [InlineData(100000.0, 100.0)]
+    public async Task ValidateBasketCompositionSymbols_AcceptsLegLimitsIncludingNotDecided
+      (double maxSpreadPips, double maxVolatilityPercent)
+    {
+      using TradingTestContext context = CreateContext();
+
+      // Zero means the operator has not decided the limit yet: the composition is still valid, and the
+      // refusal belongs to the risk gate that blocks that leg.
+      bool result = await context.Hikyaku.Send(new ValidateBasketCompositionSymbols
+      {
+        Legs = new List<BasketCompositionLegDto>
+        {
+          CreateLeg("EURUSD", 100, 1.0, maxSpreadPips: maxSpreadPips, maxVolatilityPercent: maxVolatilityPercent)
         }
       }, CancellationToken.None);
 

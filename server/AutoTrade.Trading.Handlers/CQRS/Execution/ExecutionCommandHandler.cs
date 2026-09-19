@@ -28,7 +28,6 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
   /// </summary>
   public class ExecutionCommandHandler(
     DB db,
-    IHikyaku hikyaku,
     IMarketDataSource marketDataSource,
     IExecutionGateway executionGateway,
     ExecutionOptions executionOptions,

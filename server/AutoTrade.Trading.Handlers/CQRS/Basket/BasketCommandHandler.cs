@@ -39,6 +39,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
     private const double MinRiskCap = 0.05;
     private const double MaxRiskCap = 5.0;
     private const double MaxStopDistancePips = 100000.0;
+    private const double MaxLegSpreadPips = 100000.0;
+    private const double MaxLegVolatilityPercent = 100.0;
 
     /// <summary>
     /// A leg may exist without a stop distance while the operator is still composing the basket: the refusal
@@ -48,6 +50,15 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
     private static bool IsStopDistanceUsable(double stopDistancePips)
     {
       return stopDistancePips >= 0 && stopDistancePips <= MaxStopDistancePips;
+    }
+
+    /// <summary>
+    /// A leg may also exist without its limits decided: the refusal belongs to the risk gate, which blocks
+    /// that leg, not to the draft. Only a value that cannot mean anything is rejected here.
+    /// </summary>
+    private static bool IsLegLimitUsable(double limit, double maximum)
+    {
+      return limit >= 0 && limit <= maximum;
     }
     private const int MinCoveragePercent = 50;
     private const int MaxCoveragePercent = 100;
@@ -166,6 +177,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
           Weight = sourceLeg.Weight,
           RiskCap = sourceLeg.RiskCap,
           StopDistancePips = sourceLeg.StopDistancePips,
+          MaxSpreadPips = sourceLeg.MaxSpreadPips,
+          MaxVolatilityPercent = sourceLeg.MaxVolatilityPercent,
           IsSelected = sourceLeg.IsSelected
         });
       }
@@ -288,6 +301,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
           Weight = leg.Weight,
           RiskCap = leg.RiskCap,
           StopDistancePips = leg.StopDistancePips,
+          MaxSpreadPips = leg.MaxSpreadPips,
+          MaxVolatilityPercent = leg.MaxVolatilityPercent,
           IsSelected = leg.IsSelected
         });
       }
@@ -448,7 +463,9 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
         && leg.Symbol.Trim().Length <= MaxSymbolLength
         && leg.RiskCap >= MinRiskCap
         && leg.RiskCap <= MaxRiskCap
-        && IsStopDistanceUsable(leg.StopDistancePips));
+        && IsStopDistanceUsable(leg.StopDistancePips)
+        && IsLegLimitUsable(leg.MaxSpreadPips, MaxLegSpreadPips)
+        && IsLegLimitUsable(leg.MaxVolatilityPercent, MaxLegVolatilityPercent));
 
       if (!everySymbolUsable)
       {

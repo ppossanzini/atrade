@@ -90,6 +90,12 @@ declare namespace server {
     riskCap: number
     /** Stop distance of the leg in pips: a decision about this instrument inside this basket. */
     stopDistancePips: number
+    /**
+     * Widest spread tolerated on this leg, in pips, and highest volatility tolerated, as a percentage.
+     * Zero means the operator has not decided yet, and the risk gate blocks that leg until it is decided.
+     */
+    maxSpreadPips: number
+    maxVolatilityPercent: number
     isSelected: boolean
   }
 
@@ -185,17 +191,9 @@ declare namespace server {
     gates: RiskGateResult[]
   }
 
-  interface MarketRiskLimits {
-    market: MarketKind
-    legSpreadMaxPips: number | null
-    legVolatilityMaxPercent: number | null
-    isConfigured: boolean
-  }
-
   interface RiskLimits {
     snapshotMaxAgeSeconds: number | null
-    markets: MarketRiskLimits[]
-    isFullyConfigured: boolean
+    isConfigured: boolean
   }
 
   type ProposalAction = 'Entry' | 'Reduce' | 'Exit'
@@ -232,6 +230,9 @@ declare namespace server {
     weight: number
     riskCap: number
     stopDistancePips: number
+    /** Spread and volatility limits frozen with the version. Zero means not decided. */
+    maxSpreadPips: number
+    maxVolatilityPercent: number
   }
 
   interface ProposalDetail extends ProposalSummary {
@@ -251,5 +252,105 @@ declare namespace server {
     outcome: ProposalDecisionOutcome
     status: ProposalStatus
     decidedAtUtc: IsoDateTime
+  }
+
+  type ExecutionStatus =
+    | 'Pending'
+    | 'Dispatching'
+    | 'AwaitingBroker'
+    | 'ReconciliationRequired'
+    | 'CompensationRequired'
+    | 'Compensating'
+    | 'CompletedNominal'
+    | 'CompletedPartial'
+    | 'Blocked'
+    | 'Failed'
+
+  type ExecutionLegStatus =
+    | 'Pending'
+    | 'Dispatched'
+    | 'Accepted'
+    | 'PartiallyFilled'
+    | 'Filled'
+    | 'Rejected'
+    | 'TimedOut'
+    | 'ReconciliationRequired'
+    | 'Compensated'
+
+  type ExecutionOutcome =
+    | 'Applied'
+    | 'NotFound'
+    | 'NotAuthorized'
+    | 'AlreadyExecuted'
+    | 'NotConfigured'
+    | 'Blocked'
+    | 'Conflict'
+
+  type ExecutionEventKind =
+    | 'Unknown'
+    | 'OrderAccepted'
+    | 'OrderRejected'
+    | 'OrderPartiallyFilled'
+    | 'OrderFilled'
+    | 'OrderCancelled'
+
+  /**
+   * One row of the execution queue. Coverage is measured by the server from the volumes really filled, and
+   * the compensation need is read, never inferred from the status alone.
+   */
+  interface ExecutionSummary {
+    executionId: string
+    proposalId: string | null
+    basketId: string
+    basketName: string
+    versionNumber: number
+    status: ExecutionStatus
+    failurePolicy: FailurePolicy
+    minimumCoverage: number
+    coverage: number
+    legCount: number
+    filledLegCount: number
+    createdAtUtc: IsoDateTime
+    completedAtUtc: IsoDateTime | null
+    needsCompensation: boolean
+  }
+
+  interface ExecutionLeg {
+    legId: string
+    ordinal: number
+    symbol: string
+    market: MarketKind
+    direction: LegDirection
+    volumeUnits: number
+    filledVolumeUnits: number
+    clientOrderId: string | null
+    brokerOrderId: string | null
+    status: ExecutionLegStatus
+    averagePrice: number | null
+    errorCode: string | null
+    lastEventAtUtc: IsoDateTime | null
+  }
+
+  interface ExecutionEvent {
+    brokerEventId: string
+    kind: ExecutionEventKind
+    symbol: string | null
+    payload: string | null
+    receivedAtUtc: IsoDateTime
+  }
+
+  interface ExecutionDetail extends ExecutionSummary {
+    snapshotId: string | null
+    compensationOfExecutionId: string | null
+    startedAtUtc: IsoDateTime | null
+    legs: ExecutionLeg[]
+    events: ExecutionEvent[]
+  }
+
+  interface ExecutionStartResult {
+    executionId: string
+    outcome: ExecutionOutcome
+    status: ExecutionStatus
+    reason: string | null
   }
 }

@@ -413,6 +413,10 @@ namespace AutoTrade.Trading.Handlers.Tests.Execution
       Assert.Equal(1, row.FilledLegCount);
       Assert.True(row.Coverage is > 0 and < 100);
 
+      // The queue carries the correlation, so an operator reading the list can reach the proposal behind the
+      // exposure without opening the detail first.
+      Assert.Equal(proposalId, row.ProposalId);
+
       ExecutionDetailDto detail = await context.Hikyaku.Send(new GetExecutionDetail { ExecutionId = original.ExecutionId }, CancellationToken.None);
 
       Assert.Equal(2, detail.Legs.Count);

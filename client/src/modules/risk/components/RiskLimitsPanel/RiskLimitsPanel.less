@@ -1,16 +1,7 @@
-// One block per market, separated by a rule so the three sets of thresholds stay distinguishable
-// without turning configuration data into a table.
-.risk-limits-panel__market {
-  margin-top: var(--at-space-md);
-  padding-top: var(--at-space-xs);
-  border-top: 1px solid var(--at-border-subtle);
-}
-
-.risk-limits-panel__market .panel-header {
-  margin-bottom: 0;
-}
-
-.risk-limits-panel__market-name {
-  font-size: 13px;
-  font-weight: 600;
+// The leg limits moved onto the leg, so the panel no longer renders them: this note says where they are
+// read and edited, instead of leaving an operator wondering why they disappeared.
+.risk-limits-panel__note {
+  margin: var(--at-space-sm) 0 0;
+  font-size: 12px;
+  color: var(--at-text-muted);
 }

@@ -199,6 +199,11 @@ export default defineComponent({
           // A new leg starts without a stop distance: the sizing refuses to size it until the operator
           // decides how far the leg may run against us.
           stopDistancePips: 0,
+
+          // The limits start undecided too: the risk gate blocks the leg until the operator decides what
+          // spread and volatility are acceptable for this instrument.
+          maxSpreadPips: 0,
+          maxVolatilityPercent: 0,
           isSelected: false,
         },
       ]

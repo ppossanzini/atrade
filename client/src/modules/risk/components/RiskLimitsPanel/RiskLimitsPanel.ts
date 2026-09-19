@@ -1,10 +1,13 @@
-import { computed, defineComponent, type PropType } from 'vue'
+import { defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 /**
- * Presents the risk thresholds actually in force, one block per market. A null threshold is rendered
- * as not configured and never as a default: the engine blocks on an unconfigured limit, so hiding the
- * gap would make a blocking verdict unexplainable from the UI.
+ * Presents the risk settings that still live in deployment configuration: the snapshot validity window.
+ * The leg limits are not shown here because they no longer belong to the deployment: they travel with the
+ * leg, so they are read and edited in the basket, where the decision was taken.
+ *
+ * A null window is rendered as not configured and never as a default: the engine blocks on it, so hiding
+ * the gap would make a blocking verdict unexplainable from the UI.
  */
 export default defineComponent({
   name: 'RiskLimitsPanel',
@@ -18,14 +21,12 @@ export default defineComponent({
       default: false,
     },
   },
-  setup(props) {
+  setup() {
     const { t } = useI18n()
 
-    const markets = computed(() => props.limits?.markets ?? [])
-
     /**
-     * Renders a threshold with its unit. A missing threshold is reported as not configured, which is
-     * the actionable state, instead of an empty cell.
+     * Renders the window with its unit. A missing value is reported as not configured, which is the
+     * actionable state, instead of an empty cell.
      */
     function formatThreshold(value: number | null, unit: string): string {
       if (value === null || value === undefined) {
@@ -39,7 +40,6 @@ export default defineComponent({
 
     return {
       t,
-      markets,
       formatThreshold,
     }
   },

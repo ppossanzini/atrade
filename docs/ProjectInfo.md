@@ -222,7 +222,7 @@
 ## ADR-0013 - Per-market leg risk limits
 
 - Date: 2026-09-19
-- Status: Accepted
+- Status: Superseded by ADR-0021
 - Context: The Risk Engine needed leg thresholds (maximum spread, maximum volatility) and the open question was whether one global value per threshold was enough. It is not: a spread that is normal on an index makes a major FX pair untradeable, and a table of values spanning both either blocks healthy legs or admits unhealthy ones. The market of a leg already exists in the model (`BasketVersionLeg.Market`, `MarketKind`), so the differentiation needs no new concept.
 - Decision:
   - Leg thresholds are per market and are configured under `Trading:Risk:Markets:{Market}:LegSpreadMaxPips` and `Trading:Risk:Markets:{Market}:LegVolatilityMaxPercent`, where `{Market}` is the `MarketKind` name (`Fx`, `Metal`, `Index`).
@@ -261,3 +261,20 @@
   - The simulation does not implement the cTrader protocol or its transport: it is an in-process data source, not a fake server. Verifying the protocol client stays the job of the broker integration and is not claimed by this ADR.
 - Consequences: The whole risk and analysis surface becomes exercisable and demoable before the external approval. When the application is approved, the simulated source is deleted and only the implementation behind the seam changes: no contract, no handler and no screen has to be touched, because nothing above the seam ever knew the difference. In exchange, the swap must be remembered as the only step of the transition, and the `None` default plus the Live-account guard are what keep an unconfigured or misconfigured deployment from reporting a market nobody observed.
 
+
+## ADR-0021 - Leg risk limits belong to the leg
+
+- Date: 2026-09-19
+- Status: Accepted
+- Supersedes: ADR-0013
+- Context: The maximum spread and maximum volatility were configuration keys per market (`Trading:Risk:Markets:{Market}`). Two problems surfaced at verification time. First, the same engine kept half of its policy in the basket version (risk per basket, daily loss, minimum coverage, failure policy) and half in a deployment file, so changing a limit left no trace in the version history and none in the journal, while the other half was versioned and journalled. Second, the deployment file declared the market taxonomy, duplicating a classification the provider catalogue already owns. The rule confirmed by the operator: a value that shapes a decision about a leg belongs to the leg; configuration may only hold defaults or a simulator scenario.
+- Decision:
+  - `MaxSpreadPips` and `MaxVolatilityPercent` live on the leg and follow the stop-distance chain: `BasketCompositionLegDto` → `BasketDraftLeg` → `BasketVersionLeg` → `ProposalLeg`/`ProposalLegDto`.
+  - Zero means "not decided". The composition accepts it because the operator is still composing; `RiskInputFactory` turns it into an absent limit and `RiskEngine` blocks that leg with `RISK_THRESHOLD_NOT_CONFIGURED`. A leg never borrows a limit from another leg or from its market.
+  - `RiskCandidateLeg` and `RiskEvaluationLeg` carry the limits; `RiskEngine` no longer resolves any threshold from a market.
+  - `RiskThresholds` keeps only `SnapshotMaxAgeSeconds` and `IsConfigured`. The window describes the freshness of the feed, not a decision about a basket, so it stays a deployment property; if snapshots ever become per market, it follows them.
+  - `Trading:Risk:Markets` and the related `RiskConfigurationKeys` entries are removed. `appsettings.json` and `appsettings.Local.json` keep only `SnapshotMaxAgeSeconds`.
+  - `MarketRiskLimitsDto` is deleted; `RiskLimitsDto` becomes `SnapshotMaxAgeSeconds` + `IsConfigured`, which narrows the ADR-0014 bullet that described one entry per market.
+  - Accepted range: spread `0..100000` pips, volatility `0..100` %. Outside it the composition is rejected as a value that cannot mean anything.
+  - The `LegRiskLimits` migration adds the columns and carries the approved values onto the existing drafts, versions and proposals by market (Fx 1.5 / 0.35, Metal 40 / 0.8, Index 5 / 0.6), so no leg is judged differently before and after the deploy.
+- Consequences: changing a limit now requires publishing a version, which makes it versioned, journalled and visible in the proposal history like every other decision about a leg. Two legs of the same market can be judged by different limits, which is the point. The market taxonomy disappears from configuration. The `Soglie di verifica` panel shows only the snapshot window and states where the leg limits are decided, and the basket leg table carries the two new columns.

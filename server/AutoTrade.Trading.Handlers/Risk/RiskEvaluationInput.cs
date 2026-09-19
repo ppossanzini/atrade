@@ -12,7 +12,7 @@ namespace AutoTrade.Trading.Handlers.Risk
   {
     public string Symbol { get; set; }
 
-    /// <summary>Market the symbol belongs to. The leg limits are resolved from it, never assumed.</summary>
+    /// <summary>Market the symbol belongs to, for the readable gate row and for the record.</summary>
     public MarketKind Market { get; set; }
 
     public int Weight { get; set; }
@@ -20,6 +20,15 @@ namespace AutoTrade.Trading.Handlers.Risk
     public double? SpreadPips { get; set; }
 
     public double? VolatilityPercent { get; set; }
+
+    /// <summary>
+    /// Spread limit decided on this leg, in pips. Null when the leg carries no limit, which blocks: a leg
+    /// without a decision cannot be admitted by borrowing a limit from somewhere else.
+    /// </summary>
+    public double? SpreadLimit { get; set; }
+
+    /// <summary>Volatility limit decided on this leg, as a percentage. Null when not decided.</summary>
+    public double? VolatilityLimit { get; set; }
 
     /// <summary>
     /// Whether the leg can actually be prepared for execution. Coverage is computed from this flag, so a

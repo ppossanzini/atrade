@@ -22,6 +22,18 @@ namespace AutoTrade.Trading.Core.Dto
     /// </summary>
     public double StopDistancePips { get; set; }
 
+    /// <summary>
+    /// Widest spread tolerated on this leg, in pips. Zero means the operator has not decided it yet and the
+    /// corresponding gate blocks; the value belongs to the leg because what is normal on an index is
+    /// unusable on a major pair, and it is frozen into the version like every other leg property.
+    /// </summary>
+    public double MaxSpreadPips { get; set; }
+
+    /// <summary>
+    /// Highest volatility tolerated on this leg, as a percentage. Zero means not decided and blocks.
+    /// </summary>
+    public double MaxVolatilityPercent { get; set; }
+
     public bool IsSelected { get; set; }
   }
 }

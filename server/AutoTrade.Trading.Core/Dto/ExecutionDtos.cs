@@ -12,6 +12,12 @@ namespace AutoTrade.Trading.Core.Dto
   {
     public Guid ExecutionId { get; set; }
 
+    /// <summary>
+    /// The proposal this execution came from. Null for a compensation, which closes exposure nobody proposed
+    /// as a new order and therefore belongs to no proposal.
+    /// </summary>
+    public Guid? ProposalId { get; set; }
+
     public Guid BasketId { get; set; }
 
     public string BasketName { get; set; }
@@ -84,8 +90,6 @@ namespace AutoTrade.Trading.Core.Dto
 
   public class ExecutionDetailDto : ExecutionSummaryDto
   {
-    public Guid? ProposalId { get; set; }
-
     public Guid? SnapshotId { get; set; }
 
     public Guid? CompensationOfExecutionId { get; set; }

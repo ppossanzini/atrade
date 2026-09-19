@@ -7,15 +7,15 @@
 
       <el-tag
         v-if="limits"
-        :type="limits.isFullyConfigured ? 'success' : 'warning'"
+        :type="limits.isConfigured ? 'success' : 'warning'"
         size="small"
         effect="plain"
       >
-        {{ limits.isFullyConfigured ? t('risk.limitsComplete') : t('risk.limitsIncomplete') }}
+        {{ limits.isConfigured ? t('risk.configured') : t('risk.notConfigured') }}
       </el-tag>
     </div>
 
-    <el-skeleton v-if="isLoading && !limits" :rows="4" animated />
+    <el-skeleton v-if="isLoading && !limits" :rows="2" animated />
 
     <p v-else-if="!limits" class="panel-empty">{{ t('risk.limitsUnavailable') }}</p>
 
@@ -31,7 +31,7 @@
       </div>
 
       <el-alert
-        v-if="!limits.isFullyConfigured"
+        v-if="!limits.isConfigured"
         class="panel-alert"
         type="warning"
         :closable="false"
@@ -39,34 +39,7 @@
         :title="t('risk.limitsIncompleteHint')"
       />
 
-      <div v-for="market in markets" :key="market.market" class="risk-limits-panel__market">
-        <div class="panel-header">
-          <span class="risk-limits-panel__market-name">{{ t(`marketKind.${market.market}`) }}</span>
-          <el-tag :type="market.isConfigured ? 'success' : 'warning'" size="small" effect="plain">
-            {{ market.isConfigured ? t('risk.configured') : t('risk.notConfigured') }}
-          </el-tag>
-        </div>
-
-        <div class="metric-row">
-          <span class="metric-row__label">{{ t('risk.legSpreadMax') }}</span>
-          <span
-            class="metric-row__value"
-            :class="{ 'metric-row__value--muted': market.legSpreadMaxPips === null }"
-          >
-            {{ formatThreshold(market.legSpreadMaxPips, 'pips') }}
-          </span>
-        </div>
-
-        <div class="metric-row">
-          <span class="metric-row__label">{{ t('risk.legVolatilityMax') }}</span>
-          <span
-            class="metric-row__value"
-            :class="{ 'metric-row__value--muted': market.legVolatilityMaxPercent === null }"
-          >
-            {{ formatThreshold(market.legVolatilityMaxPercent, 'percent') }}
-          </span>
-        </div>
-      </div>
+      <p class="risk-limits-panel__note">{{ t('risk.legLimitsElsewhere') }}</p>
     </template>
   </div>
 </template>

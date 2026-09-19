@@ -4,6 +4,7 @@ import LoginView from '@/modules/auth/views/LoginView/LoginView.vue'
 import OperationalStatusView from '@/modules/operations/views/OperationalStatusView/OperationalStatusView.vue'
 import BasketBuilderView from '@/modules/basket/views/BasketBuilderView/BasketBuilderView.vue'
 import MarketManagerView from '@/modules/market/views/MarketManagerView/MarketManagerView.vue'
+import ExecutionView from '@/modules/execution/views/ExecutionView/ExecutionView.vue'
 import ComingSoonView from '@/modules/common/views/ComingSoonView/ComingSoonView.vue'
 import { useSessionStore } from '@/stores/session'
 
@@ -16,12 +17,6 @@ const pendingSections: RouteRecordRaw[] = [
     name: 'strategy',
     component: ComingSoonView,
     meta: { titleKey: 'navigation.strategy' },
-  },
-  {
-    path: 'execution',
-    name: 'execution',
-    component: ComingSoonView,
-    meta: { titleKey: 'navigation.execution' },
   },
   {
     path: 'history',
@@ -67,6 +62,12 @@ const routes: RouteRecordRaw[] = [
         name: 'market',
         component: MarketManagerView,
         meta: { titleKey: 'navigation.market' },
+      },
+      {
+        path: 'execution',
+        name: 'execution',
+        component: ExecutionView,
+        meta: { titleKey: 'navigation.execution' },
       },
       ...pendingSections,
     ],

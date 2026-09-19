@@ -11,7 +11,7 @@ Strategia: vertical slice demo-first
 | 1 - Sessione e stato operativo | Consegnata | login `200` / logout `204` / `401` dopo logout; kill switch persistito con operatore e motivo; 35 test |
 | 2 - Basket lifecycle | Consegnata | 143 test; flusso completo verificato via HTTP e in browser; snapshot immutabili verificati a DB; `InitialCreate` applicata |
 | 3 - Broker demo | Parziale, bloccata da fuori | codice completo e test verde; reachability TCP/wss e errore provider reali (`OA client is not in active state`); autenticazione, snapshot, riconciliazione e rinnovo token non verificabili finche l'app non e approvata |
-| 4 - Risk Engine | Consegnata (gate umano aperto) | 269 test; 12 codici gate con codice, valore osservato, soglia e timestamp; limiti per mercato (ADR-0013); pannelli Risk gate e Soglie di verifica in browser, incluso il ciclo kill switch ingaggiato/rilasciato riflesso nei gate |
+| 4 - Risk Engine | Consegnata (gate umano aperto) | 269 test; 12 codici gate con codice, valore osservato, soglia e timestamp; limiti di gamba sulla gamba (ADR-0021, sostituisce ADR-0013); pannelli Risk gate e Soglie di verifica in browser, incluso il ciclo kill switch ingaggiato/rilasciato riflesso nei gate |
 | 5 - Execution Engine | Non iniziata | richiede un conto demo autorizzato e la riconciliazione; la parte persist-first/idempotenza e costruibile prima (vedi nota di scope) |
 | 6 - Market Manager | Consegnata | 340 test; ciclo di analisi reale con proposte, snapshot persistito e 10 valutazioni di gate per proposta; matrice di instradamento a tabella; decisioni con rivalutazione del gate e rispetto della modalita (ADR-0017); vista operatore verificata in browser (coda, dettaglio, rifiuto con motivazione obbligatoria) |
 

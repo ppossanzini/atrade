@@ -23,7 +23,7 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
   {
     private static readonly DateTime Start = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
-    private static Dictionary<string, string> Settings(string mode = "Supervised", bool running = true, double spreadLimit = 1.5, double ttlSeconds = 300)
+    private static Dictionary<string, string> Settings(string mode = "Supervised", bool running = true, double ttlSeconds = 300)
     {
       return new Dictionary<string, string>
       {
@@ -43,20 +43,14 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
         { "Trading:MarketData:Simulated:Symbols:USDJPY:VolatilityPercent", "0.25" },
         { "Trading:MarketData:Simulated:Symbols:USDJPY:IsTradable", "false" },
         { "Trading:Risk:SnapshotMaxAgeSeconds", "60" },
-        { "Trading:Risk:Markets:Fx:LegSpreadMaxPips", spreadLimit.ToString(System.Globalization.CultureInfo.InvariantCulture) },
-        { "Trading:Risk:Markets:Fx:LegVolatilityMaxPercent", "0.35" },
-        { "Trading:Risk:Markets:Metal:LegSpreadMaxPips", "40" },
-        { "Trading:Risk:Markets:Metal:LegVolatilityMaxPercent", "0.8" },
-        { "Trading:Risk:Markets:Index:LegSpreadMaxPips", "5" },
-        { "Trading:Risk:Markets:Index:LegVolatilityMaxPercent", "0.6" },
         { "Trading:Market:CycleSeconds", "30" },
         { "Trading:Market:ProposalTtlSeconds", ttlSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture) }
       };
     }
 
-    private static TradingTestContext CreateContext(string mode = "Supervised", bool running = true, double spreadLimit = 1.5, double ttlSeconds = 300)
+    private static TradingTestContext CreateContext(string mode = "Supervised", bool running = true, double ttlSeconds = 300)
     {
-      TradingTestContext context = new TradingTestContext(Settings(mode, running, spreadLimit, ttlSeconds));
+      TradingTestContext context = new TradingTestContext(Settings(mode, running, ttlSeconds));
       context.Clock.Set(Start);
 
       return context;
@@ -72,7 +66,8 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
       string secondSymbol = "XAUUSD",
       MarketKind secondMarket = MarketKind.Metal,
       FailurePolicy failurePolicy = FailurePolicy.MinimumCoverage,
-      int minimumCoverage = 75)
+      int minimumCoverage = 75,
+      double legSpreadLimit = 1.5)
     {
       context.Db.KillSwitchStates.Add(new KillSwitchState { Id = 1, IsEngaged = false });
       context.Db.MarketManagerStates.Add(new MarketManagerState
@@ -118,7 +113,9 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
         Direction = LegDirection.Long,
         TimeFrame = TimeFrame.H1,
         Weight = 60,
-        RiskCap = 0.5
+        RiskCap = 0.5,
+        MaxSpreadPips = legSpreadLimit,
+        MaxVolatilityPercent = 0.35
       });
 
       context.Db.BasketVersionLegs.Add(new BasketVersionLeg
@@ -131,7 +128,9 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
         Direction = LegDirection.Short,
         TimeFrame = TimeFrame.M5,
         Weight = 40,
-        RiskCap = 0.3
+        RiskCap = 0.3,
+        MaxSpreadPips = 40,
+        MaxVolatilityPercent = 0.8
       });
 
       context.Db.ActiveBasketVersions.Add(new ActiveBasketVersion
@@ -247,8 +246,8 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
     [Fact]
     public async Task Cycle_WithABlockedGate_RecordsABlockedProposalThatNobodyCanDecide()
     {
-      using TradingTestContext context = CreateContext("Manual", spreadLimit: 0.49);
-      SeedActiveVersion(context, "Manual");
+      using TradingTestContext context = CreateContext("Manual");
+      SeedActiveVersion(context, "Manual", legSpreadLimit: 0.49);
 
       await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
 

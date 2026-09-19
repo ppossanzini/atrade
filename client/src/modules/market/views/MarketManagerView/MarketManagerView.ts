@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import ProposalQueue from '@/modules/market/components/ProposalQueue/ProposalQueue.vue'
 import RiskGatePanel from '@/modules/risk/components/RiskGatePanel/RiskGatePanel.vue'
 import { useBasketsStore } from '@/stores/baskets'
+import { useExecutionStore } from '@/stores/execution'
 import { useMarketStore, type ProposalDecisionKind } from '@/stores/market'
 
 type DecisionRequest = {
@@ -18,6 +19,7 @@ export default defineComponent({
     const { t } = useI18n()
     const marketStore = useMarketStore()
     const basketsStore = useBasketsStore()
+    const executionStore = useExecutionStore()
 
     const pendingDecision = ref<DecisionRequest | null>(null)
     const decisionReason = ref('')
@@ -35,7 +37,9 @@ export default defineComponent({
     const activeBasketLabel = computed(() => {
       const active = basketsStore.activeBasket
 
-      return active ? `${active.name} · v${active.activeVersionNumber}` : t('market.noActiveBasket')
+      return active
+        ? `${active.name} · v${active.activeVersionNumber}`
+        : t('market.noActiveBasket')
     })
 
     const lastCycleKey = computed(() =>
@@ -72,6 +76,18 @@ export default defineComponent({
       () => reasonIsRequired.value && decisionReason.value.trim().length === 0,
     )
 
+    /**
+     * Only an approved proposal can be executed, and only once. The already-executed half is read from the
+     * execution queue so the button does not invite a command the server would refuse; the server remains
+     * the authority on both conditions.
+     */
+    const canStartExecution = computed(
+      () =>
+        marketStore.detail !== null &&
+        marketStore.detail.status === 'Approved' &&
+        !executionStore.isProposalExecuted(marketStore.detail.proposalId),
+    )
+
     const decisionDialogTitle = computed(() =>
       pendingDecision.value
         ? t(`market.confirm.${pendingDecision.value.kind}`)
@@ -88,6 +104,7 @@ export default defineComponent({
 
     async function refresh(): Promise<void> {
       await basketsStore.loadRegistry()
+      await executionStore.load()
       await marketStore.load()
     }
 
@@ -134,11 +151,7 @@ export default defineComponent({
         return
       }
 
-      const outcome = await marketStore.decide(
-        pending.kind,
-        pending.proposalId,
-        decisionReason.value.trim(),
-      )
+      const outcome = await marketStore.decide(pending.kind, pending.proposalId, decisionReason.value.trim())
 
       reportOutcome(pending.kind, outcome)
       closeDecision()
@@ -150,6 +163,43 @@ export default defineComponent({
       } else {
         await marketStore.load()
       }
+    }
+
+    /**
+     * Starts the execution of the proposal in the drawer. The refusal reason travels back from the server, so
+     * a missing stop distance or an engaged kill switch is reported instead of a generic failure.
+     */
+    async function startExecution(): Promise<void> {
+      const pendingProposalId = marketStore.detail?.proposalId
+
+      if (!pendingProposalId) {
+        return
+      }
+
+      const outcome = await executionStore.start(pendingProposalId)
+
+      if (outcome === 'Applied') {
+        ElMessage.success(t('market.startExecutionDone'))
+        await refresh()
+
+        return
+      }
+
+      if (outcome === 'Refused') {
+        const reason = executionStore.lastRefusalReason
+
+        ElMessage.warning(reason ? t('market.startExecutionRefused') + ` (${reason})` : t('market.startExecutionRefused'))
+
+        return
+      }
+
+      if (outcome === 'NotFound') {
+        ElMessage.error(t('market.outcome.NotFound'))
+
+        return
+      }
+
+      ElMessage.error(t('market.startExecutionFailed'))
     }
 
     function reportOutcome(kind: ProposalDecisionKind, outcome: string): void {
@@ -204,6 +254,7 @@ export default defineComponent({
       t,
       marketStore,
       basketsStore,
+      executionStore,
       pendingDecision,
       decisionReason,
       modeOptions,
@@ -215,6 +266,7 @@ export default defineComponent({
       decisionForPanel,
       reasonIsRequired,
       confirmDisabled,
+      canStartExecution,
       decisionDialogTitle,
       decisionDialogBody,
       formatTimestamp,
@@ -226,6 +278,7 @@ export default defineComponent({
       closeDecision,
       confirmDecision,
       refreshDetail,
+      startExecution,
     }
   },
 })

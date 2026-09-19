@@ -221,6 +221,15 @@
             {{ t('market.reject') }}
           </el-button>
           <el-button
+            type="primary"
+            plain
+            :loading="executionStore.isSaving"
+            :disabled="!canStartExecution || executionStore.isSaving"
+            @click="startExecution"
+          >
+            {{ t('market.startExecution') }}
+          </el-button>
+          <el-button
             type="success"
             :disabled="!marketStore.detail.isDecidable || marketStore.isSaving"
             @click="requestDecision({ kind: 'approve', proposalId: marketStore.detail.proposalId })"

@@ -78,5 +78,11 @@ namespace AutoTrade.Trading.Handlers.Model
 
     /// <summary>Stop distance of the leg, copied from the version the proposal was built from.</summary>
     public double StopDistancePips { get; set; }
+
+    /// <summary>Spread limit of the leg, copied from the version the proposal was built from.</summary>
+    public double MaxSpreadPips { get; set; }
+
+    /// <summary>Volatility limit of the leg, copied from the version the proposal was built from.</summary>
+    public double MaxVolatilityPercent { get; set; }
   }
 }

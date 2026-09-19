@@ -54,6 +54,12 @@ namespace AutoTrade.Trading.Core.Dto
 
     /// <summary>Stop distance of the leg, as frozen in the version the proposal was built from.</summary>
     public double StopDistancePips { get; set; }
+
+    /// <summary>Spread limit of the leg, frozen with the version. Zero means not decided.</summary>
+    public double MaxSpreadPips { get; set; }
+
+    /// <summary>Volatility limit of the leg, frozen with the version. Zero means not decided.</summary>
+    public double MaxVolatilityPercent { get; set; }
   }
 
   /// <summary>

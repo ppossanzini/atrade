@@ -87,6 +87,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
       ExecutionDetailDto detail = new ExecutionDetailDto
       {
         ExecutionId = summary.ExecutionId,
+        ProposalId = summary.ProposalId,
         BasketId = summary.BasketId,
         BasketName = summary.BasketName,
         VersionNumber = summary.VersionNumber,
@@ -99,7 +100,6 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
         CreatedAtUtc = summary.CreatedAtUtc,
         CompletedAtUtc = summary.CompletedAtUtc,
         NeedsCompensation = summary.NeedsCompensation,
-        ProposalId = execution.ProposalId,
         SnapshotId = execution.SnapshotId,
         CompensationOfExecutionId = execution.CompensationOfExecutionId,
         StartedAtUtc = execution.StartedAtUtc,
@@ -156,6 +156,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Execution
       return new ExecutionSummaryDto
       {
         ExecutionId = execution.Id,
+        ProposalId = execution.ProposalId,
         BasketId = execution.BasketId,
         BasketName = basketName,
         VersionNumber = execution.VersionNumber,

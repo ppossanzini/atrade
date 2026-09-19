@@ -336,15 +336,14 @@ Verdetto della decisione: `Block` se almeno un gate blocca, altrimenti `Review` 
 | `RISK_COVERAGE_BELOW_MINIMUM` | copertura eseguibile delle gambe selezionate | `MinimumCoverage` (%) | policy del paniere (approvata) | Block o Review secondo `FailurePolicy` |
 | `RISK_RISK_PER_BASKET_EXCEEDED` | rischio aggregato del paniere | `RiskPerBasket` (%) | policy del paniere (approvata) | Block |
 | `RISK_DAILY_LOSS_EXCEEDED` | perdita giornaliera realizzata piu aperta | `DailyLossLimit` (%) | policy del paniere (approvata) | Block |
-| `RISK_LEG_SPREAD_EXCEEDED` | spread per gamba | `Trading:Risk:Markets:{Market}:LegSpreadMaxPips` | configurazione, **da decidere per mercato** | Block sulla gamba |
-| `RISK_LEG_VOLATILITY_EXCEEDED` | volatilita per gamba | `Trading:Risk:Markets:{Market}:LegVolatilityMaxPercent` | configurazione, **da decidere per mercato** | Block sulla gamba |
+| `RISK_LEG_SPREAD_EXCEEDED` | spread per gamba | `MaxSpreadPips` (pip) | gamba della versione (draft → versione) | Block sulla gamba |
+| `RISK_LEG_VOLATILITY_EXCEEDED` | volatilita per gamba | `MaxVolatilityPercent` (%) | gamba della versione (draft → versione) | Block sulla gamba |
 | `RISK_LEG_DATA_MISSING` | dato di mercato per gamba mancante | - | - | Block |
+| `RISK_THRESHOLD_NOT_CONFIGURED` | soglia di gamba non decisa | `MaxSpreadPips` o `MaxVolatilityPercent` a zero | gamba della versione | Block sulla gamba |
 
-`{Market}` e il valore di `MarketKind` della gamba (`Fx`, `Metal`, `Index`), lo stesso enum persistito su `BasketVersionLeg.Market` e mostrato al momento della composizione: la soglia applicata a una gamba e quella del suo mercato, mai quella di un altro.
+Le soglie di gamba appartengono alla gamba (ADR-0021): `MaxSpreadPips` e `MaxVolatilityPercent` percorrono la stessa catena della stop distance (`BasketCompositionLegDto` → `BasketDraftLeg` → `BasketVersionLeg` → `ProposalLeg`) e vengono congelate nella versione, quindi una loro modifica richiede pubblicare una versione ed e tracciata nel journal. La soglia applicata a una gamba e quella di quella gamba, mai quella di un'altra gamba o del suo mercato. Zero significa **non deciso**: la composizione lo accetta, la factory lo traduce in assenza di limite e il gate `RISK_THRESHOLD_NOT_CONFIGURED` blocca la gamba. Il valore osservato e il limite applicato sono riportati su ogni gate, quindi l'operatore vede sempre quale numero e stato usato.
 
-Soglie per mercato: le soglie di gamba sono differenziate per mercato (ADR-0013). La finestra di validita dello snapshot resta **globale**, perche una versione porta un solo snapshot: se in futuro lo snapshot diventera per mercato, anche questa soglia lo diventera. In ogni caso il valore osservato e il limite applicato sono riportati su ogni gate, quindi l'operatore vede sempre quale numero e stato usato.
-
-Per ogni mercato del catalogo il Risk Engine richiede **entrambe** le soglie di gamba. Un mercato non configurato, o configurato a meta, non prende in prestito la soglia di un altro mercato: le gambe di quel mercato bloccano con `RISK_THRESHOLD_NOT_CONFIGURED` e il gate porta il mercato a cui si riferisce. `IsFullyConfigured` di `GET /api/risk/limits` e vero solo quando la finestra dello snapshot e tutte le soglie di tutti i mercati del catalogo sono configurate, anche quelli non usati dal paniere attivo.
+La finestra di validita dello snapshot resta invece **globale** in `Trading:Risk:SnapshotMaxAgeSeconds`: descrive la freschezza del feed e non una decisione su una gamba o su un paniere. Se in futuro lo snapshot diventera per mercato, anche questa soglia lo diventera. `GET /api/risk/limits` riporta solo `snapshotMaxAgeSeconds` e `isConfigured`.
 
 Traduzione della policy di esecuzione incompleta gia approvata in verdetto:
 

@@ -182,7 +182,9 @@ namespace AutoTrade.Trading.Handlers.Market
             Symbol = leg.Symbol,
             Market = leg.Market,
             Weight = leg.Weight,
-            RiskCap = leg.RiskCap
+            RiskCap = leg.RiskCap,
+            MaxSpreadPips = leg.MaxSpreadPips,
+            MaxVolatilityPercent = leg.MaxVolatilityPercent
           });
         }
       }

@@ -26,13 +26,7 @@ namespace AutoTrade.Trading.Handlers.Tests.Risk
     {
       return new RiskThresholds
       {
-        SnapshotMaxAgeSeconds = 60,
-        Markets = new Dictionary<MarketKind, MarketLegLimits>
-        {
-          { MarketKind.Fx, new MarketLegLimits { LegSpreadMaxPips = 2.0, LegVolatilityMaxPercent = 15.0 } },
-          { MarketKind.Metal, new MarketLegLimits { LegSpreadMaxPips = 4.0, LegVolatilityMaxPercent = 25.0 } },
-          { MarketKind.Index, new MarketLegLimits { LegSpreadMaxPips = 3.0, LegVolatilityMaxPercent = 20.0 } }
-        }
+        SnapshotMaxAgeSeconds = 60
       };
     }
 
@@ -53,8 +47,8 @@ namespace AutoTrade.Trading.Handlers.Tests.Risk
         DailyLossPercent = 0.5,
         Legs = new List<RiskEvaluationLeg>
         {
-          new RiskEvaluationLeg { Symbol = "EURUSD", Market = MarketKind.Fx, Weight = 60, SpreadPips = 0.8, VolatilityPercent = 7.0, IsExecutable = true },
-          new RiskEvaluationLeg { Symbol = "XAUUSD", Market = MarketKind.Metal, Weight = 40, SpreadPips = 1.5, VolatilityPercent = 12.0, IsExecutable = true }
+          new RiskEvaluationLeg { Symbol = "EURUSD", Market = MarketKind.Fx, Weight = 60, SpreadPips = 0.8, VolatilityPercent = 7.0, SpreadLimit = 2.0, VolatilityLimit = 15.0, IsExecutable = true },
+          new RiskEvaluationLeg { Symbol = "XAUUSD", Market = MarketKind.Metal, Weight = 40, SpreadPips = 1.5, VolatilityPercent = 12.0, SpreadLimit = 4.0, VolatilityLimit = 25.0, IsExecutable = true }
         }
       };
     }
@@ -328,20 +322,41 @@ namespace AutoTrade.Trading.Handlers.Tests.Risk
     }
 
     [Fact]
-    public void LegLimits_WhenTheMarketIsNotConfigured_BlockOnlyThatMarket()
+    public void LegLimits_WhenALegHasNoLimit_BlocksOnlyThatLeg()
     {
-      RiskThresholds thresholds = CreateConfiguredThresholds();
-      thresholds.Markets.Remove(MarketKind.Metal);
+      RiskEvaluationInput input = CreateHealthyInput();
+      input.Legs[1].SpreadLimit = null;
+      input.Legs[1].VolatilityLimit = null;
 
-      RiskDecisionDto decision = CreateEngine(CreateClock(), thresholds).Evaluate(CreateHealthyInput());
+      RiskDecisionDto decision = CreateEngine(CreateClock(), CreateConfiguredThresholds()).Evaluate(input);
 
-      // The metal leg borrows nothing from another market: it blocks on its own missing configuration.
+      // The leg without a decision borrows nothing from another leg or from its market: it blocks on its
+      // own missing limit.
       RiskDecisionDtoAssertions.AssertVerdict(decision, RiskGateVerdict.Block);
       Assert.Equal(2, decision.Gates.Count(item => item.Code == RiskGateCode.ThresholdNotConfigured && item.Subject == "XAUUSD"));
       Assert.DoesNotContain(decision.Gates, item => item.Subject == "EURUSD" && item.Code == RiskGateCode.ThresholdNotConfigured);
       Assert.All(
         decision.Gates.Where(item => item.Subject == "XAUUSD" && item.Code == RiskGateCode.ThresholdNotConfigured),
         item => Assert.Equal(MarketKind.Metal, item.Market));
+    }
+
+    [Fact]
+    public void LegLimits_WithTheSameMarketJudgedByDifferentLimits_UsesTheLimitOfEachLeg()
+    {
+      RiskEvaluationInput input = CreateHealthyInput();
+
+      // One FX leg tolerates the observed spread, the other does not: the limit travelled with the leg and
+      // is not inherited from the market the two legs share.
+      input.Legs = new List<RiskEvaluationLeg>
+      {
+        new RiskEvaluationLeg { Symbol = "EURUSD", Market = MarketKind.Fx, Weight = 50, SpreadPips = 1.0, VolatilityPercent = 7.0, SpreadLimit = 1.5, VolatilityLimit = 15.0, IsExecutable = true },
+        new RiskEvaluationLeg { Symbol = "GBPUSD", Market = MarketKind.Fx, Weight = 50, SpreadPips = 1.0, VolatilityPercent = 7.0, SpreadLimit = 0.5, VolatilityLimit = 15.0, IsExecutable = true }
+      };
+
+      RiskDecisionDto decision = CreateEngine(CreateClock(), CreateConfiguredThresholds()).Evaluate(input);
+
+      RiskDecisionDtoAssertions.AssertGate(decision, RiskGateCode.LegSpreadExceeded, RiskGateVerdict.Allow, "EURUSD");
+      RiskDecisionDtoAssertions.AssertGate(decision, RiskGateCode.LegSpreadExceeded, RiskGateVerdict.Block, "GBPUSD");
     }
 
     [Fact]
@@ -401,14 +416,15 @@ namespace AutoTrade.Trading.Handlers.Tests.Risk
     [Fact]
     public void LegLimits_WithoutConfiguration_Block()
     {
-      RiskThresholds thresholds = CreateConfiguredThresholds();
+      RiskEvaluationInput input = CreateHealthyInput();
 
-      foreach (MarketKind market in Enum.GetValues(typeof(MarketKind)))
+      foreach (RiskEvaluationLeg leg in input.Legs)
       {
-        thresholds.Markets[market] = new MarketLegLimits();
+        leg.SpreadLimit = null;
+        leg.VolatilityLimit = null;
       }
 
-      RiskDecisionDto decision = CreateEngine(CreateClock(), thresholds).Evaluate(CreateHealthyInput());
+      RiskDecisionDto decision = CreateEngine(CreateClock(), CreateConfiguredThresholds()).Evaluate(input);
 
       RiskDecisionDtoAssertions.AssertVerdict(decision, RiskGateVerdict.Block);
       Assert.Equal(2, decision.Gates.Count(item => item.Code == RiskGateCode.ThresholdNotConfigured && item.Subject == "EURUSD"));
@@ -426,8 +442,8 @@ namespace AutoTrade.Trading.Handlers.Tests.Risk
       // gate blocks, and block wins.
       input.Legs = new List<RiskEvaluationLeg>
       {
-        new RiskEvaluationLeg { Symbol = "EURUSD", Weight = 80, SpreadPips = 0.8, VolatilityPercent = 7.0, IsExecutable = true },
-        new RiskEvaluationLeg { Symbol = "XAUUSD", Weight = 20, SpreadPips = 1.5, VolatilityPercent = 12.0, IsExecutable = false }
+        new RiskEvaluationLeg { Symbol = "EURUSD", Weight = 80, SpreadPips = 0.8, VolatilityPercent = 7.0, SpreadLimit = 2.0, VolatilityLimit = 15.0, IsExecutable = true },
+        new RiskEvaluationLeg { Symbol = "XAUUSD", Weight = 20, SpreadPips = 1.5, VolatilityPercent = 12.0, SpreadLimit = 4.0, VolatilityLimit = 25.0, IsExecutable = false }
       };
 
       RiskDecisionDto decision = CreateEngine(CreateClock(), CreateConfiguredThresholds()).Evaluate(input);
@@ -438,29 +454,14 @@ namespace AutoTrade.Trading.Handlers.Tests.Risk
     }
 
     [Theory]
-    [InlineData(60, 2.0, 15.0, true)]
-    [InlineData(null, 2.0, 15.0, false)]
-    [InlineData(60, null, 15.0, false)]
-    [InlineData(60, 2.0, null, false)]
-    [InlineData(null, null, null, false)]
-    public void ThresholdConfiguration_IsReportedHonestly(int? age, double? spread, double? volatility, bool expected)
+    [InlineData(60, true)]
+    [InlineData(null, false)]
+    public void ThresholdConfiguration_IsReportedHonestly(int? age, bool expected)
     {
       RiskThresholds thresholds = CreateConfiguredThresholds();
       thresholds.SnapshotMaxAgeSeconds = age;
-      thresholds.Markets[MarketKind.Fx] = new MarketLegLimits { LegSpreadMaxPips = spread, LegVolatilityMaxPercent = volatility };
 
-      Assert.Equal(expected, thresholds.IsFullyConfigured);
-    }
-
-    [Fact]
-    public void ThresholdConfiguration_WithAnUnconfiguredMarket_IsNotFullyConfigured()
-    {
-      // The basket in use may only trade FX, but an unconfigured market still has to be visible.
-      RiskThresholds thresholds = CreateConfiguredThresholds();
-      thresholds.Markets.Remove(MarketKind.Index);
-
-      Assert.False(thresholds.IsFullyConfigured);
-      Assert.Null(thresholds.ForMarket(MarketKind.Index).LegSpreadMaxPips);
+      Assert.Equal(expected, thresholds.IsConfigured);
     }
   }
 

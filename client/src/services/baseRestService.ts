@@ -22,6 +22,17 @@ export function getHttpStatus(error: unknown): number | null {
 }
 
 /**
+ * Returns the response body of a failed request, or null when there is none. A refused command answers with
+ * the same contract as an accepted one, so the reason it was refused travels in the body and must not be
+ * thrown away with the status.
+ */
+export function getHttpErrorBody<TResponse>(error: unknown): TResponse | null {
+  return axios.isAxiosError(error) && error.response
+    ? (error.response.data as TResponse)
+    : null
+}
+
+/**
  * Shared transport base for domain services. It centralizes the axios instance, the runtime base
  * URL and the typed helpers; it contains no endpoint-specific logic.
  */
