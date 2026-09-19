@@ -18,6 +18,7 @@ export default defineComponent({
     const marketManager = computed(() => operationsStore.status?.marketManager ?? null)
 
     const evidenceStore = computed(() => operationsStore.status?.evidenceStore ?? null)
+    const analysisModel = computed(() => operationsStore.status?.analysisModel ?? null)
 
     const isKillSwitchEngaged = computed(() => killSwitch.value?.isEngaged === true)
     const hasKillSwitchReason = computed(() => Boolean(killSwitch.value?.reason))
@@ -99,6 +100,7 @@ export default defineComponent({
       account,
       marketManager,
       evidenceStore,
+      analysisModel,
       engageReason,
       isKillSwitchEngaged,
       hasKillSwitchReason,

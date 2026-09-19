@@ -1,3 +1,4 @@
+using AutoTrade.Trading.Handlers.Analysis;
 using AutoTrade.Trading.Handlers.CQRS.Journal;
 using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Execution;
@@ -30,6 +31,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddTradingMarket(configuration);
       services.AddTradingExecution(configuration);
       services.AddTradingEvidence(configuration);
+      services.AddTradingAnalysis(configuration);
 
       return services;
     }

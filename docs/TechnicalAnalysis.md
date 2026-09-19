@@ -231,6 +231,10 @@ La strategia non ha una tabella propria: e la policy della versione (`BasketDraf
 
 `IOllamaAnalysisClient` riceve un input versionato e restituisce JSON aderente a uno schema. Timeout, dimensione, modello e temperatura sono configurati. Output non deserializzabile, campi fuori range o simboli non consentiti vengono scartati. Il rationale non puo modificare i valori calcolati dal Risk Engine.
 
+Lo schema alza la probabilita di una risposta usabile, non e cio che la rende affidabile: ogni campo viene validato (simbolo uguale a quello in analisi e dentro l'allowlist, bias appartenente al vocabolario definito, confidenza in 0..1, rationale non vuoto e dentro il limite), e il corpo viene letto entro un tetto di byte mentre viene letto. L'esito ha due forme sole: un'opinione che ha passato tutti i controlli, oppure nessuna opinione con un motivo. Una risposta scartata lascia `IsAvailable = true` con opinione nulla: motore presente che non dice nulla di usabile e motore assente sono fatti diversi.
+
+Il modello non e opzionale quando e configurato: se il provider e Ollama e il motore non risponde o il modello non e installato, l'host non parte. Nessun modello viene scaricato a runtime. Con provider None ogni chiamata riporta esplicitamente indisponibilita, senza testo di fallback inventato.
+
 Lo spike e stato superato: `Jigen.Store` 1.3.1 e una dipendenza reale, risolta da nuget.org, con `Jigen.Primitives` 1.3.1 (la famiglia precedente non era pubblicata e non e referenziabile). L'adapter e registrato come singleton e si assume due comportamenti del motore: non crea la directory del database e, se manca, la segnala come doppio writer (causa sbagliata); un percorso e apribile da un solo `Store` alla volta.
 
 La disponibilita viaggia nel risultato (`EvidenceSearchResult.IsAvailable`), quindi store non configurato non viene mai letto come nessuna corrispondenza. `EnsureProviderIsUsable` piu risoluzione eager all'avvio fermano l'host se lo store configurato non si apre. Non esiste un'API di backup: il backup e una copia coerente della directory a store chiuso.

@@ -54,11 +54,22 @@ declare namespace server {
     account: TradingAccountStatus | null
     marketManager: MarketManagerStatus | null
     evidenceStore: EvidenceStoreStatus | null
+    analysisModel: AnalysisModelStatus | null
   }
 
   /** Semantic memory as the application sees it. Unavailable degrades retrieval, never authority. */
   interface EvidenceStoreStatus {
     provider: string
+    isAvailable: boolean
+  }
+
+  /**
+   * Analysis model as the application sees it. The model is reported even when unavailable, so a missing
+   * model can be told apart from a model that is present and returning nothing usable.
+   */
+  interface AnalysisModelStatus {
+    provider: string
+    model: string | null
     isAvailable: boolean
   }
 

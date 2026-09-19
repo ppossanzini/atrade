@@ -8,6 +8,7 @@ using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Query.Session;
 using AutoTrade.Trading.Handlers;
 using AutoTrade.Trading.Handlers.Broker;
+using AutoTrade.Trading.Handlers.Analysis;
 using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Execution;
 using AutoTrade.Trading.Handlers.MarketData;
@@ -96,9 +97,17 @@ EvidenceModule.EnsureProviderIsUsable(evidenceOptions);
 // rather than surface as a failed retrieval hours later.
 app.Services.GetRequiredService<IJigenEvidenceStore>();
 
+// Fail-closed: asking for an analysis model without naming it aborts startup, and a model the local engine
+// does not have aborts startup too. A model that is quietly missing would turn every opinion into a silent
+// absence, and absence must never be readable as a neutral view. No provider is a supported state.
+AnalysisOptions analysisOptions = app.Services.GetRequiredService<AnalysisOptions>();
+AnalysisModule.EnsureProviderIsUsable(analysisOptions);
+await app.Services.GetRequiredService<IOllamaAnalysisClient>().EnsureModelIsPresentAsync(CancellationToken.None);
+
 app.Logger.LogInformation("Market data source in force: {Provider}.", marketDataOptions.Provider);
 app.Logger.LogInformation("Execution provider in force: {Provider}.", executionOptions.Provider);
 app.Logger.LogInformation("Evidence store in force: {Provider}.", evidenceOptions.Provider);
+app.Logger.LogInformation("Analysis model in force: {Provider}/{Model}.", analysisOptions.Provider, string.IsNullOrWhiteSpace(analysisOptions.Model) ? "none" : analysisOptions.Model);
 
 if (!brokerOptions.IsClientConfigured)
 {

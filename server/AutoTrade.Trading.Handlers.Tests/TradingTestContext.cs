@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AutoTrade.Trading.Handlers;
+using AutoTrade.Trading.Handlers.Analysis;
 using AutoTrade.Trading.Handlers.Broker.OAuth;
 using AutoTrade.Trading.Handlers.CQRS.Journal;
 using AutoTrade.Trading.Handlers.Evidence;
@@ -62,12 +63,20 @@ namespace AutoTrade.Trading.Handlers.Tests
       // And the evidence tier: with no section configured it resolves to the explicitly unavailable store.
       services.AddTradingEvidence(configuration);
 
+      // The analysis tier is registered the same way, with the local model replaced by a stand-in: a test must
+      // not depend on a model being installed on the machine running it. The transport is covered separately.
+      services.AddTradingAnalysis(configuration);
+      services.AddSingleton<IOllamaAnalysisClient>(AnalysisClient);
+
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();
       Db = _scope.ServiceProvider.GetRequiredService<DB>();
     }
 
     public FakeBrokerTokenClient TokenClient { get; } = new FakeBrokerTokenClient();
+
+    /// <summary>Analysis model stand-in, so a status test can choose whether a model is in force.</summary>
+    public Tests.Analysis.FakeAnalysisClient AnalysisClient { get; } = new Tests.Analysis.FakeAnalysisClient();
 
     /// <summary>Exposed so tests can prove what actually reached the database.</summary>
     public AutoTrade.Trading.Handlers.Broker.IBrokerTokenProtector TokenProtector

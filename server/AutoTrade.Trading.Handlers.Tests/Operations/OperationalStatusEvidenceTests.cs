@@ -30,5 +30,37 @@ namespace AutoTrade.Trading.Handlers.Tests.Operations
       Assert.Equal("None", status.EvidenceStore.Provider);
       Assert.False(status.EvidenceStore.IsAvailable);
     }
+
+    [Fact]
+    public async Task Status_WithoutAConfiguredModel_ReportsProviderNoneAndUnavailable()
+    {
+      using TradingTestContext context = CreateContext();
+
+      OperationalStatusDto status = await context.Hikyaku.Send(new GetOperationalStatus(), CancellationToken.None);
+
+      Assert.NotNull(status.AnalysisModel);
+      Assert.Equal("None", status.AnalysisModel.Provider);
+      Assert.False(status.AnalysisModel.IsAvailable);
+    }
+
+    [Fact]
+    public async Task Status_WithAModelInForce_ReportsWhatIsInForce()
+    {
+      using TradingTestContext context = new TradingTestContext(new Dictionary<string, string>
+      {
+        { "Trading:Ollama:Provider", "Ollama" },
+        { "Trading:Ollama:Model", "qwen2.5:3b" }
+      });
+
+      context.AnalysisClient.IsAvailable = true;
+
+      OperationalStatusDto status = await context.Hikyaku.Send(new GetOperationalStatus(), CancellationToken.None);
+
+      // The model is reported even when it is not available, so the operator sees what was asked for and can
+      // tell a missing model from a model that is present and returning nothing usable.
+      Assert.Equal("Ollama", status.AnalysisModel.Provider);
+      Assert.Equal("qwen2.5:3b", status.AnalysisModel.Model);
+      Assert.True(status.AnalysisModel.IsAvailable);
+    }
   }
 }

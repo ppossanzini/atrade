@@ -11,5 +11,8 @@ namespace AutoTrade.Trading.Core.Dto
 
     /// <summary>Semantic memory in force, so its absence is a reported state and not a silent one.</summary>
     public EvidenceStoreStatusDto EvidenceStore { get; set; }
+
+    /// <summary>Analysis model in force, reported for the same reason as the semantic memory.</summary>
+    public AnalysisModelStatusDto AnalysisModel { get; set; }
   }
 }

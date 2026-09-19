@@ -173,37 +173,5 @@ namespace AutoTrade.Trading.Handlers.Tests.Broker
       return parsed;
     }
 
-    /// <summary>Records the requests it receives and answers with a scripted response.</summary>
-    internal sealed class StubHttpMessageHandler : HttpMessageHandler
-    {
-      private readonly Func<HttpResponseMessage> responseFactory;
-
-      private StubHttpMessageHandler(Func<HttpResponseMessage> responseFactory)
-      {
-        this.responseFactory = responseFactory;
-      }
-
-      public List<HttpRequestMessage> Requests { get; } = new List<HttpRequestMessage>();
-
-      public static StubHttpMessageHandler Respond(HttpStatusCode statusCode, string body)
-      {
-        return new StubHttpMessageHandler(() => new HttpResponseMessage(statusCode)
-        {
-          Content = new StringContent(body)
-        });
-      }
-
-      public static StubHttpMessageHandler Throw(Exception error)
-      {
-        return new StubHttpMessageHandler(() => throw error);
-      }
-
-      protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-      {
-        Requests.Add(request);
-
-        return Task.FromResult(responseFactory());
-      }
-    }
   }
 }

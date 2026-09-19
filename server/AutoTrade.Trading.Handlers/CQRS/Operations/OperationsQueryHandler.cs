@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Query.Operations;
+using AutoTrade.Trading.Handlers.Analysis;
 using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Model;
 using Hikyaku;
@@ -13,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutoTrade.Trading.Handlers.CQRS.Operations
 {
-  public class OperationsQueryHandler(DB db, IMapper mapper, TimeProvider timeProvider, EvidenceOptions evidenceOptions, IJigenEvidenceStore evidenceStore) : IRequestHandler<GetOperationalStatus, OperationalStatusDto>
+  public class OperationsQueryHandler(DB db, IMapper mapper, TimeProvider timeProvider, EvidenceOptions evidenceOptions, IJigenEvidenceStore evidenceStore, AnalysisOptions analysisOptions, IOllamaAnalysisClient analysisClient) : IRequestHandler<GetOperationalStatus, OperationalStatusDto>
   {
     private const int KillSwitchStateId = 1;
     private const int MarketManagerStateId = 1;
@@ -45,6 +46,12 @@ namespace AutoTrade.Trading.Handlers.CQRS.Operations
         {
           Provider = evidenceOptions.Provider.ToString(),
           IsAvailable = evidenceStore.IsAvailable
+        },
+        AnalysisModel = new AnalysisModelStatusDto
+        {
+          Provider = analysisOptions.Provider.ToString(),
+          Model = analysisOptions.Model,
+          IsAvailable = analysisClient.IsAvailable
         }
       };
     }

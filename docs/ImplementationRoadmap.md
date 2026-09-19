@@ -203,6 +203,8 @@ Output:
 - proposta scartata/sospesa su errore senza fallback permissivo;
 - nessun riferimento dell'adapter LLM al gateway ordini.
 
+**Stato dei primi due output (2026-09-20).** Lo store è isolato e reale (`Jigen.Store` 1.3.1, ADR-0023), con disponibilità riportata nello stato operativo. Lo structured output è implementato e verificato contro il modello reale (`qwen2.5:3b`, ADR-0024): schema inviato al motore, poi validazione campo per campo, esito a due sole forme (opinione validata oppure nessuna opinione con motivo), bound di byte e di tempo, fail-closed provato fermando il motore. Restano da consegnare: il retrieval versionato e tracciato (manca il modello di embedding, che non è lo stesso modello di analisi), il collegamento dell'opinione al percorso della proposta e lo stato degradato esplicito nel ciclo di analisi.
+
 Copre: AC-06, AC-16.
 
 ## Slice 8 - Storico e readiness demo
