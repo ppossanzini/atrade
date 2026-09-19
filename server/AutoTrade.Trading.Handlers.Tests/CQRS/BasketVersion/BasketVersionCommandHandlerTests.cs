@@ -87,6 +87,7 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.BasketVersion
           BasketId = basketId,
           Policy = new BasketPolicyDto
           {
+            EntryMode = EntryMode.MeanReversion,
             FailurePolicy = FailurePolicy.AllOrNothing,
             MinimumCoverage = 90,
             RiskPerBasket = 1.4,
@@ -129,6 +130,9 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.BasketVersion
 
       var versionPolicy = Assert.Single(context.Db.BasketVersionPolicies);
       Assert.Equal(version.Id, versionPolicy.VersionId);
+
+      // The declared entry rule is part of the strategy, so it is frozen with the version like every other rule.
+      Assert.Equal(EntryMode.MeanReversion, versionPolicy.EntryMode);
       Assert.Equal(FailurePolicy.AllOrNothing, versionPolicy.FailurePolicy);
       Assert.Equal(90, versionPolicy.MinimumCoverage);
       Assert.Equal(1.4, versionPolicy.RiskPerBasket);

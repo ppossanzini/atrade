@@ -156,7 +156,7 @@ Le chiavi sono `Guid` UUIDv7 creati nel behavior layer. Importi, prezzi e percen
 | `BrokerCredential` | AccountId, encrypted tokens, ExpiresAtUtc | cifrato; mai loggato o esposto |
 | `Basket` | Id, Name, Status, DraftRevision | nome univoco tra non archiviati |
 | `BasketDraftLeg` | Id, BasketId, SymbolId, side, weight, timeframe, risk cap | indice BasketId+SymbolId; range validati |
-| `BasketPolicyDraft` | BasketId, risk/daily loss/coverage/failure mode | uno a uno col basket |
+| `BasketPolicyDraft` | BasketId, entry mode, risk/daily loss/coverage/failure mode | uno a uno col basket |
 | `BasketVersion` | Id, BasketId, Number, snapshot policy, CreatedBy | BasketId+Number univoco; immutabile |
 | `BasketVersionLeg` | Id, VersionId, ordinal, snapshot completo | VersionId+ordinal e VersionId+SymbolId univoci |
 | `ActiveBasket` | singleton key, BasketVersionId, ActivatedBy/At | una sola riga; transazione di swap |
@@ -218,6 +218,12 @@ Ogni transizione usa optimistic concurrency. Sono illegali:
 - passaggio alla gamba successiva prima dello stato terminale richiesto;
 - modifica di snapshot/policy dopo l'avvio;
 - riattivazione automatica dopo divergenza broker.
+
+### 7.1 Strategia e gate di promozione
+
+La strategia non ha una tabella propria: e la policy della versione (`BasketDraftPolicy` in bozza, `BasketVersionPolicy` congelata, `EntryMode` su `Proposal`), perche gli stessi limiti governano gia il gate di rischio (ADR-0022). `BasketDetailDto.ActivePolicy` espone la policy congelata della versione attiva accanto alla bozza, cosi la schermata puo distinguere cio che e in vigore da cio che e in preparazione.
+
+`GET /api/operations/promotion` e una lettura read-only dei requisiti del gate di promozione. Ogni requisito ha uno stato misurato (`Satisfied`, `NotSatisfied`, `NotVerifiable`) e l'evidenza osservata quando esiste. Non esiste un comando che apra il gate: un'approvazione o un drill non sono deducibili dai dati.
 
 ## 8. JigenDB e Ollama
 

@@ -14,6 +14,9 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public Guid BasketId { get; set; }
 
+    /// <summary>Declared entry rule of the strategy, decided with the other rules.</summary>
+    public EntryMode EntryMode { get; set; }
+
     public FailurePolicy FailurePolicy { get; set; }
 
     public int MinimumCoverage { get; set; }

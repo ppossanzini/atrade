@@ -67,7 +67,8 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
       MarketKind secondMarket = MarketKind.Metal,
       FailurePolicy failurePolicy = FailurePolicy.MinimumCoverage,
       int minimumCoverage = 75,
-      double legSpreadLimit = 1.5)
+      double legSpreadLimit = 1.5,
+      EntryMode entryMode = EntryMode.RegimeMomentum)
     {
       context.Db.KillSwitchStates.Add(new KillSwitchState { Id = 1, IsEngaged = false });
       context.Db.MarketManagerStates.Add(new MarketManagerState
@@ -97,6 +98,7 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
       {
         Id = Guid.CreateVersion7(),
         VersionId = versionId,
+        EntryMode = entryMode,
         FailurePolicy = failurePolicy,
         MinimumCoverage = minimumCoverage,
         RiskPerBasket = riskPerBasket,
@@ -218,6 +220,21 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
 
       Assert.Equal(ProposalStatus.NeedsReview, proposal.Status);
       Assert.DoesNotContain(context.Db.JournalEvents, item => item.Kind == JournalEventKind.ProposalAutoApproved);
+    }
+
+    [Fact]
+    public async Task Cycle_FreezesTheDeclaredEntryRuleOnTheProposal()
+    {
+      using TradingTestContext context = CreateContext();
+      SeedActiveVersion(context, entryMode: EntryMode.MeanReversion);
+
+      await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
+
+      Proposal proposal = Assert.Single(context.Db.Proposals);
+
+      // The proposal records which rule the strategy was following, so a decision can always be read back
+      // together with the strategy it came from even after the basket moves on.
+      Assert.Equal(EntryMode.MeanReversion, proposal.EntryMode);
     }
 
     [Fact]
@@ -485,6 +502,28 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
       Assert.Equal(10, detail.Gates.Count);
       Assert.Equal(2, detail.Legs.Count);
       Assert.StartsWith("entry|v1|", detail.Rationale);
+    }
+
+    [Fact]
+    public async Task QueueAndDetail_ReportTheSameStrategyForTheSameProposal()
+    {
+      using TradingTestContext context = CreateContext();
+      SeedActiveVersion(context, entryMode: EntryMode.MeanReversion);
+
+      await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
+      Proposal proposal = Assert.Single(context.Db.Proposals);
+
+      ProposalSummaryDto row = Assert.Single(await context.Hikyaku.Send(new GetProposalQueue(), CancellationToken.None));
+      ProposalDetailDto detail = await context.Hikyaku.Send(new GetProposalDetail { ProposalId = proposal.Id }, CancellationToken.None);
+
+      // The queue and the detail used to build their own copy of the row, and a field added to only one of
+      // them made the two disagree about the same proposal. One builder, one answer.
+      Assert.Equal(EntryMode.MeanReversion, row.EntryMode);
+      Assert.Equal(row.EntryMode, detail.EntryMode);
+      Assert.Equal(row.Action, detail.Action);
+      Assert.Equal(row.Status, detail.Status);
+      Assert.Equal(row.Gate, detail.Gate);
+      Assert.Equal(row.ExpectedRiskPercent, detail.ExpectedRiskPercent);
     }
 
     [Fact]

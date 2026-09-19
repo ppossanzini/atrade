@@ -5,7 +5,7 @@ using AutoTrade.Trading.Core.Enums;
 
 namespace AutoTrade.Trading.Handlers.Model
 {
-  /// <summary>Frozen policy of a published version.</summary>
+  /// <summary>Frozen policy of a published version, which is the strategy the version follows.</summary>
   [Table("BasketVersionPolicy")]
   public class BasketVersionPolicy
   {
@@ -13,6 +13,9 @@ namespace AutoTrade.Trading.Handlers.Model
     public Guid Id { get; set; }
 
     public Guid VersionId { get; set; }
+
+    /// <summary>Declared entry rule, frozen with the version.</summary>
+    public EntryMode EntryMode { get; set; }
 
     public FailurePolicy FailurePolicy { get; set; }
 

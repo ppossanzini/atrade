@@ -10,6 +10,7 @@ import { useRiskStore } from '@/stores/risk'
 type DialogMode = 'create' | 'rename' | 'clone' | 'publish' | 'activate' | 'archive'
 
 const defaultPolicy = (): server.BasketPolicy => ({
+  entryMode: 'RegimeMomentum',
   failurePolicy: 'MinimumCoverage',
   minimumCoverage: 75,
   riskPerBasket: 0.8,

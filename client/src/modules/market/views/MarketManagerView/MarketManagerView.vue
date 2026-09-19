@@ -138,6 +138,12 @@
           </span>
         </div>
         <div class="metric-row">
+          <span class="metric-row__label">{{ t('strategy.mode') }}</span>
+          <span class="metric-row__value">
+            {{ t(`entryMode.${marketStore.detail.entryMode}`) }}
+          </span>
+        </div>
+        <div class="metric-row">
           <span class="metric-row__label">{{ t('market.confidence') }}</span>
           <span class="metric-row__value">{{ marketStore.detail.confidence }} %</span>
         </div>

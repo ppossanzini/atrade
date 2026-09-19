@@ -46,10 +46,11 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.Basket
       };
     }
 
-    private static BasketPolicyDto CreatePolicy(int minimumCoverage = 75, double riskPerBasket = 0.8, double dailyLossLimit = 2.5)
+    private static BasketPolicyDto CreatePolicy(int minimumCoverage = 75, double riskPerBasket = 0.8, double dailyLossLimit = 2.5, EntryMode entryMode = EntryMode.RegimeMomentum)
     {
       return new BasketPolicyDto
       {
+        EntryMode = entryMode,
         FailurePolicy = FailurePolicy.MinimumCoverage,
         MinimumCoverage = minimumCoverage,
         RiskPerBasket = riskPerBasket,
@@ -410,6 +411,35 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.Basket
         CancellationToken.None);
 
       Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(EntryMode.RegimeMomentum)]
+    [InlineData(EntryMode.Momentum)]
+    [InlineData(EntryMode.MeanReversion)]
+    public async Task ValidateBasketPolicyValues_AcceptsEveryDeclaredEntryRule(EntryMode entryMode)
+    {
+      using TradingTestContext context = CreateContext();
+
+      bool result = await context.Hikyaku.Send(
+        new ValidateBasketPolicyValues { Policy = CreatePolicy(entryMode: entryMode) },
+        CancellationToken.None);
+
+      Assert.True(result);
+    }
+
+    [Fact]
+    public async Task ValidateBasketPolicyValues_RejectsAnEntryRuleTheVocabularyDoesNotKnow()
+    {
+      using TradingTestContext context = CreateContext();
+
+      // An unknown rule would leave a proposal unable to say which strategy produced it, which is the only
+      // thing the field carries today, so it is refused instead of being stored and later misreported.
+      bool result = await context.Hikyaku.Send(
+        new ValidateBasketPolicyValues { Policy = CreatePolicy(entryMode: (EntryMode)99) },
+        CancellationToken.None);
+
+      Assert.False(result);
     }
 
     [Fact]

@@ -25,6 +25,9 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public ProposalAction Action { get; set; }
 
+    /// <summary>Entry rule declared by the version the proposal was built from.</summary>
+    public EntryMode EntryMode { get; set; }
+
     /// <summary>Aggregate verdict of the gate at generation.</summary>
     public RiskGateVerdict Gate { get; set; }
 

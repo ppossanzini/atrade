@@ -41,24 +41,38 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
 
       foreach (Proposal proposal in proposals)
       {
-        queue.Add(new ProposalSummaryDto
-        {
-          ProposalId = proposal.Id,
-          BasketId = proposal.BasketId,
-          BasketName = basketNames.TryGetValue(proposal.BasketId, out string name) ? name : null,
-          VersionNumber = proposal.VersionNumber,
-          Action = proposal.Action,
-          Status = proposal.Status,
-          Gate = proposal.Gate,
-          Confidence = proposal.Confidence,
-          ExpectedRiskPercent = proposal.ExpectedRiskPercent,
-          ProposedAtUtc = proposal.ProposedAtUtc,
-          ExpiresAtUtc = proposal.ExpiresAtUtc,
-          IsDecidable = AnalysisRules.IsDecidable(proposal.Status, mode, proposal.ExpiresAtUtc, now)
-        });
+        queue.Add(Summarise(
+          proposal,
+          basketNames.TryGetValue(proposal.BasketId, out string name) ? name : null,
+          AnalysisRules.IsDecidable(proposal.Status, mode, proposal.ExpiresAtUtc, now)));
       }
 
       return queue;
+    }
+
+    /// <summary>
+    /// The single place a proposal becomes a queue row. The detail copies from it, so a field added to the
+    /// contract can only be added once and the queue cannot end up disagreeing with the detail about the
+    /// same proposal.
+    /// </summary>
+    private static ProposalSummaryDto Summarise(Proposal proposal, string basketName, bool isDecidable)
+    {
+      return new ProposalSummaryDto
+      {
+        ProposalId = proposal.Id,
+        BasketId = proposal.BasketId,
+        BasketName = basketName,
+        VersionNumber = proposal.VersionNumber,
+        Action = proposal.Action,
+        EntryMode = proposal.EntryMode,
+        Status = proposal.Status,
+        Gate = proposal.Gate,
+        Confidence = proposal.Confidence,
+        ExpectedRiskPercent = proposal.ExpectedRiskPercent,
+        ProposedAtUtc = proposal.ProposedAtUtc,
+        ExpiresAtUtc = proposal.ExpiresAtUtc,
+        IsDecidable = isDecidable
+      };
     }
 
     public async Task<ProposalDetailDto> Handle(GetProposalDetail request, CancellationToken cancellationToken)
@@ -104,27 +118,33 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
         .OrderBy(item => item.Ordinal)
         .ToListAsync(cancellationToken);
 
+      ProposalSummaryDto summary = Summarise(
+        proposal,
+        basketName,
+        AnalysisRules.IsDecidable(proposal.Status, mode, proposal.ExpiresAtUtc, now));
+
       ProposalDetailDto detail = new ProposalDetailDto
       {
-        ProposalId = proposal.Id,
-        BasketId = proposal.BasketId,
-        BasketName = basketName,
-        VersionNumber = proposal.VersionNumber,
+        ProposalId = summary.ProposalId,
+        BasketId = summary.BasketId,
+        BasketName = summary.BasketName,
+        VersionNumber = summary.VersionNumber,
         SnapshotId = proposal.SnapshotId,
         SnapshotCapturedAtUtc = snapshotCapturedAtUtc,
-        Action = proposal.Action,
-        Status = proposal.Status,
-        Gate = proposal.Gate,
-        Confidence = proposal.Confidence,
-        ExpectedRiskPercent = proposal.ExpectedRiskPercent,
-        ProposedAtUtc = proposal.ProposedAtUtc,
-        ExpiresAtUtc = proposal.ExpiresAtUtc,
+        Action = summary.Action,
+        EntryMode = summary.EntryMode,
+        Status = summary.Status,
+        Gate = summary.Gate,
+        Confidence = summary.Confidence,
+        ExpectedRiskPercent = summary.ExpectedRiskPercent,
+        ProposedAtUtc = summary.ProposedAtUtc,
+        ExpiresAtUtc = summary.ExpiresAtUtc,
+        IsDecidable = summary.IsDecidable,
         DecidedAtUtc = proposal.DecidedAtUtc,
         DecidedByOperatorId = proposal.DecidedByOperatorId,
         DecisionReason = proposal.DecisionReason,
         Rationale = proposal.Rationale,
         CycleSequence = proposal.CycleSequence,
-        IsDecidable = AnalysisRules.IsDecidable(proposal.Status, mode, proposal.ExpiresAtUtc, now),
         Legs = new List<ProposalLegDto>(),
         Gates = new List<RiskGateResultDto>()
       };

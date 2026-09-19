@@ -27,6 +27,16 @@ namespace AutoTrade.Trading.API.Controllers
       return Ok(status);
     }
 
+    [HttpGet("promotion")]
+    [ProducesResponseType(typeof(PromotionStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetPromotion(CancellationToken cancellationToken)
+    {
+      PromotionStatusDto status = await hikyaku.Send(new GetPromotionStatus(), cancellationToken);
+
+      return Ok(status);
+    }
+
     [HttpPost("kill-switch/engage")]
     [ValidateAntiForgeryToken]
   [ProducesResponseType(typeof(KillSwitchChangeResult), StatusCodes.Status200OK)]

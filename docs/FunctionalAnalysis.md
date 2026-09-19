@@ -31,6 +31,7 @@ Nel MVP esiste un solo ruolo applicativo, `Operator`. Processi automatici e inte
 - Registro di panieri nominati, clonabili, versionati e archiviabili.
 - Esattamente una versione di paniere attiva per le nuove analisi.
 - Analisi continua o sospesa e Market Manager manuale, supervisionato o automatico.
+- Strategia versionata del paniere: modalita di ingresso dichiarata e limiti di rischio, congelati nella versione.
 - Proposte di entrata, riduzione e uscita con scadenza ed evidenze.
 - Gate deterministici di freshness, liquidita, esposizione, margine e perdita giornaliera.
 - Esecuzione sequenziale delle gambe per priorita di rischio.
@@ -215,6 +216,7 @@ Il Decision Journal e append-only e registra transizioni, input deterministici, 
 | AC-15 | Ogni transizione sensibile e ricostruibile dal journal con correlazione tra basket, proposta, esecuzione e broker |
 | AC-16 | Arresto di Ollama o JigenDB non concede mai autorita di ordine e produce uno stato degradato esplicito |
 | AC-17 | Il conto live e l'operativita automatica live non sono attivabili nel MVP demo |
+| AC-18 | Le regole della strategia sono versionate: una modifica della bozza non cambia la versione in vigore, e la proposta riporta la modalita dichiarata della versione da cui nasce |
 
 ## 8. Decisioni richieste prima dello sviluppo del Risk Engine
 
@@ -314,3 +316,32 @@ Perimetro: trasformare una proposta autorizzata in una sequenza di ordini govern
 - Il **volume** di ogni gamba e deciso dal **modello di rischio**: nasce da capitale, risk cap della gamba e distanza di stop, viene arrotondato per difetto al passo dello strumento e viene **rifiutato** se scende sotto il minimo del provider. Non viene mai alzato d'ufficio per "far entrare" un ordine.
 - Un simbolo che il provider non descrive come negoziabile, o per cui manca la taglia necessaria al calcolo, non viene inviato: l'esecuzione si ferma con il motivo esplicito invece di indovinare.
 - La conversione valutaria e richiesta quando ne la valuta base ne quella di quotazione coincidono con la valuta del conto: senza un tasso fornito dal provider il calcolo non produce un volume e l'invio non avviene.
+
+## 11. Strategia - regole funzionali (Slice 9)
+
+Perimetro: le regole che trasformano l'analisi in una proposta. La strategia **non e una entita separata**: e la policy della versione di paniere, perche gli stessi due limiti (rischio per paniere e perdita giornaliera) governano gia il gate di rischio. Una seconda copia permetterebbe alla schermata e al gate di dichiarare limiti diversi.
+
+### 11.1 Regole versionate
+
+- Le regole della strategia sono la **modalita di ingresso dichiarata**, il **rischio per paniere**, la **perdita giornaliera massima**, la **copertura minima** e il **comportamento a esecuzione incompleta**.
+- Le regole si modificano sulla **bozza** e diventano effettive solo con la pubblicazione di una versione: la versione in vigore non cambia quando cambia la bozza, e la schermata tiene le due cose distinte.
+- Ogni versione congela le proprie regole. La proposta riporta la modalita dichiarata della versione da cui nasce, quindi una decisione resta leggibile insieme alla strategia che l'ha prodotta anche dopo che il paniere e avanzato.
+- Una modalita non riconosciuta dal vocabolario viene rifiutata: una proposta deve poter dire sempre quale regola la governava.
+
+### 11.2 Cosa la modalita dichiara e cosa no
+
+- La modalita di ingresso e una **dichiarazione versionata**: viene registrata con la versione, riportata su ogni proposta e auditata come ogni altra proprieta della versione.
+- La regola direzionale che ne deriva richiede una **serie storica** (momentum, regime): la sorgente deterministica osserva un singolo snapshot e quindi non la esercita. Finche la sorgente di evidenze non esiste, il verdetto resta quello del gate di rischio e la modalita non lo modifica. La schermata lo dichiara invece di lasciar credere che il selettore cambi le proposte.
+- Nessun esito dipende dalla modalita: `Block` resta terminale in ogni modalita e nessuna modalita trasforma una revisione in permesso.
+
+### 11.3 Guardrail
+
+- Il modello locale puo proporre parametri, ma **non puo modificare questi limiti ne inviare ordini**: il gate di rischio deterministico resta l'unica autorita.
+- La strategia non bypassa visivamente la decisione di rischio: la schermata delle regole non mostra un verdetto proprio, e il verdetto continua ad arrivare dal Risk Engine.
+
+### 11.4 Gate di promozione live
+
+- Il conto live e l'operativita automatica live **non sono attivabili nel MVP demo** (AC-17).
+- Il gate di promozione e composto dai requisiti registrati in `ImplementationRoadmap.md` e la sua lettura e **read-only**: non esiste un comando che apra il gate.
+- Ogni requisito riporta uno stato misurato: `Soddisfatto`, `Non soddisfatto` oppure `Non verificabile dal sistema`. Un requisito che richiede un'approvazione, un drill o una revisione non viene mai marcato soddisfatto per il fatto che nulla lo contraddice.
+- Un archivio di esecuzioni vuoto non vale come periodo pulito: il requisito sulle divergenze richiede almeno una esecuzione conclusa.

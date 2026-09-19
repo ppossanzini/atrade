@@ -115,6 +115,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.BasketVersion
         {
           Id = Guid.CreateVersion7(),
           VersionId = version.Id,
+          EntryMode = policy.EntryMode,
           FailurePolicy = policy.FailurePolicy,
           MinimumCoverage = policy.MinimumCoverage,
           RiskPerBasket = policy.RiskPerBasket,

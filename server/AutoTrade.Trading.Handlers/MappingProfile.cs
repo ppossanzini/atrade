@@ -14,6 +14,10 @@ namespace AutoTrade.Trading.Handlers
 
       CreateMap<BasketDraftLeg, BasketCompositionLegDto>();
       CreateMap<BasketDraftPolicy, BasketPolicyDto>();
+
+      // The frozen policy is reported with the same contract as the draft, because it is the same strategy:
+      // one in preparation and one in force.
+      CreateMap<BasketVersionPolicy, BasketPolicyDto>();
     }
   }
 }

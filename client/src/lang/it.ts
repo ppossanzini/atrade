@@ -358,8 +358,79 @@ export default {
     pips: 'pips',
     seconds: 's',
   },
-  execution: {
-    title: 'Esecuzione',
+  strategy: {
+    title: 'Strategia',
+    subtitle:
+      'Le regole che trasformano l’analisi in una proposta verificabile. Sono le stesse regole del paniere: vengono congelate nella versione e valgono solo da lì.',
+    refresh: 'Aggiorna',
+    rules: 'Regole deterministiche',
+    rulesHint:
+      'Queste regole sono la policy del paniere attivo. Modificarle prepara la prossima versione: quella in vigore non cambia finché non pubblichi.',
+    mode: 'Modalità di ingresso',
+    riskBasket: 'Rischio paniere',
+    dailyLoss: 'Perdita giornaliera max',
+    minimumCoverage: 'Copertura minima',
+    failurePolicy: 'Comportamento a esecuzione incompleta',
+    guardrail:
+      'Il modello locale può proporre parametri, ma non può modificare questi limiti né inviare ordini: il gate di rischio resta l’unica autorità.',
+    modeScope:
+      'La modalità dichiarata viene registrata con la versione e riportata su ogni proposta. La regola direzionale che ne deriva è esercitata dalla sorgente di evidenze (slice RAG): finché non è attiva, il verdetto resta quello del gate di rischio.',
+    save: 'Salva regole',
+    saved: 'Regole salvate nella bozza della prossima versione.',
+    refused: 'Regole rifiutate: controlla i valori e riprova.',
+    saveFailed: 'Salvataggio delle regole non riuscito.',
+    noActiveBasket:
+      'Nessun paniere attivo: attiva una versione per configurare la strategia in vigore.',
+    pendingPublication:
+      'La bozza differisce da ciò che è in vigore: pubblica una versione per applicarla.',
+    inForce: 'Strategia in vigore',
+    inForceHint: 'Valori congelati nella versione attiva.',
+    noVersionInForce: 'Nessuna versione attiva: nessuna regola è in vigore.',
+    versionInForce: 'Versione in vigore',
+    promotion: 'Percorso di promozione',
+    promotionHint:
+      'Il conto live non è attivabile dal MVP demo: qui compare lo stato reale di ogni requisito del gate, e nessun requisito viene marcato soddisfatto se non è stato misurato.',
+    promotionOpen: 'Requisiti soddisfatti',
+    promotionClosed: 'Promozione non attivabile',
+    promotionUnavailable: 'Stato del gate di promozione non disponibile.',
+    observed: 'Osservato',
+  },
+  entryMode: {
+    RegimeMomentum: 'Regime + momentum',
+    Momentum: 'Momentum puro',
+    MeanReversion: 'Mean reversion',
+  },
+  promotionState: {
+    Satisfied: 'Soddisfatto',
+    NotSatisfied: 'Non soddisfatto',
+    NotVerifiable: 'Non verificabile dal sistema',
+  },
+  promotionRequirement: {
+    demo_period_criteria: 'Periodo demo e criteri quantitativi',
+    reconciliation_clean: 'Zero divergenze di riconciliazione',
+    recovery_drill: 'Recovery drill e restore test',
+    live_parameters_approved: 'Limiti, simboli, volumi e modalità live approvati',
+    security_review: 'Revisione sicurezza e gestione segreti',
+    rollback_procedure: 'Rollback a demo e procedura kill switch',
+    adr_and_approval: 'ADR dedicato e approvazione esplicita',
+  },
+  promotionRequirementNote: {
+    demo_period_criteria:
+      'Serve uno storico di episodi riconciliati: arriva con lo slice Storico, quindi oggi il sistema non può misurarlo.',
+    reconciliation_clean:
+      'Richiede esecuzioni concluse e nessuna ancora in riconciliazione: un archivio vuoto non è un periodo pulito.',
+    recovery_drill:
+      'Un drill di ripristino si esegue fuori dall’applicazione: il sistema non può dimostrarlo.',
+    live_parameters_approved:
+      'È un’approvazione dell’operatore: il sistema riporta solo quale conto esiste.',
+    security_review:
+      'Una revisione si conclude con un artefatto esterno: il sistema non può dimostrarla.',
+    rollback_procedure:
+      'Il kill switch è tracciato nel journal e il suo uso è evidenza osservata; il rollback a demo resta da dimostrare.',
+    adr_and_approval:
+      'L’ADR vive nei documenti e l’approvazione è esplicita: fuori dalla portata dell’applicazione.',
+  },
+  execution: {    title: 'Esecuzione',
     subtitle: 'Sequenze di ordini inviate al broker e relativo esito misurato.',
     refresh: 'Aggiorna',
     queueTitle: 'Coda delle esecuzioni',

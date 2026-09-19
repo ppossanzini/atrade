@@ -249,6 +249,7 @@ export const useBasketsStore = defineStore('baskets', () => {
     loadRegistry,
     selectBasket,
     loadSelection,
+    loadActiveBasket,
     createBasket,
     renameSelectedBasket,
     cloneSelectedBasket,

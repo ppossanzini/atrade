@@ -77,6 +77,9 @@ declare namespace server {
 
   type FailurePolicy = 'MinimumCoverage' | 'AllOrNothing' | 'RequireConfirmation'
 
+  /** Declared entry rule of the strategy. It is a declaration the version freezes and the proposal records. */
+  type EntryMode = 'RegimeMomentum' | 'Momentum' | 'MeanReversion'
+
   /**
    * Operator-owned leg definition. Analysis values are produced by the analysis pipeline and are
    * deliberately absent from this contract.
@@ -100,6 +103,7 @@ declare namespace server {
   }
 
   interface BasketPolicy {
+    entryMode: EntryMode
     failurePolicy: FailurePolicy
     minimumCoverage: number
     riskPerBasket: number
@@ -126,6 +130,11 @@ declare namespace server {
     activeVersionNumber: number
     draftLegs: BasketCompositionLeg[]
     draftPolicy: BasketPolicy | null
+    /**
+     * Policy frozen in the active version, when this basket is the one holding it. The draft is what is being
+     * prepared; these are the rules actually in force, and they change only on publication.
+     */
+    activePolicy: BasketPolicy | null
   }
 
   interface BasketVersion {
@@ -214,6 +223,8 @@ declare namespace server {
     basketName: string
     versionNumber: number
     action: ProposalAction
+    /** Entry rule the strategy was following when the proposal was produced. */
+    entryMode: EntryMode
     status: ProposalStatus
     gate: RiskGateVerdict
     confidence: number
@@ -352,5 +363,23 @@ declare namespace server {
     outcome: ExecutionOutcome
     status: ExecutionStatus
     reason: string | null
+  }
+
+  /**
+   * Whether one requirement of the live promotion gate has been met. `NotVerifiable` means the application
+   * cannot decide it, which is not the same as it being met or unmet.
+   */
+  type PromotionRequirementState = 'Satisfied' | 'NotSatisfied' | 'NotVerifiable'
+
+  interface PromotionRequirement {
+    key: string
+    state: PromotionRequirementState
+    evidence: string | null
+  }
+
+  interface PromotionStatus {
+    isLiveEligible: boolean
+    currentEnvironment: string | null
+    requirements: PromotionRequirement[]
   }
 }

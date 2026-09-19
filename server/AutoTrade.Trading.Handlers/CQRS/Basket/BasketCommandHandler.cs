@@ -68,6 +68,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
     private const double MaxDailyLossLimit = 20.0;
 
     // Defaults validated in the prototype and confirmed by the operator.
+    private const EntryMode DefaultEntryMode = EntryMode.RegimeMomentum;
     private const FailurePolicy DefaultFailurePolicy = FailurePolicy.MinimumCoverage;
     private const int DefaultMinimumCoverage = 75;
     private const double DefaultRiskPerBasket = 0.8;
@@ -106,6 +107,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
       {
         Id = Guid.CreateVersion7(),
         BasketId = basket.Id,
+        EntryMode = DefaultEntryMode,
         FailurePolicy = DefaultFailurePolicy,
         MinimumCoverage = DefaultMinimumCoverage,
         RiskPerBasket = DefaultRiskPerBasket,
@@ -189,6 +191,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
       {
         Id = Guid.CreateVersion7(),
         BasketId = clone.Id,
+        EntryMode = sourcePolicy != null ? sourcePolicy.EntryMode : DefaultEntryMode,
         FailurePolicy = sourcePolicy != null ? sourcePolicy.FailurePolicy : DefaultFailurePolicy,
         MinimumCoverage = sourcePolicy != null ? sourcePolicy.MinimumCoverage : DefaultMinimumCoverage,
         RiskPerBasket = sourcePolicy != null ? sourcePolicy.RiskPerBasket : DefaultRiskPerBasket,
@@ -361,6 +364,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
         db.BasketDraftPolicies.Add(policy);
       }
 
+      policy.EntryMode = request.Policy.EntryMode;
       policy.FailurePolicy = request.Policy.FailurePolicy;
       policy.MinimumCoverage = request.Policy.MinimumCoverage;
       policy.RiskPerBasket = request.Policy.RiskPerBasket;
@@ -493,7 +497,11 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
       bool lossValid = request.Policy.DailyLossLimit >= MinDailyLossLimit
         && request.Policy.DailyLossLimit <= MaxDailyLossLimit;
 
-      return Task.FromResult(coverageValid && riskValid && lossValid);
+      // The declared rule must be one the vocabulary knows: an unknown value would make the strategy
+      // unreportable in a proposal, which is the only thing the field is for until an evidence source exists.
+      bool entryModeValid = Enum.IsDefined(typeof(EntryMode), request.Policy.EntryMode);
+
+      return Task.FromResult(coverageValid && riskValid && lossValid && entryModeValid);
     }
 
     public async Task<bool> Handle(ValidateBasketArchivable request, CancellationToken cancellationToken)

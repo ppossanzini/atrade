@@ -103,6 +103,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
         VersionNumber = version.Number,
         SnapshotId = snapshot.Id,
         Action = proposalCandidate.Action,
+        EntryMode = policy != null ? policy.EntryMode : EntryMode.RegimeMomentum,
         Gate = decision.Verdict,
         Status = AnalysisRules.Route(state.Mode, decision.Verdict),
         Confidence = proposalCandidate.Confidence,

@@ -1,6 +1,6 @@
 # Roadmap di implementazione
 
-Status: Slice 0-2 consegnate; Slice 3 parzialmente consegnata e bloccata dall'approvazione cTrader; Slice 4 consegnata con gate umano sulle soglie ancora aperto
+Status: Slice 0-2 consegnate; Slice 3 parzialmente consegnata e bloccata dall'approvazione cTrader; Slice 4 consegnata con gate umano sulle soglie ancora aperto; Slice 5 e 6 consegnate; Slice 9 (Strategia) consegnata
 Strategia: vertical slice demo-first
 
 ## Stato di consegna
@@ -12,7 +12,7 @@ Strategia: vertical slice demo-first
 | 2 - Basket lifecycle | Consegnata | 143 test; flusso completo verificato via HTTP e in browser; snapshot immutabili verificati a DB; `InitialCreate` applicata |
 | 3 - Broker demo | Parziale, bloccata da fuori | codice completo e test verde; reachability TCP/wss e errore provider reali (`OA client is not in active state`); autenticazione, snapshot, riconciliazione e rinnovo token non verificabili finche l'app non e approvata |
 | 4 - Risk Engine | Consegnata (gate umano aperto) | 269 test; 12 codici gate con codice, valore osservato, soglia e timestamp; limiti di gamba sulla gamba (ADR-0021, sostituisce ADR-0013); pannelli Risk gate e Soglie di verifica in browser, incluso il ciclo kill switch ingaggiato/rilasciato riflesso nei gate |
-| 5 - Execution Engine | Non iniziata | richiede un conto demo autorizzato e la riconciliazione; la parte persist-first/idempotenza e costruibile prima (vedi nota di scope) |
+| 5 - Execution Engine | Consegnata (senza conto broker reale) | 385 test; persist-first con `clientOrderId` idempotente, invio sequenziale, dedup degli eventi broker, fill parziali, compensazione esplicita e journal di ogni avvio rifiutato; gateway simulato dietro `IExecutionGateway` (ADR-0018/0019); vista Esecuzione verificata in browser (coda, dettaglio gambe/eventi, compensazione con motivo obbligatorio). La verifica su conto demo autorizzato e la riconciliazione reale restano bloccate dall'approvazione cTrader |
 | 6 - Market Manager | Consegnata | 340 test; ciclo di analisi reale con proposte, snapshot persistito e 10 valutazioni di gate per proposta; matrice di instradamento a tabella; decisioni con rivalutazione del gate e rispetto della modalita (ADR-0017); vista operatore verificata in browser (coda, dettaglio, rifiuto con motivazione obbligatoria) |
 
 Le slice successive restano da consegnare.
@@ -203,6 +203,22 @@ Output:
 
 Copre: AC-14, AC-15 e regressione AC-01..17.
 
+## Slice 9 - Strategia versionata
+
+Perimetro: le regole che trasformano l'analisi in una proposta. La strategia **e la policy della versione di paniere**, non una entita separata: gli stessi limiti governano gia il gate di rischio, e una seconda copia permetterebbe alla schermata e al gate di dichiarare valori diversi.
+
+Output:
+
+- modalita di ingresso dichiarata nella catena della policy (bozza, versione, proposta) e validata contro il vocabolario;
+- regole in vigore e regole in preparazione tenute distinte, con `ActivePolicy` nella lettura del paniere attivo;
+- modalita congelata sulla proposta e riportata sia nella coda sia nel dettaglio dallo stesso costruttore;
+- vista Strategia nel client: regole deterministiche, guardrail sull'LLM, percorso di promozione;
+- lettura read-only del gate di promozione con stato misurato per requisito.
+
+Copre: AC-17 (lettura del gate), AC-18.
+
+Nota di scope: la modalita e una **dichiarazione versionata e auditata**. La regola direzionale che ne deriva (momentum, regime) richiede una serie storica e viene esercitata dalla sorgente di evidenze dello Slice 7; la schermata lo dichiara invece di suggerire che il selettore cambi le proposte.
+
 ## Gate di promozione live separato
 
 La promozione non fa parte dell'MVP e richiede almeno:
@@ -226,3 +242,4 @@ La promozione non fa parte dell'MVP e richiede almeno:
 | 6 | AC-05..07 | 340 handler test (matrice di instradamento, TTL, rivalutazione del gate, idempotenza) + flusso operatore verificato in browser |
 | 7 | AC-16 | Adapter failure tests + dependency check |
 | 8 | AC-14..15 | Reconciled episode test + audit trace |
+| 9 | AC-18 | 385 handler test (modalita congelata sulla versione e riportata sulla proposta, coda e dettaglio coerenti, gate di promozione con stato misurato) + vista Strategia verificata in browser |

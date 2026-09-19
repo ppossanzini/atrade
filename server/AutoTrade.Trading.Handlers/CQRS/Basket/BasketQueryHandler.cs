@@ -130,16 +130,23 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
 
       ActiveSlot activeSlot = await ReadActiveSlotAsync(cancellationToken);
 
+      bool holdsActiveVersion = activeSlot != null && activeSlot.BasketId == basket.Id;
+
+      BasketVersionPolicy activePolicy = holdsActiveVersion
+        ? await db.BasketVersionPolicies.AsNoTracking().FirstOrDefaultAsync(item => item.VersionId == activeSlot.VersionId, cancellationToken)
+        : null;
+
       BasketDetailDto detail = new BasketDetailDto
       {
         BasketId = basket.Id,
         Name = basket.Name,
         Status = DeriveBasketStatus(basket, activeSlot),
         LatestVersionNumber = latestNumber ?? 0,
-        ActiveVersionId = activeSlot != null && activeSlot.BasketId == basket.Id ? activeSlot.VersionId : (Guid?)null,
-        ActiveVersionNumber = activeSlot != null && activeSlot.BasketId == basket.Id ? activeSlot.Number : 0,
+        ActiveVersionId = holdsActiveVersion ? activeSlot.VersionId : (Guid?)null,
+        ActiveVersionNumber = holdsActiveVersion ? activeSlot.Number : 0,
         DraftLegs = draftLegs.Select(item => mapper.Map<BasketCompositionLegDto>(item)).ToList(),
-        DraftPolicy = draftPolicy != null ? mapper.Map<BasketPolicyDto>(draftPolicy) : null
+        DraftPolicy = draftPolicy != null ? mapper.Map<BasketPolicyDto>(draftPolicy) : null,
+        ActivePolicy = activePolicy != null ? mapper.Map<BasketPolicyDto>(activePolicy) : null
       };
 
       return detail;

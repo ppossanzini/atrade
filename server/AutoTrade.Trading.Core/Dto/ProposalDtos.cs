@@ -20,6 +20,9 @@ namespace AutoTrade.Trading.Core.Dto
 
     public ProposalAction Action { get; set; }
 
+    /// <summary>Entry rule the strategy was following when the proposal was produced.</summary>
+    public EntryMode EntryMode { get; set; }
+
     public ProposalStatus Status { get; set; }
 
     public RiskGateVerdict Gate { get; set; }
