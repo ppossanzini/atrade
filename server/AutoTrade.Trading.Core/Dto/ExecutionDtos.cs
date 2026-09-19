@@ -84,7 +84,7 @@ namespace AutoTrade.Trading.Core.Dto
 
   public class ExecutionDetailDto : ExecutionSummaryDto
   {
-    public Guid ProposalId { get; set; }
+    public Guid? ProposalId { get; set; }
 
     public Guid? SnapshotId { get; set; }
 

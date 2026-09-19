@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoTrade.Trading.Handlers;
 using AutoTrade.Trading.Handlers.Broker.OAuth;
 using AutoTrade.Trading.Handlers.CQRS.Journal;
+using AutoTrade.Trading.Handlers.Execution;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
 using AutoTrade.Trading.Handlers.Tests.Broker;
@@ -52,6 +53,10 @@ namespace AutoTrade.Trading.Handlers.Tests
       // engine, the real threshold reading and the real routing rules instead of stand-ins.
       services.AddTradingRisk(configuration);
       services.AddTradingMarket(configuration);
+
+      // The execution tier too: the configured provider decides which order gateway the handler receives,
+      // exactly as it does in production.
+      services.AddTradingExecution(configuration);
 
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();

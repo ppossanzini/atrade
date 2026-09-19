@@ -15,8 +15,11 @@ namespace AutoTrade.Trading.Handlers.Model
     [Key]
     public Guid Id { get; set; }
 
-    /// <summary>One proposal, one execution: the uniqueness is enforced by an index, not by convention.</summary>
-    public Guid ProposalId { get; set; }
+    /// <summary>
+    /// One proposal, one execution: enforced by a unique index. Null for a compensation, which is a new
+    /// execution of an existing one and has no proposal of its own.
+    /// </summary>
+    public Guid? ProposalId { get; set; }
 
     public Guid BasketId { get; set; }
 

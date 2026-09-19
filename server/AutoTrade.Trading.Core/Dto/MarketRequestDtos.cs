@@ -24,3 +24,14 @@ namespace AutoTrade.Trading.Core.Dto
     public string Reason { get; set; }
   }
 }
+
+namespace AutoTrade.Trading.Core.Dto
+{
+  /// <summary>
+  /// Compensation request. The reason is mandatory: closing real exposure without saying why is not auditable.
+  /// </summary>
+  public class CompensationRequestDto
+  {
+    public string Reason { get; set; }
+  }
+}

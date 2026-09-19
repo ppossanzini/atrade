@@ -1,4 +1,5 @@
 using AutoTrade.Trading.Handlers.CQRS.Journal;
+using AutoTrade.Trading.Handlers.Execution;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
 using MapZilla;
@@ -26,6 +27,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddTradingMarketData(configuration);
       services.AddTradingRisk(configuration);
       services.AddTradingMarket(configuration);
+      services.AddTradingExecution(configuration);
 
       return services;
     }

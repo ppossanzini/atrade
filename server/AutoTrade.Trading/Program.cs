@@ -8,6 +8,7 @@ using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Query.Session;
 using AutoTrade.Trading.Handlers;
 using AutoTrade.Trading.Handlers.Broker;
+using AutoTrade.Trading.Handlers.Execution;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
 using Hikyaku;
@@ -80,7 +81,13 @@ BrokerConfigurationGuard.EnsureValid(brokerOptions);
 MarketDataOptions marketDataOptions = app.Services.GetRequiredService<MarketDataOptions>();
 MarketDataModule.EnsureSourceIsUsable(marketDataOptions, brokerOptions);
 
+// Fail-closed: an execution provider that cannot work aborts startup, and no provider at all is a supported
+// state in which nothing can be sent.
+ExecutionOptions executionOptions = app.Services.GetRequiredService<ExecutionOptions>();
+ExecutionModule.EnsureProviderIsUsable(executionOptions);
+
 app.Logger.LogInformation("Market data source in force: {Provider}.", marketDataOptions.Provider);
+app.Logger.LogInformation("Execution provider in force: {Provider}.", executionOptions.Provider);
 
 if (!brokerOptions.IsClientConfigured)
 {
