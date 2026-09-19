@@ -1,4 +1,5 @@
 using AutoTrade.Trading.Handlers.CQRS.Journal;
+using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Execution;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
@@ -28,6 +29,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddTradingRisk(configuration);
       services.AddTradingMarket(configuration);
       services.AddTradingExecution(configuration);
+      services.AddTradingEvidence(configuration);
 
       return services;
     }

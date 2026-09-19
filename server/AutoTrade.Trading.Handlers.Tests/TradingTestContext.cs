@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoTrade.Trading.Handlers;
 using AutoTrade.Trading.Handlers.Broker.OAuth;
 using AutoTrade.Trading.Handlers.CQRS.Journal;
+using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Execution;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
@@ -57,6 +58,9 @@ namespace AutoTrade.Trading.Handlers.Tests
       // The execution tier too: the configured provider decides which order gateway the handler receives,
       // exactly as it does in production.
       services.AddTradingExecution(configuration);
+
+      // And the evidence tier: with no section configured it resolves to the explicitly unavailable store.
+      services.AddTradingEvidence(configuration);
 
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();

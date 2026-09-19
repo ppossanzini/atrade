@@ -3,6 +3,10 @@
 *.db-wal
 *.db-shm
 
+# Local semantic memory (Jigen store): runtime data as well, one file per database.
+*.jigen
+jigendb/
+
 # Frontend dependencies and build output.
 node_modules/
 dist/

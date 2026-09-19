@@ -103,6 +103,20 @@
 
           <p v-else class="status-panel__empty">{{ t('status.never') }}</p>
         </div>
+
+        <div class="panel status-panel">
+          <span class="panel-title">{{ t('status.evidenceStore') }}</span>
+
+          <template v-if="evidenceStore">
+            <MetricRow label-key="status.evidenceProvider" :value="evidenceStore.provider" />
+            <MetricRow
+              label-key="status.evidenceAvailable"
+              :value-key="evidenceStore.isAvailable ? 'common.yes' : 'common.no'"
+            />
+          </template>
+
+          <p v-else class="status-panel__empty">{{ t('status.never') }}</p>
+        </div>
       </el-col>
     </el-row>
 

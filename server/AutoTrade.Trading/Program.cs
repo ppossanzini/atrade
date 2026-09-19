@@ -8,6 +8,7 @@ using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Query.Session;
 using AutoTrade.Trading.Handlers;
 using AutoTrade.Trading.Handlers.Broker;
+using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Execution;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
@@ -86,8 +87,18 @@ MarketDataModule.EnsureSourceIsUsable(marketDataOptions, brokerOptions);
 ExecutionOptions executionOptions = app.Services.GetRequiredService<ExecutionOptions>();
 ExecutionModule.EnsureProviderIsUsable(executionOptions);
 
+// Fail-closed: asking for a semantic memory without saying where it lives aborts startup, because coming up
+// without the capability that was configured would be worse than refusing. No provider is a supported state.
+EvidenceOptions evidenceOptions = app.Services.GetRequiredService<EvidenceOptions>();
+EvidenceModule.EnsureProviderIsUsable(evidenceOptions);
+
+// The store is opened now, not on first use: a configured store that cannot be opened has to stop the host
+// rather than surface as a failed retrieval hours later.
+app.Services.GetRequiredService<IJigenEvidenceStore>();
+
 app.Logger.LogInformation("Market data source in force: {Provider}.", marketDataOptions.Provider);
 app.Logger.LogInformation("Execution provider in force: {Provider}.", executionOptions.Provider);
+app.Logger.LogInformation("Evidence store in force: {Provider}.", evidenceOptions.Provider);
 
 if (!brokerOptions.IsClientConfigured)
 {

@@ -53,6 +53,13 @@ declare namespace server {
     killSwitch: KillSwitchStatus
     account: TradingAccountStatus | null
     marketManager: MarketManagerStatus | null
+    evidenceStore: EvidenceStoreStatus | null
+  }
+
+  /** Semantic memory as the application sees it. Unavailable degrades retrieval, never authority. */
+  interface EvidenceStoreStatus {
+    provider: string
+    isAvailable: boolean
   }
 
   interface KillSwitchChange {
