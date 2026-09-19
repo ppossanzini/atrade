@@ -14,5 +14,10 @@ namespace AutoTrade.Trading.Handlers.MarketData
     {
       return Task.FromResult(MarketDataCapture.Unavailable());
     }
+
+    public Task<List<SymbolSpecification>> DescribeAsync(IReadOnlyList<SymbolRequest> symbols, CancellationToken cancellationToken)
+    {
+      return Task.FromResult(new List<SymbolSpecification>());
+    }
   }
 }

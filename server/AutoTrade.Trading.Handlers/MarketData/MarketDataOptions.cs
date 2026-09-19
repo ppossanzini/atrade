@@ -47,6 +47,9 @@ namespace AutoTrade.Trading.Handlers.MarketData
 
     public double UnrealizedPnl { get; set; }
 
+    /// <summary>Currency of the simulated account, used to decide whether a conversion would be needed.</summary>
+    public string AccountCurrency { get; set; }
+
     /// <summary>Explicit symbol profiles, keyed by symbol.</summary>
     public Dictionary<string, SimulatedSymbolOptions> Symbols { get; set; }
 
@@ -69,6 +72,20 @@ namespace AutoTrade.Trading.Handlers.MarketData
     public double VolatilityPercent { get; set; }
 
     public bool IsTradable { get; set; }
+
+    /// <summary>Smallest volume the provider accepts for this instrument.</summary>
+    public int MinVolume { get; set; }
+
+    public int StepVolume { get; set; }
+
+    public int MaxVolume { get; set; }
+
+    public int LotSize { get; set; }
+
+    /// <summary>Price value of one pip for one unit of volume.</summary>
+    public double PipSizePerUnit { get; set; }
+
+    public string ProfitCurrency { get; set; }
 
     /// <summary>
     /// True when this profile was materialised as a fallback for a whole market, so an explicit symbol

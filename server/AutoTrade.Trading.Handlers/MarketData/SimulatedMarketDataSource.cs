@@ -51,10 +51,52 @@ namespace AutoTrade.Trading.Handlers.MarketData
           Balance = settings.Balance > 0 ? settings.Balance : settings.Equity,
           RealizedPnlToday = settings.RealizedPnlToday,
           UnrealizedPnl = settings.UnrealizedPnl,
-          Environment = TradingEnvironment.Demo
+          Environment = TradingEnvironment.Demo,
+          Currency = settings.AccountCurrency
         },
         Symbols = captures
       });
+    }
+
+    /// <summary>
+    /// Describes the instruments from the configured profiles. A symbol with neither an explicit profile nor
+    /// a market fallback is absent from the answer, which is how the source reports "this instrument is not
+    /// offered" without inventing a specification.
+    /// </summary>
+    public Task<List<SymbolSpecification>> DescribeAsync(IReadOnlyList<SymbolRequest> symbols, CancellationToken cancellationToken)
+    {
+      SimulatedMarketDataOptions settings = options.Simulated;
+      List<SymbolSpecification> specifications = new List<SymbolSpecification>();
+
+      if (options.Provider != MarketDataProviderKind.Simulated || settings == null || symbols == null)
+      {
+        return Task.FromResult(specifications);
+      }
+
+      foreach (SymbolRequest request in symbols)
+      {
+        SimulatedSymbolOptions profile = ResolveProfile(settings, request);
+
+        if (profile == null)
+        {
+          continue;
+        }
+
+        specifications.Add(new SymbolSpecification
+        {
+          Symbol = request.Symbol,
+          Market = profile.Market,
+          MinVolume = profile.MinVolume,
+          StepVolume = profile.StepVolume,
+          MaxVolume = profile.MaxVolume,
+          LotSize = profile.LotSize,
+          PipSizePerUnit = profile.PipSizePerUnit,
+          ProfitCurrency = profile.ProfitCurrency,
+          IsTradable = profile.IsTradable
+        });
+      }
+
+      return Task.FromResult(specifications);
     }
 
     private static SymbolCapture CaptureSymbol(SimulatedMarketDataOptions settings, SymbolRequest request, int cycle)

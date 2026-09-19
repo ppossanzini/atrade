@@ -36,7 +36,8 @@ namespace AutoTrade.Trading.Handlers.MarketData
 
   /// <summary>
   /// Account facts of the same capture. They belong to the capture because a risk decision must not mix
-  /// a market instant with an account instant taken elsewhere.
+  /// a market instant with an account instant taken elsewhere, and because the position size depends on the
+  /// capital and on the account currency rather than on a number configured by the application.
   /// </summary>
   public class AccountCapture
   {
@@ -49,6 +50,41 @@ namespace AutoTrade.Trading.Handlers.MarketData
     public double UnrealizedPnl { get; set; }
 
     public TradingEnvironment Environment { get; set; }
+
+    /// <summary>Currency the account is denominated in, used to decide whether a conversion is needed.</summary>
+    public string Currency { get; set; }
+  }
+
+  /// <summary>
+  /// What the provider says about one instrument: the facts that decide whether and how much can be sent.
+  /// They are not operating policy and are never configured as such, because they describe the instrument
+  /// and change with it (lot size, leverage and contract size are all folded into these numbers).
+  /// </summary>
+  public class SymbolSpecification
+  {
+    public string Symbol { get; set; }
+
+    public MarketKind Market { get; set; }
+
+    /// <summary>Smallest volume the provider accepts for this instrument, in broker units.</summary>
+    public int MinVolume { get; set; }
+
+    /// <summary>Increment every volume must be a multiple of.</summary>
+    public int StepVolume { get; set; }
+
+    /// <summary>Largest volume the provider accepts, or 0 when it does not publish one.</summary>
+    public int MaxVolume { get; set; }
+
+    /// <summary>Units in one lot, as the provider defines them.</summary>
+    public int LotSize { get; set; }
+
+    /// <summary>Price value of one pip for one unit of volume: the bridge between pips and money.</summary>
+    public double PipSizePerUnit { get; set; }
+
+    /// <summary>Currency the instrument settles in. When it differs from the account currency, a rate is needed.</summary>
+    public string ProfitCurrency { get; set; }
+
+    public bool IsTradable { get; set; }
   }
 
   /// <summary>
@@ -86,5 +122,11 @@ namespace AutoTrade.Trading.Handlers.MarketData
   public interface IMarketDataSource
   {
     Task<MarketDataCapture> CaptureAsync(IReadOnlyList<SymbolRequest> symbols, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Describes the instruments the provider offers. A symbol missing from the answer is not tradable, and
+    /// the application never substitutes a specification of its own.
+    /// </summary>
+    Task<List<SymbolSpecification>> DescribeAsync(IReadOnlyList<SymbolRequest> symbols, CancellationToken cancellationToken);
   }
 }

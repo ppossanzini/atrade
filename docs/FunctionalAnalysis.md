@@ -307,6 +307,10 @@ Perimetro: trasformare una proposta autorizzata in una sequenza di ordini govern
 - Il kill switch blocca nuove esecuzioni e nuovi invii. Non chiude posizioni esistenti e non annulla un'esecuzione gia in corso.
 - Dopo un riavvio il sistema resta fail-closed per le nuove esecuzioni finche la riconciliazione non e aggiornata; le esecuzioni incomplete restano visibili con il loro stato reale.
 
-### 10.7 Gate di sicurezza prima del primo ordine con effetto reale
+### 10.7 Simboli, volume e gate di sicurezza
 
-- Prima di qualsiasi invio verso il conto demo devono essere approvati **l'ordine minimo** e **l'elenco dei simboli consentiti**. Senza questi valori l'esecuzione non prepara nemmeno la prima gamba: fail-closed, nessun default in codice.
+- I simboli negoziabili sono **quelli che il provider fornisce**: l'applicazione non mantiene un elenco proprio di simboli consentiti, e non puo inventare strumenti che il provider non descrive.
+- L'**ordine minimo, il passo e il massimo** sono proprieta dello strumento, non decisioni operative: arrivano dalla descrizione del simbolo del provider e cambiano da simbolo a simbolo (leva, lotto, taglia contrattuale). Per questo l'esecuzione non li configura e non li assume.
+- Il **volume** di ogni gamba e deciso dal **modello di rischio**: nasce da capitale, risk cap della gamba e distanza di stop, viene arrotondato per difetto al passo dello strumento e viene **rifiutato** se scende sotto il minimo del provider. Non viene mai alzato d'ufficio per "far entrare" un ordine.
+- Un simbolo che il provider non descrive come negoziabile, o per cui manca la taglia necessaria al calcolo, non viene inviato: l'esecuzione si ferma con il motivo esplicito invece di indovinare.
+- La conversione valutaria e richiesta quando ne la valuta base ne quella di quotazione coincidono con la valuta del conto: senza un tasso fornito dal provider il calcolo non produce un volume e l'invio non avviene.

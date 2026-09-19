@@ -56,6 +56,7 @@ namespace AutoTrade.Trading.Handlers.MarketData
         Balance = ReadDouble(section, "Balance", 0),
         RealizedPnlToday = ReadDouble(section, "RealizedPnlToday", 0),
         UnrealizedPnl = ReadDouble(section, "UnrealizedPnl", 0),
+        AccountCurrency = section["AccountCurrency"],
         Symbols = new Dictionary<string, SimulatedSymbolOptions>(StringComparer.OrdinalIgnoreCase),
         DefaultByMarket = new Dictionary<MarketKind, SimulatedSymbolOptions>()
       };
@@ -89,6 +90,12 @@ namespace AutoTrade.Trading.Handlers.MarketData
         SpreadPips = ReadDouble(section, "SpreadPips", 0),
         VolatilityPercent = ReadDouble(section, "VolatilityPercent", 0),
         IsTradable = ReadBool(section, "IsTradable", true),
+        MinVolume = ReadInt(section, "MinVolume", 0),
+        StepVolume = ReadInt(section, "StepVolume", 0),
+        MaxVolume = ReadInt(section, "MaxVolume", 0),
+        LotSize = ReadInt(section, "LotSize", 0),
+        PipSizePerUnit = ReadDouble(section, "PipSizePerUnit", 0),
+        ProfitCurrency = section["ProfitCurrency"],
         IsMarketDefault = isMarketDefault
       };
     }

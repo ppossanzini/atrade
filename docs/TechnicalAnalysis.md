@@ -450,11 +450,12 @@ API: `GET /api/execution/executions`, `GET /api/execution/executions/{id}`, `POS
 - Indici: `ProposalId` unico su `Execution`, `ClientOrderId` unico su `ExecutionLeg`, `BrokerEventId` unico su `BrokerEvent`, `(Status, CreatedAtUtc)` per la coda.
 - Migrazione EF dedicata.
 
-### C.3 Seam degli ordini
+### C.3 Seam degli ordini e descrizione degli strumenti
 
 - `IExecutionGateway` espone quello che l'Execution Engine usa davvero: invio di una gamba con il suo `clientOrderId`, e lettura dello stato di un ordine per la riconciliazione.
-- Dietro la seam stanno `SimulatedExecutionGateway` (ora) e il gateway cTrader (quando l'applicazione sara approvata). Vale lo stesso confine dell'ADR-0015: **nessun contratto, nessuna decisione, nessun payload e nessuna schermata sa quale dei due e attivo**; la sorgente si sceglie da configurazione e si butta quando arriva quella reale.
-- Il gateway simulato e deterministico e pilotato da profili: accetta, rifiuta, riempie parzialmente, non risponde mai (per esercitare il timeout) e risponde con un evento duplicato (per esercitare la deduplica), in base al simbolo e a una sequenza configurata.
+- La **descrizione dello strumento** (`SymbolSpecification`: volume minimo, passo, massimo, taglia del lotto, dimensione del pip per unita, negoziabile) e un fatto del provider e vive sulla seam dei dati, non in configurazione operativa: `IMarketDataSource.DescribeAsync` la fornisce, e la sorgente simulata la legge dai propri profili mentre il gateway reale la leggera dal protocollo.
+- Dietro la seam degli ordini stanno `SimulatedExecutionGateway` (ora) e il gateway cTrader (quando l'applicazione sara approvata). Vale lo stesso confine dell'ADR-0015: **nessun contratto, nessuna decisione, nessun payload e nessuna schermata sa quale dei due e attivo**.
+- Il gateway simulato e deterministico e pilotato da profili: accetta, rifiuta, riempie parzialmente, non risponde mai (per esercitare il timeout) e risponde con un evento duplicato (per esercitare la deduplica).
 - Nessuna scrittura di stato transazionale nel gateway: la persistenza e dell'handler, prima dell'invio.
 
 ### C.4 Persist-first e idempotenza
@@ -465,12 +466,21 @@ API: `GET /api/execution/executions`, `GET /api/execution/executions/{id}`, `POS
 4. Un timeout porta la gamba a `TimedOut` e l'esecuzione a `ReconciliationRequired`; il ciclo successivo chiede lo stato dell'ordine al gateway e solo allora decide se il fill e avvenuto.
 5. Al riavvio, le esecuzioni non terminali vengono riprese in riconciliazione, mai reinviate.
 
-### C.5 Configurazione e gate di sicurezza
+### C.5 Dimensionamento dalla parte del rischio
 
-- `Trading:Execution:AllowedSymbols` (elenco), `Trading:Execution:MinimumVolumeUnits`, `Trading:Execution:VolumeStepUnits`, `Trading:Execution:DefaultVolumeUnitsPerSymbol`.
-- Senza simboli consentiti e senza volume minimo l'esecuzione non parte: validation fallita con `NotConfigured`, nessun invio parziale e nessun default nel codice.
-- Il volume resta una decisione di configurazione in questo slice: la formula di sizing richiede stop e conversione valutaria, che non esistono ancora, e inventarla ora significherebbe fissare una regola di rischio senza approvazione.
-- La compensazione e sempre un ordine nuovo con un nuovo `clientOrderId`: mai il riuso di quello originale.
+- `PositionSizingCalculator` (tier rischio, deterministico) produce il volume di ogni gamba:
+
+  ```text
+  importo a rischio = capitale * (risk cap della gamba / 100)
+  valore per unita dello stop = distanza di stop in pip * dimensione del pip per unita
+  volume = importo a rischio / valore per unita dello stop
+  volume = arrotondato per difetto al passo dello strumento
+  ```
+
+- Input dal modello di rischio: capitale (dalla cattura), risk cap della gamba (dalla versione), **distanza di stop in pip** (parametro di rischio, per mercato con override per simbolo, deciso dall'operatore).
+- Input dal provider: dimensione del pip per unita, volume minimo, passo e massimo. L'input di conversione valutaria e richiesto solo quando serve e, se manca, il volume non viene prodotto.
+- Nessun volume viene mai aumentato d'ufficio: sotto il minimo dello strumento la gamba viene rifiutata con il motivo, e l'esecuzione non parte.
+- `Trading:Risk:Sizing:DefaultByMarket:{Market}:StopDistancePips` e l'override `Trading:Risk:Sizing:Symbols:{Symbol}:StopDistancePips`. Senza distanza di stop il volume non esiste e l'esecuzione non parte: fail-closed, nessun default in codice.
 
 ### C.6 Client
 

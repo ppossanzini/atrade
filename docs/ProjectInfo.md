@@ -125,6 +125,19 @@
   - If compensation is not confirmed, the residual exposure stays visible as a degraded state instead of disappearing from the operator's view.
 - Consequences: The residual exposure of a partial execution is an explicit, auditable state rather than a hidden invariant, and the kill switch keeps its meaning (it blocks new openings and never closes what exists). The cost is an operator action on the critical path, which is the intended trade for the most dangerous operation in the system.
 
+## ADR-0020 - Instrument facts from the provider, position size from the risk model
+
+- Date: 2026-09-19
+- Status: Accepted
+- Context: The first draft of the execution design asked the operator to configure an allowlist of symbols, a minimum order volume and a default volume per symbol. That put broker facts and risk decisions in the same configuration file: the minimum order and its step are properties of the instrument (lot size, leverage, contract size), while the amount to risk is a decision of the risk model. Keeping them together would have made the application the owner of facts it does not own and the operator the author of numbers the model should derive.
+- Decision:
+  - **Symbols are what the provider describes.** The application keeps no allowlist of its own: a symbol that the provider does not describe as tradable is not traded, and an instrument the provider does not offer cannot appear in an order.
+  - **Minimum volume, step, maximum, lot size and pip size per unit are provider facts**, delivered by the data seam (`IMarketDataSource.DescribeAsync`) and never configured as operating policy. They differ per symbol, which is exactly why they cannot be a constant in the application.
+  - **The volume is computed by the risk model**: risk amount = equity × leg risk cap, divided by the value of the stop distance, then rounded **down** to the instrument step. It is never rounded up to reach a minimum, and never invented: a size below the instrument minimum is refused with its reason.
+  - The risk model owns the only remaining sizing input that is a decision rather than a fact: the **stop distance in pips**, per market with a per symbol override. Without it there is no volume and the execution does not start.
+  - Currency conversion is required only when neither the base nor the quote currency is the account currency; without a rate supplied by the provider, no volume is produced and nothing is sent.
+- Consequences: The boundary between what the broker knows and what we decide stays visible in the code, and the simulated provider carries demo instrument specifications that the real provider will simply replace, exactly as with market data (ADR-0015) and order execution (ADR-0018). The cost is one more provider responsibility to model, and one more fail-closed input (the stop distance) that the operator must decide before a single order can be prepared.
+
 ## ADR-0007 - Freeze the prototype and create production projects from scratch
 
 - Date: 2026-09-18
