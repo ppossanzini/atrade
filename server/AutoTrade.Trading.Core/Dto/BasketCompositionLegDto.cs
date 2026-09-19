@@ -14,6 +14,14 @@ namespace AutoTrade.Trading.Core.Dto
     public TimeFrame TimeFrame { get; set; }
     public int Weight { get; set; }
     public double RiskCap { get; set; }
+
+    /// <summary>
+    /// Stop distance of the leg, in pips, chosen by the operator for this instrument inside this basket.
+    /// It belongs to the composition and not to a deployment setting: how far a leg may run against us is a
+    /// decision about that leg, and it is frozen into the version like every other leg property.
+    /// </summary>
+    public double StopDistancePips { get; set; }
+
     public bool IsSelected { get; set; }
   }
 }

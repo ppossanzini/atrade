@@ -204,6 +204,9 @@ export default {
     timeFrame: 'TF',
     weight: 'Peso %',
     riskCap: 'Risk cap %',
+    stopDistance: 'Stop (pip)',
+    stopDistanceHint:
+      'Distanza di stop della gamba: insieme al risk cap determina il volume dell’ordine. A zero il volume non viene calcolato e l’esecuzione non parte.',
     include: 'Includi',
     removeLeg: 'Rimuovi',
     selectedLegs: 'Gambe selezionate',

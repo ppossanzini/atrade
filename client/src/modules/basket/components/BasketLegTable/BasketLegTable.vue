@@ -104,6 +104,22 @@
       </template>
     </el-table-column>
 
+    <el-table-column :label="t('basket.stopDistance')" width="152">
+      <template #default="scope">
+        <el-input-number
+          :model-value="scope.row.stopDistancePips"
+          :disabled="disabled"
+          :min="0"
+          :max="100000"
+          :step="1"
+          :precision="1"
+          size="small"
+          controls-position="right"
+          @update:model-value="patchLeg(scope.$index, { stopDistancePips: Number($event) })"
+        />
+      </template>
+    </el-table-column>
+
     <el-table-column width="96" align="right">
       <template #default="scope">
         <el-button

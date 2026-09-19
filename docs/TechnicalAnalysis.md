@@ -477,10 +477,10 @@ API: `GET /api/execution/executions`, `GET /api/execution/executions/{id}`, `POS
   volume = arrotondato per difetto al passo dello strumento
   ```
 
-- Input dal modello di rischio: capitale (dalla cattura), risk cap della gamba (dalla versione), **distanza di stop in pip** (parametro di rischio, per mercato con override per simbolo, deciso dall'operatore).
+- Input dal modello di rischio: capitale (dalla cattura), risk cap della gamba e **distanza di stop in pip**, entrambi proprieta della gamba nella composizione del paniere e congelati nella versione. La distanza di stop non e una configurazione di deployment: e una decisione sullo strumento dentro quel paniere, quindi sta dove sta il resto della composizione e si modifica dalla schermata del paniere.
 - Input dal provider: dimensione del pip per unita, volume minimo, passo e massimo. L'input di conversione valutaria e richiesto solo quando serve e, se manca, il volume non viene prodotto.
 - Nessun volume viene mai aumentato d'ufficio: sotto il minimo dello strumento la gamba viene rifiutata con il motivo, e l'esecuzione non parte.
-- `Trading:Risk:Sizing:DefaultByMarket:{Market}:StopDistancePips` e l'override `Trading:Risk:Sizing:Symbols:{Symbol}:StopDistancePips`. Senza distanza di stop il volume non esiste e l'esecuzione non parte: fail-closed, nessun default in codice.
+- Una gamba puo esistere senza distanza di stop mentre il paniere e in composizione: in quel caso il dimensionamento non produce volume e l'esecuzione si ferma con `stop_distance_not_configured`, senza che il paniere diventi non modificabile.
 
 ### C.6 Client
 

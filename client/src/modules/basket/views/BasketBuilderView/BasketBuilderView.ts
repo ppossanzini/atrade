@@ -195,6 +195,10 @@ export default defineComponent({
           timeFrame: 'H1',
           weight: 0,
           riskCap: 0.5,
+
+          // A new leg starts without a stop distance: the sizing refuses to size it until the operator
+          // decides how far the leg may run against us.
+          stopDistancePips: 0,
           isSelected: false,
         },
       ]

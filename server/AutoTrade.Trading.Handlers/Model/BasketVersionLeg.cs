@@ -32,5 +32,8 @@ namespace AutoTrade.Trading.Handlers.Model
     public int Weight { get; set; }
 
     public double RiskCap { get; set; }
+
+    /// <summary>Stop distance of the leg in pips, frozen with the version.</summary>
+    public double StopDistancePips { get; set; }
   }
 }

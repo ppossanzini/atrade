@@ -13,10 +13,8 @@ namespace AutoTrade.Trading.Handlers
     public static IServiceCollection AddTradingRisk(this IServiceCollection services, IConfiguration configuration)
     {
       RiskThresholds thresholds = RiskThresholdsFactory.FromConfiguration(configuration);
-      RiskSizingThresholds sizingThresholds = RiskSizingThresholdsFactory.FromConfiguration(configuration);
 
       services.AddSingleton(thresholds);
-      services.AddSingleton(sizingThresholds);
       services.AddSingleton<RiskEngine>();
 
       return services;

@@ -28,6 +28,9 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public double RiskCap { get; set; }
 
+    /// <summary>Stop distance of the leg in pips, decided with the leg and published with the version.</summary>
+    public double StopDistancePips { get; set; }
+
     public bool IsSelected { get; set; }
   }
 }

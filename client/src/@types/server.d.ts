@@ -88,6 +88,8 @@ declare namespace server {
     timeFrame: TimeFrame
     weight: number
     riskCap: number
+    /** Stop distance of the leg in pips: a decision about this instrument inside this basket. */
+    stopDistancePips: number
     isSelected: boolean
   }
 
@@ -229,6 +231,7 @@ declare namespace server {
     direction: LegDirection
     weight: number
     riskCap: number
+    stopDistancePips: number
   }
 
   interface ProposalDetail extends ProposalSummary {

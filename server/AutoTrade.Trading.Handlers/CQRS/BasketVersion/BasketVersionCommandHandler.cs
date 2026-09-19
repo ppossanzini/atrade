@@ -99,7 +99,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.BasketVersion
           Direction = leg.Direction,
           TimeFrame = leg.TimeFrame,
           Weight = leg.Weight,
-          RiskCap = leg.RiskCap
+          RiskCap = leg.RiskCap,
+          StopDistancePips = leg.StopDistancePips
         });
 
         ordinal++;

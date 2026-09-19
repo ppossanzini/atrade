@@ -51,6 +51,9 @@ namespace AutoTrade.Trading.Core.Dto
     public int Weight { get; set; }
 
     public double RiskCap { get; set; }
+
+    /// <summary>Stop distance of the leg, as frozen in the version the proposal was built from.</summary>
+    public double StopDistancePips { get; set; }
   }
 
   /// <summary>

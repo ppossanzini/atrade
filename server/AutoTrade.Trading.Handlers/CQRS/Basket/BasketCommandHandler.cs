@@ -38,6 +38,17 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
     private const int TotalWeightTarget = 100;
     private const double MinRiskCap = 0.05;
     private const double MaxRiskCap = 5.0;
+    private const double MaxStopDistancePips = 100000.0;
+
+    /// <summary>
+    /// A leg may exist without a stop distance while the operator is still composing the basket: the refusal
+    /// belongs to the sizing, which produces no volume and no order, not to the draft. What is rejected here is
+    /// only a value that cannot mean anything.
+    /// </summary>
+    private static bool IsStopDistanceUsable(double stopDistancePips)
+    {
+      return stopDistancePips >= 0 && stopDistancePips <= MaxStopDistancePips;
+    }
     private const int MinCoveragePercent = 50;
     private const int MaxCoveragePercent = 100;
     private const double MinRiskPerBasket = 0.1;
@@ -154,6 +165,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
           TimeFrame = sourceLeg.TimeFrame,
           Weight = sourceLeg.Weight,
           RiskCap = sourceLeg.RiskCap,
+          StopDistancePips = sourceLeg.StopDistancePips,
           IsSelected = sourceLeg.IsSelected
         });
       }
@@ -275,6 +287,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
           TimeFrame = leg.TimeFrame,
           Weight = leg.Weight,
           RiskCap = leg.RiskCap,
+          StopDistancePips = leg.StopDistancePips,
           IsSelected = leg.IsSelected
         });
       }
@@ -434,7 +447,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
         !string.IsNullOrWhiteSpace(leg.Symbol)
         && leg.Symbol.Trim().Length <= MaxSymbolLength
         && leg.RiskCap >= MinRiskCap
-        && leg.RiskCap <= MaxRiskCap);
+        && leg.RiskCap <= MaxRiskCap
+        && IsStopDistanceUsable(leg.StopDistancePips));
 
       if (!everySymbolUsable)
       {

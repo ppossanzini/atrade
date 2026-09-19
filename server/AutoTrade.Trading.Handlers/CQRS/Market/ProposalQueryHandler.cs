@@ -137,7 +137,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
           Market = leg.Market,
           Direction = leg.Direction,
           Weight = leg.Weight,
-          RiskCap = leg.RiskCap
+          RiskCap = leg.RiskCap,
+          StopDistancePips = leg.StopDistancePips
         });
       }
 
