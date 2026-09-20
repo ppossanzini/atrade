@@ -18,7 +18,31 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
   /// </summary>
   public class JigenEvidenceStoreTests : IDisposable
   {
-    private const string Collection = "episodes";
+    private static readonly EvidenceCollection Episodes = new EvidenceCollection
+    {
+      Name = "episodes",
+      Engine = EmbeddingEngineKind.JigenOnnx,
+      EmbeddingModel = "test-model",
+      TextVersion = "v1"
+    };
+
+    /// <summary>Same logical area, a different model: it must not share a space with the one above.</summary>
+    private static readonly EvidenceCollection EpisodesOtherModel = new EvidenceCollection
+    {
+      Name = "episodes",
+      Engine = EmbeddingEngineKind.JigenOnnx,
+      EmbeddingModel = "other-model",
+      TextVersion = "v1"
+    };
+
+    /// <summary>Same model, a different rendering of the text: a different space again.</summary>
+    private static readonly EvidenceCollection EpisodesOtherTextVersion = new EvidenceCollection
+    {
+      Name = "episodes",
+      Engine = EmbeddingEngineKind.JigenOnnx,
+      EmbeddingModel = "test-model",
+      TextVersion = "v2"
+    };
 
     private readonly List<string> createdDirectories = new List<string>();
 
@@ -51,10 +75,9 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
       return new EvidenceRecord
       {
         EvidenceId = Guid.CreateVersion7(),
-        Collection = Collection,
+        Collection = Episodes,
         Content = content,
         Embedding = embedding,
-        EmbeddingModel = "test-model",
         Query = "what happened after a partial fill",
         SourceRef = sourceRef,
         RecordedAtUtc = new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc)
@@ -101,7 +124,7 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
         CancellationToken.None);
 
       EvidenceSearchResult result = await store.SearchAsync(
-        new EvidenceQuery { Collection = Collection, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 2, EmbeddingModel = "test-model" },
+        new EvidenceQuery { Collection = Episodes, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 2 },
         CancellationToken.None);
 
       Assert.True(result.IsAvailable);
@@ -112,7 +135,8 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
       Assert.Equal(nearest.EvidenceId, top.EvidenceId);
       Assert.Equal("partial fill on the second leg", top.Content);
       Assert.Equal("execution:1", top.SourceRef);
-      Assert.Equal("test-model", top.EmbeddingModel);
+      Assert.Equal("test-model", top.Collection.EmbeddingModel);
+      Assert.Equal(Episodes.EffectiveName, top.Collection.EffectiveName);
       Assert.Equal("what happened after a partial fill", top.Query);
       Assert.Equal(nearest.RecordedAtUtc, top.RecordedAtUtc);
       Assert.True(top.Score > result.Matches[1].Score);
@@ -136,7 +160,7 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
       using (var reopened = new JigenEvidenceStore(CreateOptions(path)))
       {
         EvidenceSearchResult result = await reopened.SearchAsync(
-          new EvidenceQuery { Collection = Collection, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 1, EmbeddingModel = "test-model" },
+          new EvidenceQuery { Collection = Episodes, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 1 },
           CancellationToken.None);
 
         Assert.Equal(evidenceId, Assert.Single(result.Matches).EvidenceId);
@@ -151,7 +175,7 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
       using var store = new JigenEvidenceStore(CreateOptions(path));
 
       EvidenceSearchResult result = await store.SearchAsync(
-        new EvidenceQuery { Collection = "nothing-here", Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 3, EmbeddingModel = "test-model" },
+        new EvidenceQuery { Collection = EpisodesOtherModel, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 3 },
         CancellationToken.None);
 
       // An empty result and an absent store must not look the same to a caller.
@@ -180,10 +204,119 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
       using var store = new JigenEvidenceStore(CreateOptions(path));
 
       await Assert.ThrowsAsync<InvalidOperationException>(
-        () => store.SearchAsync(new EvidenceQuery { Collection = "", Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 1 }, CancellationToken.None));
+        () => store.SearchAsync(new EvidenceQuery { Collection = null, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 1 }, CancellationToken.None));
 
       await Assert.ThrowsAsync<InvalidOperationException>(
-        () => store.SearchAsync(new EvidenceQuery { Collection = Collection, Embedding = null, Top = 1 }, CancellationToken.None));
+        () => store.SearchAsync(new EvidenceQuery { Collection = Episodes, Embedding = null, Top = 1 }, CancellationToken.None));
+    }
+
+    [Fact]
+    public void Collection_WithoutAModelOrAVersion_RefusesToProduceAName()
+    {
+      // The structural guarantee: an incomplete collection cannot even be named, so it cannot become a space
+      // two producers quietly share.
+      Assert.Throws<InvalidOperationException>(() => new EvidenceCollection { Name = "episodes", TextVersion = "v1" }.EffectiveName);
+      Assert.Throws<InvalidOperationException>(() => new EvidenceCollection { Name = "episodes", EmbeddingModel = "test-model" }.EffectiveName);
+      Assert.Throws<InvalidOperationException>(() => new EvidenceCollection { EmbeddingModel = "test-model", TextVersion = "v1" }.EffectiveName);
+    }
+
+    [Fact]
+    public void Collection_WithoutAnEngine_RefusesToProduceAName()
+    {
+      // The engine is part of the identity, so leaving it unset is not a default: it is an incomplete space.
+      EvidenceCollection withoutEngine = new EvidenceCollection
+      {
+        Name = "episodes",
+        EmbeddingModel = "test-model",
+        TextVersion = "v1"
+      };
+
+      Assert.Equal(EmbeddingEngineKind.Unset, withoutEngine.Engine);
+      Assert.Throws<InvalidOperationException>(() => withoutEngine.EffectiveName);
+    }
+
+    [Fact]
+    public void EffectiveName_CarriesEveryProducerAttribute()
+    {
+      // Pinned as a literal because this string is the identity of a stored collection: changing its shape
+      // silently orphans every vector already written under the old one.
+      Assert.Equal("episodes@JigenOnnx@test-model@v1", Episodes.EffectiveName);
+      Assert.NotEqual(Episodes.EffectiveName, EpisodesOtherModel.EffectiveName);
+      Assert.NotEqual(Episodes.EffectiveName, EpisodesOtherTextVersion.EffectiveName);
+    }
+
+    [Fact]
+    public async Task Search_WithEmbeddingsOfTheSizeAModelProduces_Works()
+    {
+      // The real checkpoint emits a 768-dimensional vector and the store has to hold it: the small vectors
+      // used elsewhere in this file only prove the ranking rule, not the size.
+      string path = CreateTemporaryPath();
+
+      using var store = new JigenEvidenceStore(CreateOptions(path));
+
+      float[] first = new float[768];
+      float[] second = new float[768];
+
+      for (int index = 0; index < 768; index++)
+      {
+        first[index] = index == 0 ? 1.0f : 0.0f;
+        second[index] = index == 1 ? 1.0f : 0.0f;
+      }
+
+      EvidenceRecord record = CreateRecord("embedded at full size", first, "episode:768");
+
+      await store.UpsertAsync(new List<EvidenceRecord> { record, CreateRecord("the other one", second, "episode:other") }, CancellationToken.None);
+
+      EvidenceSearchResult result = await store.SearchAsync(
+        new EvidenceQuery { Collection = Episodes, Embedding = first, Top = 2 },
+        CancellationToken.None);
+
+      Assert.True(result.IsAvailable);
+      Assert.Equal(2, result.Matches.Count);
+      Assert.Equal(record.EvidenceId, result.Matches[0].EvidenceId);
+    }
+
+    [Fact]
+    public async Task Search_DoesNotSeeEvidenceStoredUnderAnotherTextVersion()
+    {
+      string path = CreateTemporaryPath();
+
+      using var store = new JigenEvidenceStore(CreateOptions(path));
+
+      await store.UpsertAsync(
+        new List<EvidenceRecord> { CreateRecord("rendered by v1", Vector(1.0f, 0.0f, 0.0f), "episode:v1") },
+        CancellationToken.None);
+
+      EvidenceSearchResult otherVersion = await store.SearchAsync(
+        new EvidenceQuery { Collection = EpisodesOtherTextVersion, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 3 },
+        CancellationToken.None);
+
+      Assert.True(otherVersion.IsAvailable);
+      Assert.Empty(otherVersion.Matches);
+    }
+
+    [Fact]
+    public async Task Search_DoesNotSeeEvidenceStoredUnderAnotherModel()
+    {
+      string path = CreateTemporaryPath();
+
+      using var store = new JigenEvidenceStore(CreateOptions(path));
+
+      await store.UpsertAsync(
+        new List<EvidenceRecord>
+        {
+          CreateRecord("embedded by the other model", Vector(1.0f, 0.0f, 0.0f), "episode:other")
+        },
+        CancellationToken.None);
+
+      // The record above lives in Episodes, so a query in EpisodesOtherModel must not find it even though the
+      // vector would rank first: this is what stops two models from being compared by accident.
+      EvidenceSearchResult otherModel = await store.SearchAsync(
+        new EvidenceQuery { Collection = EpisodesOtherModel, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 3 },
+        CancellationToken.None);
+
+      Assert.True(otherModel.IsAvailable);
+      Assert.Empty(otherModel.Matches);
     }
 
     [Fact]
@@ -196,7 +329,7 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
       await store.UpsertAsync(new List<EvidenceRecord> { CreateRecord("dropped", Vector(1.0f, 0.0f, 0.0f), "episode:1") }, CancellationToken.None);
 
       EvidenceSearchResult result = await store.SearchAsync(
-        new EvidenceQuery { Collection = Collection, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 3 },
+        new EvidenceQuery { Collection = Episodes, Embedding = Vector(1.0f, 0.0f, 0.0f), Top = 3 },
         CancellationToken.None);
 
       Assert.False(result.IsAvailable);

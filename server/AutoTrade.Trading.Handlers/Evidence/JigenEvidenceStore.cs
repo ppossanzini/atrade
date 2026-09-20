@@ -74,7 +74,7 @@ namespace AutoTrade.Trading.Handlers.Evidence
         entries.Add(new VectorEntry
         {
           Id = record.EvidenceId.ToByteArray(),
-          CollectionName = record.Collection,
+          CollectionName = record.Collection.EffectiveName,
           Content = MessagePackDocumentSerializer.Instance.Serialize(StoredEvidence.From(record)),
           Embedding = record.Embedding
         });
@@ -92,14 +92,16 @@ namespace AutoTrade.Trading.Handlers.Evidence
     /// </summary>
     public Task<EvidenceSearchResult> SearchAsync(EvidenceQuery query, CancellationToken cancellationToken)
     {
-      if (query == null || string.IsNullOrWhiteSpace(query.Collection) || query.Embedding == null || query.Embedding.Length == 0)
+      if (query == null || query.Collection == null || query.Embedding == null || query.Embedding.Length == 0)
       {
         throw new InvalidOperationException("A retrieval needs a collection and a query embedding.");
       }
 
       List<EvidenceMatch> matches = new List<EvidenceMatch>();
 
-      foreach ((VectorEntry entry, float score) in store.Search(query.Collection, query.Embedding, Math.Max(1, query.Top)))
+      // Searched by effective name, so the model and the text version are part of the space being searched and
+      // nothing produced under a different model can be ranked against this query.
+      foreach ((VectorEntry entry, float score) in store.Search(query.Collection.EffectiveName, query.Embedding, Math.Max(1, query.Top)))
       {
         StoredEvidence stored = MessagePackDocumentSerializer.Instance.Deserialize<StoredEvidence>(entry.Content);
 
@@ -108,17 +110,13 @@ namespace AutoTrade.Trading.Handlers.Evidence
           EvidenceId = stored.EvidenceId,
           Score = score,
           Content = stored.Content,
-          EmbeddingModel = stored.EmbeddingModel,
+          Collection = query.Collection,
           Query = stored.Query,
           SourceRef = stored.SourceRef,
           RecordedAtUtc = stored.RecordedAtUtc
         });
       }
 
-      // The model that produced each match is carried out with it, so a caller can tell whether the numbers it
-      // is looking at are comparable to its query. The seam does not filter on it: keeping evidence from
-      // different models apart is a decision that is still open, and pretending to enforce it here would hide
-      // the fact that it is not decided.
       return Task.FromResult(new EvidenceSearchResult
       {
         IsAvailable = true,
@@ -162,7 +160,7 @@ namespace AutoTrade.Trading.Handlers.Evidence
         {
           EvidenceId = record.EvidenceId,
           Content = record.Content,
-          EmbeddingModel = record.EmbeddingModel,
+          EmbeddingModel = record.Collection.EmbeddingModel,
           Query = record.Query,
           SourceRef = record.SourceRef,
           RecordedAtUtc = record.RecordedAtUtc
