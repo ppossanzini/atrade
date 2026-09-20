@@ -205,6 +205,10 @@ Output:
 
 **Stato dei primi due output (2026-09-20).** Lo store è isolato e reale (`Jigen.Store` 1.3.1, ADR-0023), con disponibilità riportata nello stato operativo. Lo structured output è implementato e verificato contro il modello reale (`qwen2.5:3b`, ADR-0024): schema inviato al motore, poi validazione campo per campo, esito a due sole forme (opinione validata oppure nessuna opinione con motivo), bound di byte e di tempo, fail-closed provato fermando il motore. Restano da consegnare: il retrieval versionato e tracciato (manca il modello di embedding, che non è lo stesso modello di analisi), il collegamento dell'opinione al percorso della proposta e lo stato degradato esplicito nel ciclo di analisi.
 
+**Catena di embedding misurata (2026-09-20).** Il modello `nomic-embed-text` (768 dimensioni) è installato sul motore locale ed è stato misurato contro lo store reale: 768 dimensioni accettate e restituite integre, ranking coerente con il significato (non solo con la geometria) su episodi del dominio, metadati che sopravvivono al round trip, risultato identico dopo riapertura. L'unit test dello store usava vettori a 3 dimensioni, quindi questa parte era assunta e non verificata: adesso è verificata, in modo opt-in (`AUTOTRADE_OLLAMA_LIVE=1`, tag `Live`) e quindi esclusa da qualunque rivendicazione di copertura.
+
+**Questioni aperte prima di scrivere il retrieval.** Due, e la seconda è stata scoperta leggendo il codice e non i documenti. Primo: cosa merita di essere ricordato come episodio e in quale punto della catena va scritto. Secondo: `EvidenceQuery.EmbeddingModel` è un campo che viaggia e viene riportato su ogni match, ma **il seam non filtra su di esso**, e la scelta fra partizionare per modello nel nome della collezione e filtrare a runtime non è ancora presa. Con un solo modello installato non morde; con due mescolerebbe numeri incomparabili senza dirlo. Va deciso prima di popolare la memoria, non dopo.
+
 Copre: AC-06, AC-16.
 
 ## Slice 8 - Storico e readiness demo

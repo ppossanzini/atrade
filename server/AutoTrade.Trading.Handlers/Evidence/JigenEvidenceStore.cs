@@ -115,8 +115,10 @@ namespace AutoTrade.Trading.Handlers.Evidence
         });
       }
 
-      // Evidence embedded by another model is not comparable, so it is reported rather than ranked against
-      // this query as if the numbers meant the same thing.
+      // The model that produced each match is carried out with it, so a caller can tell whether the numbers it
+      // is looking at are comparable to its query. The seam does not filter on it: keeping evidence from
+      // different models apart is a decision that is still open, and pretending to enforce it here would hide
+      // the fact that it is not decided.
       return Task.FromResult(new EvidenceSearchResult
       {
         IsAvailable = true,

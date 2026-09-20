@@ -42,7 +42,11 @@ namespace AutoTrade.Trading.Handlers.Evidence
 
     public int Top { get; set; }
 
-    /// <summary>Model that produced the query embedding, checked against the stored evidence.</summary>
+    /// <summary>
+    /// Model that produced the query embedding. It travels with the query and is reported on every match, so a
+    /// caller can always see whether it is comparing like with like. It is not enforced by the seam yet: how
+    /// evidence from different models is kept apart is still an open decision.
+    /// </summary>
     public string EmbeddingModel { get; set; }
   }
 
