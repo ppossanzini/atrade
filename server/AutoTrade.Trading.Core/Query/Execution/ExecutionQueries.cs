@@ -5,14 +5,14 @@ using Hikyaku;
 
 namespace AutoTrade.Trading.Core.Query.Execution
 {
-  /// <summary>The execution queue, most recent first.</summary>
-  public class GetExecutionQueue : IRequest<List<ExecutionSummaryDto>>
-  {
-  }
+    /// <summary>The execution queue, most recent first.</summary>
+    public class GetExecutionQueue : IRequest<List<ExecutionSummaryDto>>
+    {
+    }
 
-  /// <summary>Full execution with its legs and the broker events that were applied to it.</summary>
-  public class GetExecutionDetail : IRequest<ExecutionDetailDto>
-  {
-    public Guid ExecutionId { get; set; }
-  }
+    /// <summary>Full execution with its legs and the broker events that were applied to it.</summary>
+    public class GetExecutionDetail : IRequest<ExecutionDetailDto>
+    {
+        public Guid ExecutionId { get; set; }
+    }
 }

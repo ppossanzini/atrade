@@ -24,24 +24,6 @@
       </template>
     </el-table-column>
 
-    <el-table-column :label="t('basket.market')" width="132">
-      <template #default="scope">
-        <el-select
-          :model-value="scope.row.market"
-          :disabled="disabled"
-          size="small"
-          @update:model-value="patchLeg(scope.$index, { market: $event })"
-        >
-          <el-option
-            v-for="market in markets"
-            :key="market"
-            :label="t(`marketKind.${market}`)"
-            :value="market"
-          />
-        </el-select>
-      </template>
-    </el-table-column>
-
     <el-table-column :label="t('basket.direction')" width="122">
       <template #default="scope">
         <el-select

@@ -3,7 +3,7 @@ using Hikyaku;
 
 namespace AutoTrade.Trading.Core.Query.Broker
 {
-  public class GetBrokerConnectionStatus : IRequest<BrokerConnectionStatusDto>
-  {
-  }
+    public class GetBrokerConnectionStatus : IRequest<BrokerConnectionStatusDto>
+    {
+    }
 }

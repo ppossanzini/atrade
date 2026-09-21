@@ -214,7 +214,6 @@ export default {
     legSymbolPlaceholder: 'es. EURUSD',
     noLegs: 'Nessuna gamba presente.',
     symbol: 'Simbolo',
-    market: 'Mercato',
     direction: 'Direzione',
     timeFrame: 'TF',
     weight: 'Peso %',
@@ -297,11 +296,6 @@ export default {
     Superseded: 'Superata',
     Archived: 'Archiviata',
   },
-  marketKind: {
-    Fx: 'FX',
-    Metal: 'Metalli',
-    Index: 'Indici',
-  },
   legDirection: {
     Long: 'Long',
     Short: 'Short',
@@ -327,7 +321,6 @@ export default {
     gateVerdict: 'Esito',
     gateCode: 'Codice',
     gateSubject: 'Oggetto',
-    gateMarket: 'Mercato',
     gateObserved: 'Valore osservato',
     gateThreshold: 'Soglia',
     gateEvaluatedAt: 'Valutato il',
@@ -485,7 +478,6 @@ export default {
     legsColumns: {
       ordinal: '#',
       symbol: 'Simbolo',
-      market: 'Mercato',
       direction: 'Direzione',
       planned: 'Volume pianificato',
       filled: 'Volume riempito',

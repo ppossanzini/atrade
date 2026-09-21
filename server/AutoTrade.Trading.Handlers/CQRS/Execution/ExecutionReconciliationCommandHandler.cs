@@ -7,12 +7,12 @@ using Hikyaku;
 
 namespace AutoTrade.Trading.Handlers.CQRS.Execution
 {
-  public sealed class ExecutionReconciliationCommandHandler(IExecutionReconciliationService service)
-    : IRequestHandler<ReconcileExecutions, ExecutionReconciliationResultDto>
-  {
-    public Task<ExecutionReconciliationResultDto> Handle(ReconcileExecutions request, CancellationToken cancellationToken)
+    public sealed class ExecutionReconciliationCommandHandler(IExecutionReconciliationService service)
+      : IRequestHandler<ReconcileExecutions, ExecutionReconciliationResultDto>
     {
-      return service.ReconcileAsync(cancellationToken);
+        public Task<ExecutionReconciliationResultDto> Handle(ReconcileExecutions request, CancellationToken cancellationToken)
+        {
+            return service.ReconcileAsync(cancellationToken);
+        }
     }
-  }
 }

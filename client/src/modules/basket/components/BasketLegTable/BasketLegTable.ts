@@ -1,7 +1,6 @@
 import { defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-const markets: server.MarketKind[] = ['Fx', 'Metal', 'Index']
 const directions: server.LegDirection[] = ['Long', 'Short']
 const timeFrames: server.TimeFrame[] = ['M5', 'M15', 'M30', 'H1']
 
@@ -42,6 +41,6 @@ export default defineComponent({
       )
     }
 
-    return { t, markets, directions, timeFrames, patchLeg, removeLeg }
+    return { t, directions, timeFrames, patchLeg, removeLeg }
   },
 })

@@ -3,7 +3,7 @@ using Hikyaku;
 
 namespace AutoTrade.Trading.Core.Query.Operations
 {
-  public class GetOperationalStatus : IRequest<OperationalStatusDto>
-  {
-  }
+    public class GetOperationalStatus : IRequest<OperationalStatusDto>
+    {
+    }
 }

@@ -2,8 +2,7 @@ import { BaseRestService } from './baseRestService'
 
 /**
  * Transport-only access to the execution endpoints. Starting an execution and confirming a compensation both
- * send orders, so both are attributed to the operator by the server; the antiforgery header travels with the
- * shared transport.
+ * send orders, so both are attributed to the operator authenticated by the shared Bearer transport.
  */
 export class ExecutionService extends BaseRestService {
   constructor() {

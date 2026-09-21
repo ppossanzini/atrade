@@ -3,6 +3,7 @@
 - Keep the immutable visual prototype in `prototipe/` and implement production code only in new `client/` and `server/` projects.
 - Never copy mock stores, simulated execution logic, or prototype-only contracts into production code.
 - Use a dense trading-workbench layout with independent sidebar and content scrolling.
+- Use a light daytime trading-desk palette: cool paper canvas, white raised panels, graphite text and exchange blue as the single action accent; reserve green, amber and red for status meaning.
 - Make Basket Builder the primary decision surface.
 - Use Element Plus controls for all interactive Vue widgets.
 - Keep user-facing text in Vue I18n dictionaries.
@@ -42,6 +43,7 @@
 - The client folder reality is `src/stores/`, `src/modules/<module>/{components,views}` and `src/services`; there is no `src/store/`, `src/components/` or `src/composables/` yet, so new shared pieces go in the module that owns them until a real second consumer exists.
 - Keep in configuration only what describes the deployment or a simulator scenario: the freshness window of the feed and the simulated provider's own profile. A value that shapes a decision about a leg (risk cap, stop distance, spread and volatility limits) belongs to the leg and is frozen into the version, so it is versioned and journalled with the decision.
 - Carry a leg value through the whole chain (`BasketCompositionLegDto` → `BasketDraftLeg` → `BasketVersionLeg` → `ProposalLeg`/`ProposalLegDto`) or not at all; a leg value that only some links carry is a bug waiting to happen. Zero is the agreed word for "not decided", and the reader turns it into a blocking gate instead of a permissive default.
+- A basket leg never asks the operator for a market class. The symbol is authoritative; simulated data requires an explicit symbol profile and must not fall back through a manually selected `Fx`/`Metal`/`Index` category.
 - The `appsettings*.json` files may carry `//` comments: the .NET JSON configuration provider tolerates them and VS Code reports no error, but a strict JSON parser (scripts, `python -m json.tool`) will refuse the file. Use them only to state what a block belongs to.
 - Keep one builder per read contract: the proposal queue and the proposal detail both go through `ProposalQueryHandler.Summarise`, because two object initializers for the same DTO is how the queue and the detail ended up disagreeing about the same proposal. Same rule already applied in `ExecutionQueryHandler`.
 - Show the rules in force and the rules being prepared as two distinct things (`BasketDetailDto.ActivePolicy` versus `DraftPolicy`): an edit to a draft is not in force until a version is published, and a screen that hides the difference makes the operator believe a limit already changed.

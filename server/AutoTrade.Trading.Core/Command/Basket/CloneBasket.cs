@@ -4,10 +4,10 @@ using Hikyaku;
 
 namespace AutoTrade.Trading.Core.Command.Basket
 {
-  public class CloneBasket : IRequest<CreateBasketResult>
-  {
-    public Guid SourceBasketId { get; set; }
-    public string Name { get; set; }
-    public Guid OperatorId { get; set; }
-  }
+    public class CloneBasket : IRequest<CreateBasketResult>
+    {
+        public Guid SourceBasketId { get; set; }
+        public string Name { get; set; }
+        public Guid OperatorId { get; set; }
+    }
 }

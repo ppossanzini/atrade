@@ -4,55 +4,55 @@ using Microsoft.Extensions.Configuration;
 
 namespace AutoTrade.Trading.Handlers.Market
 {
-  /// <summary>
-  /// Timing of the analysis cycle. Neither value has a default in code: the cycle does not start until the
-  /// operator has decided how often to analyse and how long a proposal stays valid.
-  /// </summary>
-  public class MarketOptions
-  {
-    public int CycleSeconds { get; set; }
-
-    public int ProposalTtlSeconds { get; set; }
-
-    public bool IsConfigured
+    /// <summary>
+    /// Timing of the analysis cycle. Neither value has a default in code: the cycle does not start until the
+    /// operator has decided how often to analyse and how long a proposal stays valid.
+    /// </summary>
+    public class MarketOptions
     {
-      get { return CycleSeconds > 0 && ProposalTtlSeconds > 0; }
-    }
-  }
+        public int CycleSeconds { get; set; }
 
-  public static class MarketOptionsFactory
-  {
-    private const string SectionKey = "Trading:Market";
+        public int ProposalTtlSeconds { get; set; }
 
-    public static MarketOptions FromConfiguration(IConfiguration configuration)
-    {
-      if (configuration == null)
-      {
-        throw new ArgumentNullException(nameof(configuration));
-      }
-
-      return new MarketOptions
-      {
-        CycleSeconds = ReadInt(configuration, "CycleSeconds"),
-        ProposalTtlSeconds = ReadInt(configuration, "ProposalTtlSeconds")
-      };
+        public bool IsConfigured
+        {
+            get { return CycleSeconds > 0 && ProposalTtlSeconds > 0; }
+        }
     }
 
-    private static int ReadInt(IConfiguration configuration, string key)
+    public static class MarketOptionsFactory
     {
-      string value = configuration[SectionKey + ":" + key];
+        private const string SectionKey = "Trading:Market";
 
-      if (string.IsNullOrWhiteSpace(value))
-      {
-        return 0;
-      }
+        public static MarketOptions FromConfiguration(IConfiguration configuration)
+        {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
 
-      if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed))
-      {
-        return parsed;
-      }
+            return new MarketOptions
+            {
+                CycleSeconds = ReadInt(configuration, "CycleSeconds"),
+                ProposalTtlSeconds = ReadInt(configuration, "ProposalTtlSeconds")
+            };
+        }
 
-      throw new InvalidOperationException($"Configuration value '{SectionKey}:{key}' is not an integer: '{value}'.");
+        private static int ReadInt(IConfiguration configuration, string key)
+        {
+            string value = configuration[SectionKey + ":" + key];
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return 0;
+            }
+
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed))
+            {
+                return parsed;
+            }
+
+            throw new InvalidOperationException($"Configuration value '{SectionKey}:{key}' is not an integer: '{value}'.");
+        }
     }
-  }
 }

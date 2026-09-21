@@ -67,10 +67,6 @@ export default defineComponent({
       return status ? t(`executionLegStatus.${status}`) : ''
     }
 
-    function marketLabel(market: server.MarketKind | undefined): string {
-      return market ? t(`marketKind.${market}`) : ''
-    }
-
     function directionLabel(direction: server.LegDirection | undefined): string {
       return direction ? t(`legDirection.${direction}`) : ''
     }
@@ -155,7 +151,6 @@ export default defineComponent({
       statusLabel,
       policyLabel,
       legStatusLabel,
-      marketLabel,
       directionLabel,
       eventKindLabel,
       refresh,

@@ -74,7 +74,7 @@ I nomi seguenti sono contratti iniziali. Ogni comando ha un handler; ogni filtro
 
 | HTTP | Contratto | Risultato |
 | --- | --- | --- |
-| `POST /api/session/login` | `LoginOperator` | Sessione cookie |
+| `POST /api/session/login` | `LoginOperator` | Sessione persistita e Bearer token opaco |
 | `POST /api/session/logout` | `LogoutOperator` | `204` |
 | `GET /api/session` | `GetCurrentSession` | Operatore e scadenza |
 | `GET /api/operations/status` | `GetOperationalStatus` | Broker, worker, store e kill switch |
@@ -245,8 +245,8 @@ La memoria semantica non conserva stato transazionale, non decide alcun verdetto
 
 ## 9. Sicurezza
 
-- ASP.NET Core cookie authentication same-origin, cookie `HttpOnly`, `Secure`, `SameSite=Strict`.
-- Protezione antiforgery per ogni comando mutante.
+- Autenticazione ASP.NET Core con Bearer token opaco validato contro la sessione persistita a ogni richiesta.
+- Il client conserva il token in `sessionStorage`; logout, scadenza e disattivazione invalidano immediatamente l'accesso lato server.
 - Password hash tramite API ASP.NET Core, lockout e rotazione credenziali configurabili.
 - CORS disabilitato in produzione same-origin; reverse proxy limita l'esposizione alla LAN/VPN approvata.
 - Endpoint operativi autorizzati; callback OAuth protetta da state/nonce e redirect URI esatta.
@@ -309,7 +309,7 @@ Deployment singolo host Linux:
 | cTrader contract | Serializzazione Protobuf, correlation, error mapping, token rotation |
 | Broker integration demo | Auth, reconcile, order minimo, fill/error, reconnect senza duplicati |
 | Ollama/JigenDB | Schema output, timeout, indisponibilita, evidence linkage |
-| API | Auth, antiforgery, status code e command-then-query |
+| API | Bearer auth, status code e command-then-query |
 | Client | Store/service contract, route guards, loading/empty/error/degraded states |
 | End-to-end demo | Basket -> proposta -> gate -> ordine -> reconcile -> episode -> journal |
 

@@ -4,112 +4,110 @@ using AutoTrade.Trading.Core.Enums;
 
 namespace AutoTrade.Trading.Core.Dto
 {
-  /// <summary>
-  /// One row of the execution queue. Coverage is measured, not assumed: it is the share of the planned
-  /// volume that was actually filled.
-  /// </summary>
-  public class ExecutionSummaryDto
-  {
-    public Guid ExecutionId { get; set; }
-
     /// <summary>
-    /// The proposal this execution came from. Null for a compensation, which closes exposure nobody proposed
-    /// as a new order and therefore belongs to no proposal.
+    /// One row of the execution queue. Coverage is measured, not assumed: it is the share of the planned
+    /// volume that was actually filled.
     /// </summary>
-    public Guid? ProposalId { get; set; }
+    public class ExecutionSummaryDto
+    {
+        public Guid ExecutionId { get; set; }
 
-    public Guid BasketId { get; set; }
+        /// <summary>
+        /// The proposal this execution came from. Null for a compensation, which closes exposure nobody proposed
+        /// as a new order and therefore belongs to no proposal.
+        /// </summary>
+        public Guid? ProposalId { get; set; }
 
-    public string BasketName { get; set; }
+        public Guid BasketId { get; set; }
 
-    public int VersionNumber { get; set; }
+        public string BasketName { get; set; }
 
-    public ExecutionStatus Status { get; set; }
+        public int VersionNumber { get; set; }
 
-    public FailurePolicy FailurePolicy { get; set; }
+        public ExecutionStatus Status { get; set; }
 
-    public int MinimumCoverage { get; set; }
+        public FailurePolicy FailurePolicy { get; set; }
 
-    /// <summary>Filled volume as a percentage of the planned volume.</summary>
-    public int Coverage { get; set; }
+        public int MinimumCoverage { get; set; }
 
-    public int LegCount { get; set; }
+        /// <summary>Filled volume as a percentage of the planned volume.</summary>
+        public int Coverage { get; set; }
 
-    public int FilledLegCount { get; set; }
+        public int LegCount { get; set; }
 
-    public DateTime CreatedAtUtc { get; set; }
+        public int FilledLegCount { get; set; }
 
-    public DateTime? CompletedAtUtc { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
 
-    /// <summary>True when the residual exposure needs an operator decision.</summary>
-    public bool NeedsCompensation { get; set; }
-  }
+        public DateTime? CompletedAtUtc { get; set; }
 
-  public class ExecutionLegDto
-  {
-    public Guid LegId { get; set; }
+        /// <summary>True when the residual exposure needs an operator decision.</summary>
+        public bool NeedsCompensation { get; set; }
+    }
 
-    public int Ordinal { get; set; }
+    public class ExecutionLegDto
+    {
+        public Guid LegId { get; set; }
 
-    public string Symbol { get; set; }
+        public int Ordinal { get; set; }
 
-    public MarketKind Market { get; set; }
+        public string Symbol { get; set; }
 
-    public LegDirection Direction { get; set; }
+        public LegDirection Direction { get; set; }
 
-    public int VolumeUnits { get; set; }
+        public int VolumeUnits { get; set; }
 
-    public int FilledVolumeUnits { get; set; }
+        public int FilledVolumeUnits { get; set; }
 
-    public string ClientOrderId { get; set; }
+        public string ClientOrderId { get; set; }
 
-    public string BrokerOrderId { get; set; }
+        public string BrokerOrderId { get; set; }
 
-    public ExecutionLegStatus Status { get; set; }
+        public ExecutionLegStatus Status { get; set; }
 
-    public double? AveragePrice { get; set; }
+        public double? AveragePrice { get; set; }
 
-    public string ErrorCode { get; set; }
+        public string ErrorCode { get; set; }
 
-    public DateTime? LastEventAtUtc { get; set; }
-  }
+        public DateTime? LastEventAtUtc { get; set; }
+    }
 
-  /// <summary>What the broker reported, once, deduplicated by its own identity.</summary>
-  public class ExecutionEventDto
-  {
-    public string BrokerEventId { get; set; }
+    /// <summary>What the broker reported, once, deduplicated by its own identity.</summary>
+    public class ExecutionEventDto
+    {
+        public string BrokerEventId { get; set; }
 
-    public ExecutionEventKind Kind { get; set; }
+        public ExecutionEventKind Kind { get; set; }
 
-    public string Symbol { get; set; }
+        public string Symbol { get; set; }
 
-    public string Payload { get; set; }
+        public string Payload { get; set; }
 
-    public DateTime ReceivedAtUtc { get; set; }
-  }
+        public DateTime ReceivedAtUtc { get; set; }
+    }
 
-  public class ExecutionDetailDto : ExecutionSummaryDto
-  {
-    public Guid? SnapshotId { get; set; }
+    public class ExecutionDetailDto : ExecutionSummaryDto
+    {
+        public Guid? SnapshotId { get; set; }
 
-    public Guid? CompensationOfExecutionId { get; set; }
+        public Guid? CompensationOfExecutionId { get; set; }
 
-    public DateTime? StartedAtUtc { get; set; }
+        public DateTime? StartedAtUtc { get; set; }
 
-    public List<ExecutionLegDto> Legs { get; set; }
+        public List<ExecutionLegDto> Legs { get; set; }
 
-    public List<ExecutionEventDto> Events { get; set; }
-  }
+        public List<ExecutionEventDto> Events { get; set; }
+    }
 
-  public class ExecutionStartResultDto
-  {
-    public Guid ExecutionId { get; set; }
+    public class ExecutionStartResultDto
+    {
+        public Guid ExecutionId { get; set; }
 
-    public ExecutionOutcome Outcome { get; set; }
+        public ExecutionOutcome Outcome { get; set; }
 
-    public ExecutionStatus Status { get; set; }
+        public ExecutionStatus Status { get; set; }
 
-    /// <summary>Why the start was refused, when that is the case.</summary>
-    public string Reason { get; set; }
-  }
+        /// <summary>Why the start was refused, when that is the case.</summary>
+        public string Reason { get; set; }
+    }
 }

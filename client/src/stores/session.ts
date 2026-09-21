@@ -1,6 +1,10 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { getHttpStatus, setAccessTokenProvider } from '@/services/baseRestService'
+import {
+  getHttpStatus,
+  setAccessTokenProvider,
+  setUnauthorizedHandler,
+} from '@/services/baseRestService'
 import { sessionService } from '@/services/sessionService'
 
 export type LoginOutcome =
@@ -12,8 +16,8 @@ export type LoginOutcome =
   | 'unexpectedError'
 
 /**
- * Server-side validated session. The cookie is only a carrier: the authoritative session lives on
- * the server, so the store re-reads it instead of trusting local state.
+ * Server-side validated session. The Bearer token identifies the persisted session; the store re-reads
+ * the authoritative state instead of trusting locally cached operator data.
  */
 export const useSessionStore = defineStore('session', () => {
   const accessTokenStorageKey = 'autotrade.accessToken'
@@ -32,6 +36,8 @@ export const useSessionStore = defineStore('session', () => {
     currentSession.value = null
     sessionStorage.removeItem(accessTokenStorageKey)
   }
+
+  setUnauthorizedHandler(clearSession)
 
   /**
    * Reads the current session. A failure leaves the operator unauthenticated rather than assuming

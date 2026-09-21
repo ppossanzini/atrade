@@ -72,10 +72,6 @@
           <template #default="scope">{{ gateSubject(scope.row.subject) }}</template>
         </el-table-column>
 
-        <el-table-column :label="t('risk.gateMarket')" width="104">
-          <template #default="scope">{{ gateMarket(scope.row.market) }}</template>
-        </el-table-column>
-
         <el-table-column :label="t('risk.gateObserved')" width="150" align="right">
           <template #default="scope">
             {{ formatMeasured(scope.row.observedValue, scope.row.unit) }}

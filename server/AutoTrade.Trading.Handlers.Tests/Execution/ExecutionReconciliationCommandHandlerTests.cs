@@ -8,35 +8,35 @@ using Xunit;
 
 namespace AutoTrade.Trading.Handlers.Tests.Execution
 {
-  public class ExecutionReconciliationCommandHandlerTests
-  {
-    [Fact]
-    public async Task Handle_DelegatesToReconciliationService()
+    public class ExecutionReconciliationCommandHandlerTests
     {
-      ExecutionReconciliationResultDto expected = new ExecutionReconciliationResultDto
-      {
-        IsClean = true,
-        ExecutionCount = 2,
-        ResolvedExecutionCount = 2
-      };
-      StubReconciliationService service = new StubReconciliationService(expected);
-      ExecutionReconciliationCommandHandler handler = new ExecutionReconciliationCommandHandler(service);
+        [Fact]
+        public async Task Handle_DelegatesToReconciliationService()
+        {
+            ExecutionReconciliationResultDto expected = new ExecutionReconciliationResultDto
+            {
+                IsClean = true,
+                ExecutionCount = 2,
+                ResolvedExecutionCount = 2
+            };
+            StubReconciliationService service = new StubReconciliationService(expected);
+            ExecutionReconciliationCommandHandler handler = new ExecutionReconciliationCommandHandler(service);
 
-      ExecutionReconciliationResultDto actual = await handler.Handle(new ReconcileExecutions(), CancellationToken.None);
+            ExecutionReconciliationResultDto actual = await handler.Handle(new ReconcileExecutions(), CancellationToken.None);
 
-      Assert.Same(expected, actual);
-      Assert.True(service.WasCalled);
+            Assert.Same(expected, actual);
+            Assert.True(service.WasCalled);
+        }
+
+        private sealed class StubReconciliationService(ExecutionReconciliationResultDto result) : IExecutionReconciliationService
+        {
+            public bool WasCalled { get; private set; }
+
+            public Task<ExecutionReconciliationResultDto> ReconcileAsync(CancellationToken cancellationToken)
+            {
+                WasCalled = true;
+                return Task.FromResult(result);
+            }
+        }
     }
-
-    private sealed class StubReconciliationService(ExecutionReconciliationResultDto result) : IExecutionReconciliationService
-    {
-      public bool WasCalled { get; private set; }
-
-      public Task<ExecutionReconciliationResultDto> ReconcileAsync(CancellationToken cancellationToken)
-      {
-        WasCalled = true;
-        return Task.FromResult(result);
-      }
-    }
-  }
 }

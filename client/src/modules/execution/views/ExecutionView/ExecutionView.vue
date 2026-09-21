@@ -185,9 +185,6 @@
             prop="symbol"
             min-width="90"
           />
-          <el-table-column :label="t('execution.legsColumns.market')" width="86">
-            <template #default="scope">{{ marketLabel(scope.row.market) }}</template>
-          </el-table-column>
           <el-table-column :label="t('execution.legsColumns.direction')" width="86">
             <template #default="scope">{{ directionLabel(scope.row.direction) }}</template>
           </el-table-column>

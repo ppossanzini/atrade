@@ -4,20 +4,20 @@ using MapZilla;
 
 namespace AutoTrade.Trading.Handlers
 {
-  public class MappingProfile : Profile
-  {
-    public MappingProfile()
+    public class MappingProfile : Profile
     {
-      CreateMap<KillSwitchState, KillSwitchStatusDto>();
-      CreateMap<TradingAccount, TradingAccountStatusDto>();
-      CreateMap<MarketManagerState, MarketManagerStatusDto>();
+        public MappingProfile()
+        {
+            CreateMap<KillSwitchState, KillSwitchStatusDto>();
+            CreateMap<TradingAccount, TradingAccountStatusDto>();
+            CreateMap<MarketManagerState, MarketManagerStatusDto>();
 
-      CreateMap<BasketDraftLeg, BasketCompositionLegDto>();
-      CreateMap<BasketDraftPolicy, BasketPolicyDto>();
+            CreateMap<BasketDraftLeg, BasketCompositionLegDto>();
+            CreateMap<BasketDraftPolicy, BasketPolicyDto>();
 
-      // The frozen policy is reported with the same contract as the draft, because it is the same strategy:
-      // one in preparation and one in force.
-      CreateMap<BasketVersionPolicy, BasketPolicyDto>();
+            // The frozen policy is reported with the same contract as the draft, because it is the same strategy:
+            // one in preparation and one in force.
+            CreateMap<BasketVersionPolicy, BasketPolicyDto>();
+        }
     }
-  }
 }

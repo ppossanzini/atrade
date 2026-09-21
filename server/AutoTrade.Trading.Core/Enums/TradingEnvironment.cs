@@ -1,8 +1,8 @@
 namespace AutoTrade.Trading.Core.Enums
 {
-  public enum TradingEnvironment
-  {
-    Demo = 0,
-    Live = 1
-  }
+    public enum TradingEnvironment
+    {
+        Demo = 0,
+        Live = 1
+    }
 }

@@ -8,42 +8,42 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AutoTrade.Trading.Handlers
 {
-  /// <summary>
-  /// Broker tier registration. It is called by the handlers module so the composition root keeps a
-  /// single registration entrypoint per tier.
-  /// </summary>
-  public static class BrokerModule
-  {
-    private const int BrokerHttpTimeoutSeconds = 30;
-
-    public static IServiceCollection AddTradingBroker(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>
+    /// Broker tier registration. It is called by the handlers module so the composition root keeps a
+    /// single registration entrypoint per tier.
+    /// </summary>
+    public static class BrokerModule
     {
-      BrokerOptions options = BrokerOptionsFactory.FromConfiguration(configuration);
-      services.AddSingleton(options);
+        private const int BrokerHttpTimeoutSeconds = 30;
 
-      // A configured broker without a usable key must not be able to reach the token store, and an
-      // unconfigured broker must not break resolution of unrelated requests. The guard turns the first
-      // case into a startup failure and this registration turns the second into an explicit error on use.
-      byte[] tokenKey;
+        public static IServiceCollection AddTradingBroker(this IServiceCollection services, IConfiguration configuration)
+        {
+            BrokerOptions options = BrokerOptionsFactory.FromConfiguration(configuration);
+            services.AddSingleton(options);
 
-      if (BrokerTokenProtector.TryCreateKey(options.TokenKey, out tokenKey))
-      {
-        services.AddSingleton<IBrokerTokenProtector>(new BrokerTokenProtector(tokenKey));
-      }
-      else
-      {
-        services.AddSingleton<IBrokerTokenProtector, UnconfiguredBrokerTokenProtector>();
-      }
+            // A configured broker without a usable key must not be able to reach the token store, and an
+            // unconfigured broker must not break resolution of unrelated requests. The guard turns the first
+            // case into a startup failure and this registration turns the second into an explicit error on use.
+            byte[] tokenKey;
 
-      // A single long lived client serves the fixed provider endpoint, so there is no per request socket
-      // churn and no handler rotation to manage.
-      services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(BrokerHttpTimeoutSeconds) });
-      services.AddSingleton<IBrokerTokenClient, BrokerTokenClient>();
-      services.AddScoped<IBrokerAuthorizationCorrelator, BrokerAuthorizationCorrelator>();
-      services.AddSingleton<ICtraderProtocolClientFactory, CtraderProtocolClientFactory>();
-      services.AddScoped<ICtraderSnapshotReader, CtraderSnapshotReader>();
+            if (BrokerTokenProtector.TryCreateKey(options.TokenKey, out tokenKey))
+            {
+                services.AddSingleton<IBrokerTokenProtector>(new BrokerTokenProtector(tokenKey));
+            }
+            else
+            {
+                services.AddSingleton<IBrokerTokenProtector, UnconfiguredBrokerTokenProtector>();
+            }
 
-      return services;
+            // A single long lived client serves the fixed provider endpoint, so there is no per request socket
+            // churn and no handler rotation to manage.
+            services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(BrokerHttpTimeoutSeconds) });
+            services.AddSingleton<IBrokerTokenClient, BrokerTokenClient>();
+            services.AddScoped<IBrokerAuthorizationCorrelator, BrokerAuthorizationCorrelator>();
+            services.AddSingleton<ICtraderProtocolClientFactory, CtraderProtocolClientFactory>();
+            services.AddScoped<ICtraderSnapshotReader, CtraderSnapshotReader>();
+
+            return services;
+        }
     }
-  }
 }

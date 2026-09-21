@@ -5,178 +5,178 @@ using AutoTrade.Trading.Core.Enums;
 
 namespace AutoTrade.Trading.Handlers.Evidence
 {
-  /// <summary>Who the episode is about, and what was being attempted.</summary>
-  public class EpisodeProposalFacts
-  {
-    public Guid ProposalId { get; set; }
-
-    public int VersionNumber { get; set; }
-
-    public string EntryMode { get; set; }
-
-    public string Action { get; set; }
-
-    public double Confidence { get; set; }
-  }
-
-  /// <summary>
-  /// Builds an episode from facts the system already evaluated, without reading anything back.
-  /// </summary>
-  /// <remarks>
-  /// The situation is reconstructed from the gate evaluations themselves rather than from the raw market
-  /// capture. That is deliberate: the gate is what actually judged those numbers, so an episode quoting the
-  /// gates cannot disagree with the verdict it is describing.
-  /// </remarks>
-  public static class OperationalEpisodeBuilder
-  {
-    public static OperationalEpisode GateBlocked(EpisodeProposalFacts facts, IReadOnlyList<RiskGateResultDto> gates, DateTime occurredAtUtc)
+    /// <summary>Who the episode is about, and what was being attempted.</summary>
+    public class EpisodeProposalFacts
     {
-      if (facts == null)
-      {
-        throw new ArgumentNullException(nameof(facts));
-      }
+        public Guid ProposalId { get; set; }
 
-      if (gates == null)
-      {
-        throw new ArgumentNullException(nameof(gates));
-      }
+        public int VersionNumber { get; set; }
 
-      OperationalEpisodeOutcome outcome = null;
+        public string EntryMode { get; set; }
 
-      foreach (RiskGateResultDto gate in gates)
-      {
-        if (gate.Verdict != RiskGateVerdict.Block)
-        {
-          continue;
-        }
+        public string Action { get; set; }
 
-        // The first blocker in evaluation order is reported as the deciding rule. The others stay in the
-        // transactional record: repeating them here would make the memory claim a cause it did not establish.
-        outcome = new OperationalEpisodeOutcome
-        {
-          Code = gate.Code.ToString(),
-          Subject = gate.Subject,
-          ObservedValue = gate.ObservedValue,
-          ThresholdValue = gate.ThresholdValue,
-          Unit = gate.Unit,
-          Detail = gate.Detail
-        };
-
-        break;
-      }
-
-      if (outcome == null)
-      {
-        throw new InvalidOperationException("A blocked proposal has to carry at least one blocking gate: without it there is nothing to remember.");
-      }
-
-      return OperationalEpisodeRenderer.Create(
-        OperationalEpisodeKind.GateBlocked,
-        "proposal:" + facts.ProposalId,
-        occurredAtUtc,
-        Situation(facts, gates),
-        outcome);
+        public double Confidence { get; set; }
     }
 
     /// <summary>
-    /// The measurable situation a proposal was judged in, rebuilt from its gate evaluations.
+    /// Builds an episode from facts the system already evaluated, without reading anything back.
     /// </summary>
     /// <remarks>
-    /// Shared by the episode and by the retrieval query on purpose: if the question were phrased differently
-    /// from the answer, the comparison would depend on the phrasing rather than on the situation.
+    /// The situation is reconstructed from the gate evaluations themselves rather than from the raw market
+    /// capture. That is deliberate: the gate is what actually judged those numbers, so an episode quoting the
+    /// gates cannot disagree with the verdict it is describing.
     /// </remarks>
-    public static OperationalEpisodeContext Situation(EpisodeProposalFacts facts, IReadOnlyList<RiskGateResultDto> gates)
+    public static class OperationalEpisodeBuilder
     {
-      if (facts == null)
-      {
-        throw new ArgumentNullException(nameof(facts));
-      }
-
-      if (gates == null)
-      {
-        throw new ArgumentNullException(nameof(gates));
-      }
-
-      OperationalEpisodeContext context = new OperationalEpisodeContext
-      {
-        VersionNumber = facts.VersionNumber,
-        EntryMode = facts.EntryMode,
-        Action = facts.Action,
-        Confidence = facts.Confidence,
-        Legs = ReadLegs(gates)
-      };
-
-      foreach (RiskGateResultDto gate in gates)
-      {
-        switch (gate.Code)
+        public static OperationalEpisode GateBlocked(EpisodeProposalFacts facts, IReadOnlyList<RiskGateResultDto> gates, DateTime occurredAtUtc)
         {
-          case RiskGateCode.CoverageBelowMinimum:
-            context.CoveragePercent = gate.ObservedValue ?? 0d;
-            context.MinimumCoveragePercent = gate.ThresholdValue ?? 0d;
-            break;
-          case RiskGateCode.SnapshotStale:
-            context.SnapshotAgeSeconds = gate.ObservedValue ?? 0d;
-            break;
-          case RiskGateCode.DailyLossExceeded:
-            context.DailyLossPercent = gate.ObservedValue ?? 0d;
-            context.DailyLossLimitPercent = gate.ThresholdValue ?? 0d;
-            break;
-        }
-      }
+            if (facts == null)
+            {
+                throw new ArgumentNullException(nameof(facts));
+            }
 
-      return context;
+            if (gates == null)
+            {
+                throw new ArgumentNullException(nameof(gates));
+            }
+
+            OperationalEpisodeOutcome outcome = null;
+
+            foreach (RiskGateResultDto gate in gates)
+            {
+                if (gate.Verdict != RiskGateVerdict.Block)
+                {
+                    continue;
+                }
+
+                // The first blocker in evaluation order is reported as the deciding rule. The others stay in the
+                // transactional record: repeating them here would make the memory claim a cause it did not establish.
+                outcome = new OperationalEpisodeOutcome
+                {
+                    Code = gate.Code.ToString(),
+                    Subject = gate.Subject,
+                    ObservedValue = gate.ObservedValue,
+                    ThresholdValue = gate.ThresholdValue,
+                    Unit = gate.Unit,
+                    Detail = gate.Detail
+                };
+
+                break;
+            }
+
+            if (outcome == null)
+            {
+                throw new InvalidOperationException("A blocked proposal has to carry at least one blocking gate: without it there is nothing to remember.");
+            }
+
+            return OperationalEpisodeRenderer.Create(
+              OperationalEpisodeKind.GateBlocked,
+              "proposal:" + facts.ProposalId,
+              occurredAtUtc,
+              Situation(facts, gates),
+              outcome);
+        }
+
+        /// <summary>
+        /// The measurable situation a proposal was judged in, rebuilt from its gate evaluations.
+        /// </summary>
+        /// <remarks>
+        /// Shared by the episode and by the retrieval query on purpose: if the question were phrased differently
+        /// from the answer, the comparison would depend on the phrasing rather than on the situation.
+        /// </remarks>
+        public static OperationalEpisodeContext Situation(EpisodeProposalFacts facts, IReadOnlyList<RiskGateResultDto> gates)
+        {
+            if (facts == null)
+            {
+                throw new ArgumentNullException(nameof(facts));
+            }
+
+            if (gates == null)
+            {
+                throw new ArgumentNullException(nameof(gates));
+            }
+
+            OperationalEpisodeContext context = new OperationalEpisodeContext
+            {
+                VersionNumber = facts.VersionNumber,
+                EntryMode = facts.EntryMode,
+                Action = facts.Action,
+                Confidence = facts.Confidence,
+                Legs = ReadLegs(gates)
+            };
+
+            foreach (RiskGateResultDto gate in gates)
+            {
+                switch (gate.Code)
+                {
+                    case RiskGateCode.CoverageBelowMinimum:
+                        context.CoveragePercent = gate.ObservedValue ?? 0d;
+                        context.MinimumCoveragePercent = gate.ThresholdValue ?? 0d;
+                        break;
+                    case RiskGateCode.SnapshotStale:
+                        context.SnapshotAgeSeconds = gate.ObservedValue ?? 0d;
+                        break;
+                    case RiskGateCode.DailyLossExceeded:
+                        context.DailyLossPercent = gate.ObservedValue ?? 0d;
+                        context.DailyLossLimitPercent = gate.ThresholdValue ?? 0d;
+                        break;
+                }
+            }
+
+            return context;
+        }
+
+        /// <summary>
+        /// Rebuilds one leg per symbol, keeping evaluation order so the same run always produces the same text.
+        /// </summary>
+        private static List<OperationalEpisodeLeg> ReadLegs(IReadOnlyList<RiskGateResultDto> gates)
+        {
+            List<OperationalEpisodeLeg> legs = new List<OperationalEpisodeLeg>();
+
+            foreach (RiskGateResultDto gate in gates)
+            {
+                if (string.IsNullOrWhiteSpace(gate.Subject) || gate.Subject == "basket")
+                {
+                    continue;
+                }
+
+                if (gate.Code != RiskGateCode.LegSpreadExceeded && gate.Code != RiskGateCode.LegVolatilityExceeded)
+                {
+                    continue;
+                }
+
+                OperationalEpisodeLeg leg = Find(legs, gate.Subject);
+
+                if (gate.Code == RiskGateCode.LegSpreadExceeded)
+                {
+                    leg.SpreadPips = gate.ObservedValue ?? 0d;
+                    leg.SpreadLimitPips = gate.ThresholdValue ?? 0d;
+                }
+                else
+                {
+                    leg.VolatilityPercent = gate.ObservedValue ?? 0d;
+                    leg.VolatilityLimitPercent = gate.ThresholdValue ?? 0d;
+                }
+            }
+
+            return legs;
+        }
+
+        private static OperationalEpisodeLeg Find(List<OperationalEpisodeLeg> legs, string symbol)
+        {
+            foreach (OperationalEpisodeLeg leg in legs)
+            {
+                if (string.Equals(leg.Symbol, symbol, StringComparison.Ordinal))
+                {
+                    return leg;
+                }
+            }
+
+            OperationalEpisodeLeg created = new OperationalEpisodeLeg { Symbol = symbol };
+            legs.Add(created);
+
+            return created;
+        }
     }
-
-    /// <summary>
-    /// Rebuilds one leg per symbol, keeping evaluation order so the same run always produces the same text.
-    /// </summary>
-    private static List<OperationalEpisodeLeg> ReadLegs(IReadOnlyList<RiskGateResultDto> gates)
-    {
-      List<OperationalEpisodeLeg> legs = new List<OperationalEpisodeLeg>();
-
-      foreach (RiskGateResultDto gate in gates)
-      {
-        if (string.IsNullOrWhiteSpace(gate.Subject) || gate.Subject == "basket")
-        {
-          continue;
-        }
-
-        if (gate.Code != RiskGateCode.LegSpreadExceeded && gate.Code != RiskGateCode.LegVolatilityExceeded)
-        {
-          continue;
-        }
-
-        OperationalEpisodeLeg leg = Find(legs, gate.Subject);
-
-        if (gate.Code == RiskGateCode.LegSpreadExceeded)
-        {
-          leg.SpreadPips = gate.ObservedValue ?? 0d;
-          leg.SpreadLimitPips = gate.ThresholdValue ?? 0d;
-        }
-        else
-        {
-          leg.VolatilityPercent = gate.ObservedValue ?? 0d;
-          leg.VolatilityLimitPercent = gate.ThresholdValue ?? 0d;
-        }
-      }
-
-      return legs;
-    }
-
-    private static OperationalEpisodeLeg Find(List<OperationalEpisodeLeg> legs, string symbol)
-    {
-      foreach (OperationalEpisodeLeg leg in legs)
-      {
-        if (string.Equals(leg.Symbol, symbol, StringComparison.Ordinal))
-        {
-          return leg;
-        }
-      }
-
-      OperationalEpisodeLeg created = new OperationalEpisodeLeg { Symbol = symbol };
-      legs.Add(created);
-
-      return created;
-    }
-  }
 }

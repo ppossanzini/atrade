@@ -4,8 +4,8 @@ using AutoTrade.Trading.Core.Dto;
 
 namespace AutoTrade.Trading.Handlers.Execution
 {
-  public interface IExecutionReconciliationService
-  {
-    Task<ExecutionReconciliationResultDto> ReconcileAsync(CancellationToken cancellationToken);
-  }
+    public interface IExecutionReconciliationService
+    {
+        Task<ExecutionReconciliationResultDto> ReconcileAsync(CancellationToken cancellationToken);
+    }
 }

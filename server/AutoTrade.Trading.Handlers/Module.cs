@@ -12,29 +12,29 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AutoTrade.Trading.Handlers
 {
-  /// <summary>
-  /// Handlers-tier registration. The composition root is responsible for the mediator registration
-  /// and for invoking this module.
-  /// </summary>
-  public static class Module
-  {
-    public static IServiceCollection AddTradingHandlers(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>
+    /// Handlers-tier registration. The composition root is responsible for the mediator registration
+    /// and for invoking this module.
+    /// </summary>
+    public static class Module
     {
-      services.AddDbContext<DB>(options => options.UseSqlite(configuration.GetConnectionString("Trading")));
-      services.AddScoped<IJournalWriter, JournalWriter>();
-      services.AddScoped<IPasswordHasher<Operator>, PasswordHasher<Operator>>();
-      services.AddScoped<TradingDatabaseInitializer>();
-      services.AddMapZilla(new[] { typeof(MappingProfile).Assembly });
-      services.AddTradingBroker(configuration);
-      services.AddTradingMarketData(configuration);
-      services.AddTradingRisk(configuration);
-      services.AddTradingMarket(configuration);
-      services.AddTradingExecution(configuration);
-      services.AddTradingEvidence(configuration);
-      services.AddTradingEmbedding(configuration);
-      services.AddTradingAnalysis(configuration);
+        public static IServiceCollection AddTradingHandlers(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddDbContext<DB>(options => options.UseSqlite(configuration.GetConnectionString("Trading")));
+            services.AddScoped<IJournalWriter, JournalWriter>();
+            services.AddScoped<IPasswordHasher<Operator>, PasswordHasher<Operator>>();
+            services.AddScoped<TradingDatabaseInitializer>();
+            services.AddMapZilla(new[] { typeof(MappingProfile).Assembly });
+            services.AddTradingBroker(configuration);
+            services.AddTradingMarketData(configuration);
+            services.AddTradingRisk(configuration);
+            services.AddTradingMarket(configuration);
+            services.AddTradingExecution(configuration);
+            services.AddTradingEvidence(configuration);
+            services.AddTradingEmbedding(configuration);
+            services.AddTradingAnalysis(configuration);
 
-      return services;
+            return services;
+        }
     }
-  }
 }

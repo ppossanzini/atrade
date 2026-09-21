@@ -2,11 +2,17 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { getSettings } from '@/settings'
 
 export type AccessTokenProvider = () => string | null
+export type UnauthorizedHandler = () => void
 
 let accessTokenProvider: AccessTokenProvider | null = null
+let unauthorizedHandler: UnauthorizedHandler | null = null
 
 export function setAccessTokenProvider(provider: AccessTokenProvider | null): void {
   accessTokenProvider = provider
+}
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  unauthorizedHandler = handler
 }
 
 /**
@@ -70,14 +76,23 @@ export abstract class BaseRestService {
 
   private async send<TResponse>(config: AxiosRequestConfig): Promise<TResponse> {
     const accessToken = accessTokenProvider ? accessTokenProvider() : null
-    const response = await this.client.request<TResponse>({
-      ...config,
-      headers: {
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        ...config.headers,
-      },
-    })
 
-    return response.data
+    try {
+      const response = await this.client.request<TResponse>({
+        ...config,
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          ...config.headers,
+        },
+      })
+
+      return response.data
+    } catch (error) {
+      if (getHttpStatus(error) === 401) {
+        unauthorizedHandler?.()
+      }
+
+      throw error
+    }
   }
 }

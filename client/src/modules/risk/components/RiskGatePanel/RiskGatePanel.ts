@@ -65,10 +65,6 @@ export default defineComponent({
       return subject === 'basket' ? t('risk.basketSubject') : subject
     }
 
-    function gateMarket(market: server.MarketKind | null): string {
-      return market ? t(`marketKind.${market}`) : t('risk.notAvailable')
-    }
-
     /**
      * Renders a measurement with its unit. A null measurement is a missing datum, which is shown as
      * such and never as a zero.
@@ -101,7 +97,6 @@ export default defineComponent({
       gateVerdictLabel,
       gateCode,
       gateSubject,
-      gateMarket,
       formatMeasured,
       formatTimestamp,
       requestRefresh,

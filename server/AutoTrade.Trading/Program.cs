@@ -51,10 +51,10 @@ builder.Services.AddAuthorization();
 string[] allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 {
-  if (allowedOrigins.Length > 0)
-  {
-    policy.WithOrigins(allowedOrigins).AllowCredentials().AllowAnyHeader().AllowAnyMethod();
-  }
+    if (allowedOrigins.Length > 0)
+    {
+        policy.WithOrigins(allowedOrigins).AllowCredentials().AllowAnyHeader().AllowAnyMethod();
+    }
 }));
 
 WebApplication app = builder.Build();
@@ -107,19 +107,19 @@ app.Logger.LogInformation("Analysis model in force: {Provider}/{Model}.", analys
 
 if (!brokerOptions.IsClientConfigured)
 {
-  app.Logger.LogWarning("Broker is not configured. Set Trading:Broker:ClientId, ClientSecret, TokenKey and RedirectUri to enable it.");
+    app.Logger.LogWarning("Broker is not configured. Set Trading:Broker:ClientId, ClientSecret, TokenKey and RedirectUri to enable it.");
 }
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-  ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
-  app.MapOpenApi();
+    app.MapOpenApi();
 }
 
 app.UseRouting();
@@ -132,8 +132,8 @@ app.MapHealthChecks("/health");
 
 using (IServiceScope scope = app.Services.CreateScope())
 {
-  TradingDatabaseInitializer initializer = scope.ServiceProvider.GetRequiredService<TradingDatabaseInitializer>();
-  await initializer.InitializeAsync(CancellationToken.None);
+    TradingDatabaseInitializer initializer = scope.ServiceProvider.GetRequiredService<TradingDatabaseInitializer>();
+    await initializer.InitializeAsync(CancellationToken.None);
 }
 
 app.Run();

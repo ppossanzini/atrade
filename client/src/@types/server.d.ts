@@ -102,8 +102,6 @@ declare namespace server {
 
   type LegDirection = 'Long' | 'Short'
 
-  type MarketKind = 'Fx' | 'Metal' | 'Index'
-
   type TimeFrame = 'M5' | 'M15' | 'M30' | 'H1'
 
   type FailurePolicy = 'MinimumCoverage' | 'AllOrNothing' | 'RequireConfirmation'
@@ -117,7 +115,6 @@ declare namespace server {
    */
   interface BasketCompositionLeg {
     symbol: string
-    market: MarketKind
     direction: LegDirection
     timeFrame: TimeFrame
     weight: number
@@ -213,7 +210,6 @@ declare namespace server {
     code: RiskGateCode
     verdict: RiskGateVerdict
     subject: string
-    market: MarketKind | null
     observedValue: number | null
     thresholdValue: number | null
     unit: string | null
@@ -267,7 +263,6 @@ declare namespace server {
 
   interface ProposalLeg {
     symbol: string
-    market: MarketKind
     direction: LegDirection
     weight: number
     riskCap: number
@@ -361,7 +356,6 @@ declare namespace server {
     legId: string
     ordinal: number
     symbol: string
-    market: MarketKind
     direction: LegDirection
     volumeUnits: number
     filledVolumeUnits: number

@@ -2,7 +2,7 @@ import { BaseRestService } from './baseRestService'
 
 /**
  * Transport-only access to the Market Manager endpoints. Decisions are attributed to the operator on the
- * server, so no identity travels from here; the antiforgery header is added by the shared transport.
+ * server, so no identity travels in the payload; the shared transport adds the Bearer credential.
  */
 export class MarketService extends BaseRestService {
   constructor() {

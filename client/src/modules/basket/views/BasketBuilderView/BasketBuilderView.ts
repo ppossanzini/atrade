@@ -191,7 +191,6 @@ export default defineComponent({
         ...draftLegs.value,
         {
           symbol,
-          market: 'Fx',
           direction: 'Long',
           timeFrame: 'H1',
           weight: 0,

@@ -55,7 +55,7 @@ Exit criteria: build e test di entrambi i progetti; health server; pagina client
 Output:
 
 - bootstrap sicuro dell'operatore locale;
-- login, cookie session, logout, lockout e antiforgery;
+- login, sessione persistita, Bearer token opaco, logout e lockout;
 - stato operativo e kill switch persistito;
 - route guards e schermata di stato client;
 - audit login/logout/kill switch.

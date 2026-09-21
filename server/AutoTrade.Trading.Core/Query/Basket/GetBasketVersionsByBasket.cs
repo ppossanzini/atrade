@@ -5,9 +5,9 @@ using Hikyaku;
 
 namespace AutoTrade.Trading.Core.Query.Basket
 {
-  /// <summary>Read condition: version history of one basket, newest first.</summary>
-  public class GetBasketVersionsByBasket : IRequest<List<BasketVersionDto>>
-  {
-    public Guid BasketId { get; set; }
-  }
+    /// <summary>Read condition: version history of one basket, newest first.</summary>
+    public class GetBasketVersionsByBasket : IRequest<List<BasketVersionDto>>
+    {
+        public Guid BasketId { get; set; }
+    }
 }

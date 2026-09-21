@@ -182,9 +182,6 @@
         <span class="panel-title panel-title--spaced">{{ t('market.legs') }}</span>
         <el-table :data="marketStore.detail.legs" size="small">
           <el-table-column :label="t('basket.symbol')" min-width="110" prop="symbol" />
-          <el-table-column :label="t('basket.market')" width="96">
-            <template #default="scope">{{ t(`marketKind.${scope.row.market}`) }}</template>
-          </el-table-column>
           <el-table-column :label="t('basket.direction')" width="96">
             <template #default="scope">{{ t(`legDirection.${scope.row.direction}`) }}</template>
           </el-table-column>

@@ -4,8 +4,8 @@ using Hikyaku;
 
 namespace AutoTrade.Trading.Core.Command.Operations
 {
-  public class ReleaseKillSwitch : IRequest<KillSwitchChangeResult>
-  {
-    public Guid OperatorId { get; set; }
-  }
+    public class ReleaseKillSwitch : IRequest<KillSwitchChangeResult>
+    {
+        public Guid OperatorId { get; set; }
+    }
 }
