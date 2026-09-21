@@ -54,7 +54,19 @@ declare namespace server {
     account: TradingAccountStatus | null
     marketManager: MarketManagerStatus | null
     evidenceStore: EvidenceStoreStatus | null
+    embedding: EmbeddingSourceStatus | null
     analysisModel: AnalysisModelStatus | null
+  }
+
+  /**
+   * Embedding as the application sees it. Separate from the store on purpose: a store that is open with no
+   * embedding source cannot answer a retrieval, and the two have to be distinguishable.
+   */
+  interface EmbeddingSourceStatus {
+    engine: string
+    model: string | null
+    textVersion: string | null
+    isAvailable: boolean
   }
 
   /** Semantic memory as the application sees it. Unavailable degrades retrieval, never authority. */

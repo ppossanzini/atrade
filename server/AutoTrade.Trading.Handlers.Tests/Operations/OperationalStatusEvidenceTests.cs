@@ -44,6 +44,20 @@ namespace AutoTrade.Trading.Handlers.Tests.Operations
     }
 
     [Fact]
+    public async Task Status_WithoutAnEmbeddingSource_ReportsItSeparatelyFromTheStore()
+    {
+      using TradingTestContext context = CreateContext();
+
+      OperationalStatusDto status = await context.Hikyaku.Send(new GetOperationalStatus(), CancellationToken.None);
+
+      // The two are reported apart on purpose: here the store is off as well, but the point is that an operator
+      // can tell which of the two is missing when only one of them is.
+      Assert.NotNull(status.Embedding);
+      Assert.Equal("Unset", status.Embedding.Engine);
+      Assert.False(status.Embedding.IsAvailable);
+    }
+
+    [Fact]
     public async Task Status_WithAModelInForce_ReportsWhatIsInForce()
     {
       using TradingTestContext context = new TradingTestContext(new Dictionary<string, string>

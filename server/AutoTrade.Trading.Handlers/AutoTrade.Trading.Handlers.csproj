@@ -12,7 +12,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Hikyaku" Version="10.0.2" />
-    <PackageReference Include="Jigen.Store" Version="1.3.1" />
+    <PackageReference Include="Jigen.Store" Version="1.3.2" />
+    <!-- In-process ONNX embedding: the same runtime that ranks the vectors also produces them, so retrieval
+         never depends on an external engine being up (ADR-0025). It brings ONNX Runtime, Microsoft.ML.Tokenizers
+         and OpenCvSharp5 along; the model checkpoint itself is a deployment artefact, not a package. -->
+    <PackageReference Include="Jigen.SemanticTools" Version="1.3.2" />
     <!-- Stored evidence carries explicit MessagePack keys, so the format survives a property rename. -->
     <PackageReference Include="MessagePack" Version="3.1.7" />
     <PackageReference Include="MapZilla" Version="9.1.5" />

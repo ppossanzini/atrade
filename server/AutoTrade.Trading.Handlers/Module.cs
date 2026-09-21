@@ -31,6 +31,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddTradingMarket(configuration);
       services.AddTradingExecution(configuration);
       services.AddTradingEvidence(configuration);
+      services.AddTradingEmbedding(configuration);
       services.AddTradingAnalysis(configuration);
 
       return services;

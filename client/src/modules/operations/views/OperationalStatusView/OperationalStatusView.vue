@@ -113,6 +113,15 @@
               label-key="status.evidenceAvailable"
               :value-key="evidenceStore.isAvailable ? 'common.yes' : 'common.no'"
             />
+            <template v-if="embedding">
+              <MetricRow label-key="status.embeddingEngine" :value="embedding.engine" />
+              <MetricRow label-key="status.embeddingModel" :value="embedding.model || t('status.never')" />
+              <MetricRow label-key="status.embeddingTextVersion" :value="embedding.textVersion || t('status.never')" />
+              <MetricRow
+                label-key="status.embeddingAvailable"
+                :value-key="embedding.isAvailable ? 'common.yes' : 'common.no'"
+              />
+            </template>
           </template>
 
           <p v-else class="status-panel__empty">{{ t('status.never') }}</p>

@@ -68,6 +68,10 @@ namespace AutoTrade.Trading.Handlers.Tests
       services.AddTradingAnalysis(configuration);
       services.AddSingleton<IOllamaAnalysisClient>(AnalysisClient);
 
+      // And the embedding tier: with no section configured it resolves to the explicitly unavailable source, so
+      // a test never needs a checkpoint on disk.
+      services.AddTradingEmbedding(configuration);
+
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();
       Db = _scope.ServiceProvider.GetRequiredService<DB>();

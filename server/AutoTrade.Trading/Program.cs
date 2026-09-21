@@ -97,6 +97,13 @@ EvidenceModule.EnsureProviderIsUsable(evidenceOptions);
 // rather than surface as a failed retrieval hours later.
 app.Services.GetRequiredService<IJigenEvidenceStore>();
 
+// Fail-closed: asking for embeddings without naming the checkpoint aborts startup, and the source is built now
+// so a missing or unreadable checkpoint fails here instead of inside a retrieval. No provider is a supported
+// state in which the semantic memory simply cannot be written to.
+EmbeddingOptions embeddingOptions = app.Services.GetRequiredService<EmbeddingOptions>();
+EmbeddingModule.EnsureProviderIsUsable(embeddingOptions);
+app.Services.GetRequiredService<ITextEmbeddingSource>();
+
 // Fail-closed: asking for an analysis model without naming it aborts startup, and a model the local engine
 // does not have aborts startup too. A model that is quietly missing would turn every opinion into a silent
 // absence, and absence must never be readable as a neutral view. No provider is a supported state.
@@ -107,6 +114,7 @@ await app.Services.GetRequiredService<IOllamaAnalysisClient>().EnsureModelIsPres
 app.Logger.LogInformation("Market data source in force: {Provider}.", marketDataOptions.Provider);
 app.Logger.LogInformation("Execution provider in force: {Provider}.", executionOptions.Provider);
 app.Logger.LogInformation("Evidence store in force: {Provider}.", evidenceOptions.Provider);
+app.Logger.LogInformation("Embedding source in force: {Provider}/{Model}.", embeddingOptions.Engine, embeddingOptions.Engine == AutoTrade.Trading.Handlers.Evidence.EmbeddingEngineKind.Unset ? "none" : embeddingOptions.ModelName);
 app.Logger.LogInformation("Analysis model in force: {Provider}/{Model}.", analysisOptions.Provider, string.IsNullOrWhiteSpace(analysisOptions.Model) ? "none" : analysisOptions.Model);
 
 if (!brokerOptions.IsClientConfigured)

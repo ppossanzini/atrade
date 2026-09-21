@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutoTrade.Trading.Handlers.CQRS.Operations
 {
-  public class OperationsQueryHandler(DB db, IMapper mapper, TimeProvider timeProvider, EvidenceOptions evidenceOptions, IJigenEvidenceStore evidenceStore, AnalysisOptions analysisOptions, IOllamaAnalysisClient analysisClient) : IRequestHandler<GetOperationalStatus, OperationalStatusDto>
+  public class OperationsQueryHandler(DB db, IMapper mapper, TimeProvider timeProvider, EvidenceOptions evidenceOptions, IJigenEvidenceStore evidenceStore, EmbeddingOptions embeddingOptions, ITextEmbeddingSource embeddingSource, AnalysisOptions analysisOptions, IOllamaAnalysisClient analysisClient) : IRequestHandler<GetOperationalStatus, OperationalStatusDto>
   {
     private const int KillSwitchStateId = 1;
     private const int MarketManagerStateId = 1;
@@ -52,6 +52,15 @@ namespace AutoTrade.Trading.Handlers.CQRS.Operations
           Provider = analysisOptions.Provider.ToString(),
           Model = analysisOptions.Model,
           IsAvailable = analysisClient.IsAvailable
+        },
+        Embedding = new EmbeddingSourceStatusDto
+        {
+          Engine = embeddingOptions.Engine.ToString(),
+          // Reported only when a provider is selected: with none, a leftover model name in the settings would
+          // read as a configured memory that is merely unavailable, which is a different fact.
+          Model = embeddingOptions.Engine == EmbeddingEngineKind.Unset ? null : embeddingOptions.ModelName,
+          TextVersion = embeddingOptions.Engine == EmbeddingEngineKind.Unset ? null : embeddingOptions.TextVersion,
+          IsAvailable = embeddingSource.IsAvailable
         }
       };
     }
