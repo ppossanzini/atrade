@@ -183,6 +183,27 @@ Il Win/Loss History contiene episodi chiusi, PnL netto, R-multiple, durata, MAE,
 
 Il Decision Journal e append-only e registra transizioni, input deterministici, esiti dei gate, decisioni operatore, output LLM accettati/scartati, errori broker e riconciliazioni. Non sostituisce i log tecnici e non e modificabile dalla UI.
 
+### 5.9 Memoria operativa e episodio
+
+Il termine "episodio" indica due cose diverse e vengono tenute distinte (ADR-0026).
+
+L'**episodio di risultato** e il trade chiuso della Win/Loss History: PnL netto, R-multiple, MAE, MFE. Si conosce solo dopo che i deal sono riconciliati, quindi appartiene allo Storico e non alla memoria consultata prima di decidere.
+
+L'**episodio operativo** (`OperationalEpisode`) e un evento concluso con esito noto, descritto insieme al contesto misurabile in cui e accaduto. E questo che entra nella memoria semantica, ed e consultabile prima di una decisione.
+
+Meritano memoria:
+
+| Categoria | Quando l'esito e noto |
+| --- | --- |
+| Gate che ha bloccato una proposta | alla valutazione, con i valori osservati contro le soglie |
+| Esecuzione chiusa senza copertura nominale | alla chiusura |
+| Compensazione creata | alla creazione della compensazione |
+| Esecuzione rifiutata prima dell'invio | al rifiuto |
+| Cambio di stato del kill switch | al cambio |
+| Esecuzione chiusa con copertura nominale | alla chiusura |
+
+Non meritano memoria i cicli di analisi che non producono nulla: l'assenza di un evento non e un'esperienza. La memoria non conserva stato transazionale, non decide verdetti e non raggiunge il gateway ordini. Una memoria indisponibile o in errore non blocca e non fa fallire l'operazione che ha prodotto l'episodio.
+
 ## 6. Stati degradati
 
 | Condizione | Comportamento richiesto |

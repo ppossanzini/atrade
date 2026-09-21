@@ -239,6 +239,8 @@ Lo spike e stato superato: `Jigen.Store` 1.3.1 e una dipendenza reale, risolta d
 
 La disponibilita viaggia nel risultato (`EvidenceSearchResult.IsAvailable`), quindi store non configurato non viene mai letto come nessuna corrispondenza. `EnsureProviderIsUsable` piu risoluzione eager all'avvio fermano l'host se lo store configurato non si apre. Non esiste un'API di backup: il backup e una copia coerente della directory a store chiuso.
 
+Il contenuto della memoria e un **episodio operativo** (`OperationalEpisode`): un evento concluso con esito noto, con il contesto misurabile in cui e accaduto. Il testo e prodotto da `OperationalEpisodeRenderer`, che e puro e deterministico, cita alla lettera il `Detail` prodotto dal motore invece di parafrasarlo, e rende i numeri in **cultura invariante**: con una locale a virgola decimale lo stesso fatto produrrebbe un testo diverso, quindi un vettore diverso, per una ragione che non si vede leggendo il codice. La versione della resa (`TextVersion`, oggi `v1`) fa parte del nome della collezione, quindi cambiare una frase apre una collezione nuova invece di mescolare vettori non confrontabili.
+
 La memoria semantica non conserva stato transazionale, non decide alcun verdetto e non raggiunge il gateway ordini. Il fail-closed su store o modello fermi e responsabilita del consumatore, non dello store.
 
 ## 9. Sicurezza
