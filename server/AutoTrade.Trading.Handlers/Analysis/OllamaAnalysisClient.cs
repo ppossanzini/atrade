@@ -158,9 +158,16 @@ namespace AutoTrade.Trading.Handlers.Analysis
       {
         int read = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
 
-        if (read == buffer.Length && !reader.EndOfStream)
+        // One character past the bound is enough to tell "complete" from "truncated", and it is read rather
+        // than tested with EndOfStream, which blocks synchronously inside an async method.
+        if (read == buffer.Length)
         {
-          return null;
+          int extra = await reader.ReadAsync(buffer, 0, 1);
+
+          if (extra > 0)
+          {
+            return null;
+          }
         }
 
         return new string(buffer, 0, read);

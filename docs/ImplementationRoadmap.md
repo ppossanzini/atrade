@@ -211,7 +211,19 @@ Output:
 
 **Blocco risolto, seam di embedding consegnato (2026-09-20).** `Jigen.SemanticTools` **1.3.2 è pubblicato**, insieme al resto della famiglia (`Jigen.Store` e `Jigen.Primitives` portati a 1.3.2). Il seam è quindi scritto: `ITextEmbeddingSource` con i due ruoli separati (`EmbedDocumentAsync` e `EmbedQueryAsync`), `EmbeddingOptions` con profilo, execution provider e dimensione di output, l'adattatore `JigenOnnxTextEmbeddingSource` che possiede le due cose che il runtime non gestisce (esistenza del checkpoint e del tokenizer, e validazione del profilo invece del fallback a un default) e la sorgente esplicitamente indisponibile quando non c'è provider. `EmbeddingOptions.CreateCollection` è l'unico posto che compone la chiave della collezione, così un chiamante non può dimenticare metà dell'identità. Lo stato operativo riporta l'embedding **separatamente** dallo store: store aperto e sorgente assente significa che la memoria non può rispondere, e le due cose devono essere distinguibili.
 
-**Cosa manca per chiudere la catena.** Il checkpoint (`model.onnx` più tokenizer) — fornito dal deployment, non ancora presente. Fino ad allora il seam esiste e **rifiuta di generare embedding**: nessun vettore di zeri, nessun fallback. Restano poi le due questioni di prodotto già annotate: cosa merita di essere ricordato come episodio e in quale punto della catena va scritto.
+**Cosa manca per chiudere la catena.** Il checkpoint è stato fornito (2026-09-21) e la catena è attiva: vedi la misura qui sotto. Restano le due questioni di prodotto già annotate: cosa merita di essere ricordato come episodio, e in quale punto della catena va scritto. Finché non sono decise la memoria resta vuota, e vuota è uno stato corretto: nessun vettore viene inventato per riempirla.
+
+**Catena ONNX verificata live, con numeri (2026-09-21).** Con `nomic-embed-text-v1.5` in-process: 768 dimensioni, ranking coerente con il significato, metadati integri, risultato identico dopo riapertura dello store. Documento e query producono vettori **diversi** per lo stesso testo, il che conferma che i prefissi di task sono applicati e giustifica i due metodi separati del seam. Confronto fra le varianti del checkpoint, sugli stessi tre episodi:
+
+| Episodio | `model_int8` (137 MB) | `model.onnx` (547 MB) |
+|---|---|---|
+| riempimento parziale | 0.789987 | 0.795407 |
+| spread oltre il limite | 0.648439 | 0.671169 |
+| snapshot stantio | 0.503572 | 0.514343 |
+
+L'ordine è lo stesso e il margine fra primo e secondo è ampio in entrambi (0.142 con int8, 0.124 con fp32): la precisione piena alza tutti i punteggi di poco, la separazione non migliora. La variante **int8** è quindi attiva, con 410 MB di RAM in meno. La misura è su un caso e non è un benchmark: va ripetuta se il dominio degli episodi cambia.
+
+**Trappola verificata sul tokenizer.** `tokenizer.json` di HuggingFace **non è utilizzabile** con questo runtime se il checkpoint non è SentencePiece: il ramo JSON cerca un sidecar `sentencepiece.bpe.model` nella stessa cartella e fallisce con `FileNotFoundException`. I checkpoint nomic sono WordPiece, quindi va usato `tokenizer.onnx` (presente nella stessa cartella). L'errore è per una volta chiaro e indica il file mancante, ma la conclusione è controintuitiva: il file più "familiare" è quello sbagliato.
 
 **Questioni aperte prima di scrivere il retrieval.** Due, e la seconda è stata scoperta leggendo il codice e non i documenti. Primo: cosa merita di essere ricordato come episodio e in quale punto della catena va scritto, e come si rende il testo di un episodio (la resa è versionata, quindi cambiarla apre una nuova collezione). Secondo: la separazione per modello/engine è ora strutturale nel nome della collezione, ma resta da decidere chi costruisce quella collezione e da dove arriva la versione del testo.
 
