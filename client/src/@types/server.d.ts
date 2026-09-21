@@ -17,13 +17,14 @@ declare namespace server {
     expiresAtUtc: IsoDateTime
   }
 
+  interface AuthenticatedSession {
+    accessToken: string
+    session: Session
+  }
+
   interface LoginRequest {
     userName: string
     password: string
-  }
-
-  interface AntiforgeryToken {
-    token: string
   }
 
   interface KillSwitchStatus {

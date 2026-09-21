@@ -31,9 +31,6 @@ export const useOperationsStore = defineStore('operations', () => {
   }
 
   async function engageKillSwitch(reason: string): Promise<server.KillSwitchChangeOutcome | null> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     try {
       const change = await operationsService.engageKillSwitch({ reason })
       await loadStatus()
@@ -45,9 +42,6 @@ export const useOperationsStore = defineStore('operations', () => {
   }
 
   async function releaseKillSwitch(): Promise<server.KillSwitchChangeOutcome | null> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     try {
       const change = await operationsService.releaseKillSwitch()
       await loadStatus()

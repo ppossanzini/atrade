@@ -43,7 +43,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("proposals/{proposalId:guid}/start")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(ExecutionStartResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -61,7 +61,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("executions/{executionId:guid}/compensate")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(ExecutionStartResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

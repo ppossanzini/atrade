@@ -205,17 +205,13 @@ export const useBasketsStore = defineStore('baskets', () => {
   }
 
   /**
-   * Runs one write through the shared transaction ceremony: request the antiforgery token, send the
-   * single contract of the scope, then refresh the registry, the detail and the version history so
-   * the UI never shows a state the server did not confirm.
+   * Runs one write and then refreshes the registry, detail and version history so the UI never shows
+   * a state the server did not confirm.
    */
   async function runMutation(
     action: () => Promise<server.BasketDetail>,
     selectResult: boolean,
   ): Promise<BasketMutationOutcome> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     isSaving.value = true
 
     try {

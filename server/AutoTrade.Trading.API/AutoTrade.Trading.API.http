@@ -2,49 +2,41 @@
 @userName = operator
 @password = INSERISCI_LA_PASSWORD_DEL_BOOTSTRAP
 
-### 1. Token antiforgery prima del login
-# @name antiforgeryBeforeLogin
-GET {{host}}/api/session/antiforgery-token
-Accept: application/json
-
-### 2. Login
+### 1. Login e rilascio del Bearer token opaco
+# @name login
 POST {{host}}/api/session/login
 Content-Type: application/json
-X-CSRF-TOKEN: {{antiforgeryBeforeLogin.response.body.$.token}}
 
 {
   "userName": "{{userName}}",
   "password": "{{password}}"
 }
 
-### 3. Token antiforgery dopo il login
-# Il token e legato all'identita del chiamante, quindi va rinnovato dopo l'accesso (ADR-0011).
-# @name antiforgeryAfterLogin
-GET {{host}}/api/session/antiforgery-token
-Accept: application/json
-
-### 4. Stato operativo
+### 2. Stato operativo
 GET {{host}}/api/operations/status
 Accept: application/json
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 5. Stato del broker: isClientConfigured e isAuthorized
 GET {{host}}/api/broker/status
 Accept: application/json
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 6. Avvio dell'autorizzazione
 # Restituisce authorizationUrl: aprila nel browser e concedi l'accesso con il tuo cTID.
 # Il provider reindirizza poi su /api/broker/callback, che completa lo scambio dei token.
 POST {{host}}/api/broker/authorization
-X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 7. Verifica dopo il consenso: isAuthorized deve essere true
 GET {{host}}/api/broker/status
 Accept: application/json
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 8. Dimentica l'autorizzazione locale
 # Il grant resta valido sul provider: qui si elimina solo la copia locale.
 POST {{host}}/api/broker/authorization/revoke
-X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 9. Import dei token da Playground (solo in Development)
 # Percorso alternativo al consenso OAuth, utile finche l'app non e approvata.
@@ -52,7 +44,7 @@ X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
 # La coppia viene validata tramite refresh e ruotata prima di essere salvata cifrata.
 POST {{host}}/api/broker/tokens
 Content-Type: application/json
-X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 {
   "accessToken": "INCOLLA_QUI_L_ACCESS_TOKEN_DEL_PLAYGROUND",
@@ -63,18 +55,20 @@ X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
 # Apre una connessione reale a wss://demo.ctraderapi.com:5035, esegue la application auth e, se esiste
 # un grant salvato, chiede la lista conti. Non restituisce mai una credenziale.
 POST {{host}}/api/broker/probe
-X-CSRF-TOKEN: {{antiforgeryAfterLogin.response.body.$.token}}
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 11. Soglie di rischio in vigore, una voce per mercato
 # Ogni mercato del catalogo e riportato, anche quando non e configurato: isConfigured dice quali
 # soglie mancano ancora, e nessun mercato eredita il valore di un altro (ADR-0013).
 GET {{host}}/api/risk/limits
 Accept: application/json
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 12. Decisione di rischio del paniere attivo
 # Riporta il verdetto aggregato e ogni gate con codice, valore osservato, soglia e mercato.
 # Il paniere deve esistere, altrimenti la risposta e 404.
 GET {{host}}/api/risk/baskets/INSERISCI_IL_BASKET_ID
 Accept: application/json
+Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ###

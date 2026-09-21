@@ -23,7 +23,9 @@ export class ExecutionService extends BaseRestService {
   }
 
   async compensate(executionId: string, reason: string): Promise<server.ExecutionStartResult> {
-    return this.post<server.ExecutionStartResult>(`/executions/${executionId}/compensate`, { reason })
+    return this.post<server.ExecutionStartResult>(`/executions/${executionId}/compensate`, {
+      reason,
+    })
   }
 }
 

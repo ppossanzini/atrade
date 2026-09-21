@@ -64,6 +64,38 @@ namespace AutoTrade.Trading.Handlers.Tests.CQRS.OperatorHandlers
     }
 
     [Fact]
+    public async Task GetCurrentSessionByToken_WithActiveSession_ReturnsProjectedSession()
+    {
+      using TradingTestContext context = CreateContext();
+      Operator operatorEntity = context.CreateOperator(UserName, Password, true);
+
+      LoginOperatorResult login = await context.Hikyaku.Send(
+        new LoginOperator { UserName = UserName, Password = Password },
+        CancellationToken.None);
+
+      SessionDto session = await context.Hikyaku.Send(
+        new GetCurrentSessionByToken { SessionToken = login.SessionToken },
+        CancellationToken.None);
+
+      Assert.NotNull(session);
+      Assert.Equal(login.SessionId, session.SessionId);
+      Assert.Equal(operatorEntity.Id, session.OperatorId);
+    }
+
+    [Fact]
+    public async Task GetCurrentSessionByToken_WithUnknownToken_ReturnsNull()
+    {
+      using TradingTestContext context = CreateContext();
+      context.CreateOperator(UserName, Password, true);
+
+      SessionDto session = await context.Hikyaku.Send(
+        new GetCurrentSessionByToken { SessionToken = "not-the-token" },
+        CancellationToken.None);
+
+      Assert.Null(session);
+    }
+
+    [Fact]
     public async Task GetCurrentSession_AfterLogout_ReturnsNull()
     {
       using TradingTestContext context = CreateContext();

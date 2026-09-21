@@ -439,11 +439,13 @@ export default {
     adr_and_approval:
       'L’ADR vive nei documenti e l’approvazione è esplicita: fuori dalla portata dell’applicazione.',
   },
-  execution: {    title: 'Esecuzione',
+  execution: {
+    title: 'Esecuzione',
     subtitle: 'Sequenze di ordini inviate al broker e relativo esito misurato.',
     refresh: 'Aggiorna',
     queueTitle: 'Coda delle esecuzioni',
-    queueSubtitle: 'La copertura è calcolata sul volume realmente riempito, non su quello pianificato.',
+    queueSubtitle:
+      'La copertura è calcolata sul volume realmente riempito, non su quello pianificato.',
     detailTitle: 'Dettaglio esecuzione',
     empty: 'Nessuna esecuzione registrata.',
     metrics: {

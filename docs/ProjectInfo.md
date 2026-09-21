@@ -180,7 +180,7 @@
 ## ADR-0010 - Local session, CSRF contract, and implementation watch-outs
 
 - Date: 2026-09-18
-- Status: Accepted
+- Status: Superseded by ADR-0030
 - Context: The MVP requires an audited local operator session protecting a JSON API reached same-site from the SPA, and implementation details surfaced during runtime verification are easy to regress.
 - Decision:
   - The authentication cookie carries only opaque claims (`operator_id`, `session_token`); the authoritative session lives in SQLite and is re-validated on every request through `CookieAuthenticationEvents.OnValidatePrincipal`, so logout, expiry and operator deactivation take effect immediately.
@@ -193,7 +193,7 @@
 ## ADR-0011 - Production client scaffold and HTTP contract conventions
 
 - Date: 2026-09-18
-- Status: Accepted
+- Status: Partially superseded by ADR-0030
 - Context: The production frontend had to be created from scratch in `client/` (no reuse of the prototype) and integrated with the verified REST API. Runtime verification exposed two contract behaviours that are easy to regress.
 - Decision:
   - Scaffold `client/` with Vue 3 + TypeScript, Vite, Router, Pinia, ESLint, Prettier, plus Element Plus, Axios, Vue I18n (Italian default) and LESS, per the locked stack.
@@ -383,3 +383,16 @@
   - `ReconcileExecutions` is the only recovery command. Its worker is disabled by default and configured under `Trading:Execution:Reconciliation`; a pass queries non-terminal legs, deduplicates broker events and atomically updates legs, executions and the account reconciliation watermark.
   - Reconciliation never sends or retries an order. Unknown, ambiguous or incomplete broker state leaves the account and execution in `ReconciliationRequired`.
 - Consequences: the real market-data path can satisfy the volatility gate without inventing a provider value, and restart/reconnect recovery has an explicit write owner. Live provider behaviour still requires the approved demo-account drill before the implementation can be declared operational.
+
+## ADR-0030 - Operator authentication uses the persisted session as an opaque Bearer token
+
+- Date: 2026-09-21
+- Status: Accepted
+- Supersedes: ADR-0010 and the cookie/antiforgery parts of ADR-0011
+- Context: Cookie authentication and antiforgery made the development client dependent on browser site rules and caused a successful login response to be followed by unauthorized API calls when client and API hosts differed. The owner explicitly requires Bearer authentication and removal of antiforgery.
+- Decision:
+  - `LoginOperator` continues to create the audited, expiring server-side session and the login endpoint returns its random 256-bit token once as `accessToken` beside the session projection.
+  - Every protected request carries `Authorization: Bearer <token>`; a custom ASP.NET Core authentication handler resolves the token against the persisted session and rejects ended, expired or inactive-operator sessions.
+  - The client keeps the token in `sessionStorage`, injects the header centrally through Axios, restores the authoritative session with `GET /api/session`, and clears the token on logout or failed restoration. `localStorage` is not used.
+  - Cookie authentication, antiforgery registration, antiforgery endpoints, filters and headers are removed. There is no weaker fallback authentication path.
+- Consequences: authentication no longer depends on SameSite or credentialed CORS cookies, while immediate server-side revocation and audit semantics remain unchanged. As with any browser-readable Bearer token, preventing script injection remains a security boundary.

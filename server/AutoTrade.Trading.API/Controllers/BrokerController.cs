@@ -42,7 +42,7 @@ namespace AutoTrade.Trading.API.Controllers
 
     [HttpPost("authorization")]
     [Authorize]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BrokerAuthorizationStartDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> StartAuthorization(CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ namespace AutoTrade.Trading.API.Controllers
 
     [HttpPost("authorization/revoke")]
     [Authorize]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BrokerAuthorizationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RevokeAuthorization(CancellationToken cancellationToken)
@@ -118,7 +118,7 @@ namespace AutoTrade.Trading.API.Controllers
     /// </summary>
     [HttpPost("tokens")]
     [Authorize]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BrokerAuthorizationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -151,7 +151,7 @@ namespace AutoTrade.Trading.API.Controllers
     /// </summary>
     [HttpPost("probe")]
     [Authorize]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BrokerProbeResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ProbeConnection(CancellationToken cancellationToken)

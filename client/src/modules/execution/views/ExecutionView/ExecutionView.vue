@@ -179,12 +179,12 @@
 
         <span class="panel-title panel-title--spaced">{{ t('execution.legs') }}</span>
         <el-table :data="executionStore.detail.legs" size="small">
+          <el-table-column :label="t('execution.legsColumns.ordinal')" prop="ordinal" width="48" />
           <el-table-column
-            :label="t('execution.legsColumns.ordinal')"
-            prop="ordinal"
-            width="48"
+            :label="t('execution.legsColumns.symbol')"
+            prop="symbol"
+            min-width="90"
           />
-          <el-table-column :label="t('execution.legsColumns.symbol')" prop="symbol" min-width="90" />
           <el-table-column :label="t('execution.legsColumns.market')" width="86">
             <template #default="scope">{{ marketLabel(scope.row.market) }}</template>
           </el-table-column>
@@ -213,11 +213,7 @@
         </el-table>
 
         <div class="execution-detail__identifiers">
-          <div
-            v-for="leg in executionStore.detail.legs"
-            :key="leg.legId"
-            class="metric-row"
-          >
+          <div v-for="leg in executionStore.detail.legs" :key="leg.legId" class="metric-row">
             <span class="metric-row__label">
               {{ leg.symbol }} · {{ t('execution.legsColumns.clientOrderId') }}
             </span>
@@ -261,11 +257,7 @@
           <el-table-column :label="t('execution.eventsColumns.kind')" min-width="150">
             <template #default="scope">{{ eventKindLabel(scope.row.kind) }}</template>
           </el-table-column>
-          <el-table-column
-            :label="t('execution.eventsColumns.symbol')"
-            prop="symbol"
-            width="96"
-          />
+          <el-table-column :label="t('execution.eventsColumns.symbol')" prop="symbol" width="96" />
           <el-table-column
             :label="t('execution.eventsColumns.brokerEventId')"
             prop="brokerEventId"

@@ -47,9 +47,7 @@ export default defineComponent({
       return statusTagTypes[status] ?? 'info'
     }
 
-    function legTag(
-      status: server.ExecutionLegStatus,
-    ): 'success' | 'warning' | 'danger' | 'info' {
+    function legTag(status: server.ExecutionLegStatus): 'success' | 'warning' | 'danger' | 'info' {
       return legTagTypes[status] ?? 'info'
     }
 
@@ -125,7 +123,9 @@ export default defineComponent({
         const reason = executionStore.lastRefusalReason
 
         ElMessage.warning(
-          reason ? `${t('execution.compensateRefused')} (${reason})` : t('execution.compensateRefused'),
+          reason
+            ? `${t('execution.compensateRefused')} (${reason})`
+            : t('execution.compensateRefused'),
         )
 
         return

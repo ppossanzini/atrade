@@ -1,16 +1,12 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { getSettings } from '@/settings'
 
-/**
- * Supplies transport headers for the current request. The session store registers a provider that
- * adds the antiforgery header, so service classes stay free of authentication concerns.
- */
-export type RequestHeaderProvider = () => Record<string, string>
+export type AccessTokenProvider = () => string | null
 
-let requestHeaderProvider: RequestHeaderProvider | null = null
+let accessTokenProvider: AccessTokenProvider | null = null
 
-export function setRequestHeaderProvider(provider: RequestHeaderProvider | null): void {
-  requestHeaderProvider = provider
+export function setAccessTokenProvider(provider: AccessTokenProvider | null): void {
+  accessTokenProvider = provider
 }
 
 /**
@@ -27,9 +23,7 @@ export function getHttpStatus(error: unknown): number | null {
  * thrown away with the status.
  */
 export function getHttpErrorBody<TResponse>(error: unknown): TResponse | null {
-  return axios.isAxiosError(error) && error.response
-    ? (error.response.data as TResponse)
-    : null
+  return axios.isAxiosError(error) && error.response ? (error.response.data as TResponse) : null
 }
 
 /**
@@ -43,7 +37,7 @@ export abstract class BaseRestService {
 
   protected constructor(basePath: string) {
     this.basePath = basePath
-    this.client = axios.create({ withCredentials: true })
+    this.client = axios.create()
   }
 
   protected get<TResponse>(path: string): Promise<TResponse> {
@@ -75,11 +69,13 @@ export abstract class BaseRestService {
   }
 
   private async send<TResponse>(config: AxiosRequestConfig): Promise<TResponse> {
-    const providerHeaders = requestHeaderProvider ? requestHeaderProvider() : {}
-
+    const accessToken = accessTokenProvider ? accessTokenProvider() : null
     const response = await this.client.request<TResponse>({
       ...config,
-      headers: { ...providerHeaders, ...config.headers },
+      headers: {
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...config.headers,
+      },
     })
 
     return response.data

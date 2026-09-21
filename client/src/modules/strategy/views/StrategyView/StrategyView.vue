@@ -42,7 +42,12 @@
           <div class="panel strategy-panel">
             <div class="panel-header">
               <span class="panel-title">{{ t('strategy.rules') }}</span>
-              <el-tag v-if="strategyStore.hasPendingChanges" type="warning" effect="plain" size="small">
+              <el-tag
+                v-if="strategyStore.hasPendingChanges"
+                type="warning"
+                effect="plain"
+                size="small"
+              >
                 {{ t('strategy.pendingPublication') }}
               </el-tag>
             </div>
@@ -135,11 +140,7 @@
             />
 
             <div class="inline-actions strategy-actions">
-              <el-button
-                type="primary"
-                :loading="strategyStore.isSaving"
-                @click="save"
-              >
+              <el-button type="primary" :loading="strategyStore.isSaving" @click="save">
                 {{ t('strategy.save') }}
               </el-button>
             </div>

@@ -5,12 +5,8 @@ export class SessionService extends BaseRestService {
     super('/api/session')
   }
 
-  async getAntiforgeryToken(): Promise<server.AntiforgeryToken> {
-    return this.get<server.AntiforgeryToken>('/antiforgery-token')
-  }
-
-  async login(request: server.LoginRequest): Promise<server.Session> {
-    return this.post<server.Session>('/login', request)
+  async login(request: server.LoginRequest): Promise<server.AuthenticatedSession> {
+    return this.post<server.AuthenticatedSession>('/login', request)
   }
 
   async getCurrent(): Promise<server.Session> {

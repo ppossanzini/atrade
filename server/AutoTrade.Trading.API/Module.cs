@@ -11,8 +11,6 @@ namespace AutoTrade.Trading.API
   {
     public static IServiceCollection AddTradingApi(this IServiceCollection services)
     {
-      // AddControllersWithViews is required for the built-in antiforgery token filters
-      // used by the mutating endpoints ([ValidateAntiForgeryToken]).
       // Enums travel as names so the HTTP contract stays readable for clients and humans.
       services
         .AddControllersWithViews()

@@ -7,11 +7,12 @@ import { useStrategyStore } from '@/stores/strategy'
  * Tag type per requirement state. A requirement the application cannot decide is neutral on purpose: it is
  * neither met nor breached, and colouring it would read as a verdict nobody issued.
  */
-const requirementTagTypes: Record<server.PromotionRequirementState, 'success' | 'danger' | 'info'> = {
-  Satisfied: 'success',
-  NotSatisfied: 'danger',
-  NotVerifiable: 'info',
-}
+const requirementTagTypes: Record<server.PromotionRequirementState, 'success' | 'danger' | 'info'> =
+  {
+    Satisfied: 'success',
+    NotSatisfied: 'danger',
+    NotVerifiable: 'info',
+  }
 
 export default defineComponent({
   name: 'StrategyView',

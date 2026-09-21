@@ -127,9 +127,6 @@ export const useMarketStore = defineStore('market', () => {
   }
 
   async function setMode(mode: server.MarketManagerMode): Promise<MarketMutationOutcome> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     isSaving.value = true
 
     try {
@@ -145,9 +142,6 @@ export const useMarketStore = defineStore('market', () => {
   }
 
   async function setAnalysisState(isRunning: boolean): Promise<MarketMutationOutcome> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     isSaving.value = true
 
     try {
@@ -169,9 +163,6 @@ export const useMarketStore = defineStore('market', () => {
     proposalId: string,
     reason: string,
   ): Promise<MarketMutationOutcome> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     isSaving.value = true
 
     try {

@@ -137,9 +137,6 @@ export const useExecutionStore = defineStore('execution', () => {
    * visible without a manual refresh.
    */
   async function start(proposalId: string): Promise<ExecutionMutationOutcome> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     isSaving.value = true
     lastRefusalReason.value = null
 
@@ -172,9 +169,6 @@ export const useExecutionStore = defineStore('execution', () => {
     executionId: string,
     reason: string,
   ): Promise<ExecutionMutationOutcome> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     isSaving.value = true
     lastRefusalReason.value = null
 

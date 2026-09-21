@@ -9,16 +9,29 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutoTrade.Trading.Handlers.CQRS.Operator
 {
-  public class OperatorQueryHandler(DB db, TimeProvider timeProvider) : IRequestHandler<GetCurrentSession, SessionDto>
+  public class OperatorQueryHandler(DB db, TimeProvider timeProvider) :
+    IRequestHandler<GetCurrentSession, SessionDto>,
+    IRequestHandler<GetCurrentSessionByToken, SessionDto>
   {
     public async Task<SessionDto> Handle(GetCurrentSession request, CancellationToken cancellationToken)
     {
+      return await BuildActiveSessionQuery(request.SessionToken)
+        .Where(session => session.OperatorId == request.OperatorId)
+        .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<SessionDto> Handle(GetCurrentSessionByToken request, CancellationToken cancellationToken)
+    {
+      return await BuildActiveSessionQuery(request.SessionToken).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private IQueryable<SessionDto> BuildActiveSessionQuery(string sessionToken)
+    {
       DateTime now = timeProvider.GetUtcNow().UtcDateTime;
 
-      SessionDto session = await (from operatorSession in db.OperatorSessions
+      return from operatorSession in db.OperatorSessions
                                   join operatorEntity in db.Operators on operatorSession.OperatorId equals operatorEntity.Id
-                                  where operatorSession.SessionToken == request.SessionToken
-                                        && operatorSession.OperatorId == request.OperatorId
+                                  where operatorSession.SessionToken == sessionToken
                                         && operatorSession.EndedAtUtc == null
                                         && operatorSession.ExpiresAtUtc > now
                                         && operatorEntity.IsActive
@@ -29,9 +42,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Operator
                                     UserName = operatorEntity.UserName,
                                     StartedAtUtc = operatorSession.StartedAtUtc,
                                     ExpiresAtUtc = operatorSession.ExpiresAtUtc
-                                  }).FirstOrDefaultAsync(cancellationToken);
-
-      return session;
+                                  };
     }
   }
 }

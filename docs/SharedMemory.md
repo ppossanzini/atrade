@@ -18,13 +18,12 @@
 - Group DB handlers per entity and name files `{EntityType}CommandHandler.cs` / `{EntityType}QueryHandler.cs`.
 - Persist the functional journal as an append-only table with a monotonic sequence and a service-owned writer.
 - Own the schema through EF Core migrations applied with `Database.MigrateAsync()` at startup; never create it implicitly with `EnsureCreated`. Migrations live in the Handlers project next to the `DB` context and are generated with `dotnet ef migrations add`, never hand-edited.
-- Validate the operator session server-side on every request; never trust cookie contents alone.
-- Require the `X-CSRF-TOKEN` header on every mutating endpoint and obtain the token from `/api/session/antiforgery-token`.
+- Authenticate API requests with the opaque operator session token in `Authorization: Bearer`; validate it against the persisted session on every request.
 - Return fail-closed operational defaults when state cannot be read instead of reporting "safe to trade".
 - Keep the production client self-contained in `client/`: never import code or mock-shaped contracts from `prototipe/`.
 - Declare server contracts as the ambient `server` namespace in `src/@types/server.d.ts`; never duplicate them per feature.
 - Keep services transport-only (one method per endpoint, no mapping) and put orchestration in Pinia stores.
-- Route every mutating call through the session store's antiforgery token refreshed after login and logout.
+- Keep the Bearer token in `sessionStorage`, inject it centrally through the Axios base service, and remove it locally after logout or failed session restoration.
 - Resolve the API base URL at request time from `src/settings.ts` and `public/settings.json`; never bake it into a constructor.
 - Give every sidebar entry a real route, using the shared Coming Soon view for sections not yet implemented.
 - Split each view/component into three files: markup in `.vue`, logic in `.ts` via `defineComponent`, styles in `.less`.

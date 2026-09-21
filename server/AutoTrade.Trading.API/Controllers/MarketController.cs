@@ -35,7 +35,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPut("manager/mode")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(MarketManagerMode), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -56,7 +56,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPut("manager/analysis")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -94,7 +94,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("proposals/{proposalId:guid}/approve")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(ProposalDecisionResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -108,7 +108,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("proposals/{proposalId:guid}/reject")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(ProposalDecisionResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -129,7 +129,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("proposals/{proposalId:guid}/suspend")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(ProposalDecisionResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

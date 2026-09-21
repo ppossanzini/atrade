@@ -31,9 +31,7 @@ export const useStrategyStore = defineStore('strategy', () => {
     () => basketsStore.activeBasket?.draftPolicy ?? null,
   )
 
-  const activeVersionNumber = computed(
-    () => basketsStore.activeBasket?.activeVersionNumber ?? 0,
-  )
+  const activeVersionNumber = computed(() => basketsStore.activeBasket?.activeVersionNumber ?? 0)
 
   /** True when the draft differs from what is in force, so the screen can say a publication is pending. */
   const hasPendingChanges = computed(() => {
@@ -80,9 +78,6 @@ export const useStrategyStore = defineStore('strategy', () => {
    * from the basket, which is why the screen keeps the two sets of values apart.
    */
   async function saveRules(policy: server.BasketPolicy): Promise<StrategyMutationOutcome> {
-    const sessionStore = useSessionStore()
-    await sessionStore.ensureCsrfToken()
-
     const basketId = basketsStore.activeBasket?.basketId
 
     if (!basketId) {
@@ -99,11 +94,7 @@ export const useStrategyStore = defineStore('strategy', () => {
     } catch (error) {
       const status = getHttpStatus(error)
 
-      return status === 400 || status === 409
-        ? 'Refused'
-        : status === 404
-          ? 'NotFound'
-          : 'Failed'
+      return status === 400 || status === 409 ? 'Refused' : status === 404 ? 'NotFound' : 'Failed'
     } finally {
       isSaving.value = false
     }

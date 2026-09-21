@@ -64,7 +64,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -90,7 +90,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("{basketId:guid}/clone")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -118,7 +118,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPatch("{basketId:guid}/identity")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -146,7 +146,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPatch("{basketId:guid}/composition")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -174,7 +174,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPatch("{basketId:guid}/policy")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -202,7 +202,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("{basketId:guid}/versions")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -230,7 +230,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("{basketId:guid}/versions/{versionId:guid}/activate")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -257,7 +257,7 @@ namespace AutoTrade.Trading.API.Controllers
     }
 
     [HttpPost("{basketId:guid}/archive")]
-    [ValidateAntiForgeryToken]
+    
     [ProducesResponseType(typeof(BasketDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]

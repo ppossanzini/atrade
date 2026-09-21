@@ -37,9 +37,7 @@ export default defineComponent({
     const activeBasketLabel = computed(() => {
       const active = basketsStore.activeBasket
 
-      return active
-        ? `${active.name} · v${active.activeVersionNumber}`
-        : t('market.noActiveBasket')
+      return active ? `${active.name} · v${active.activeVersionNumber}` : t('market.noActiveBasket')
     })
 
     const lastCycleKey = computed(() =>
@@ -151,7 +149,11 @@ export default defineComponent({
         return
       }
 
-      const outcome = await marketStore.decide(pending.kind, pending.proposalId, decisionReason.value.trim())
+      const outcome = await marketStore.decide(
+        pending.kind,
+        pending.proposalId,
+        decisionReason.value.trim(),
+      )
 
       reportOutcome(pending.kind, outcome)
       closeDecision()
@@ -188,7 +190,11 @@ export default defineComponent({
       if (outcome === 'Refused') {
         const reason = executionStore.lastRefusalReason
 
-        ElMessage.warning(reason ? t('market.startExecutionRefused') + ` (${reason})` : t('market.startExecutionRefused'))
+        ElMessage.warning(
+          reason
+            ? t('market.startExecutionRefused') + ` (${reason})`
+            : t('market.startExecutionRefused'),
+        )
 
         return
       }
