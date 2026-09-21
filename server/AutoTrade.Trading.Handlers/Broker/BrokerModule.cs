@@ -41,6 +41,7 @@ namespace AutoTrade.Trading.Handlers
       services.AddSingleton<IBrokerTokenClient, BrokerTokenClient>();
       services.AddScoped<IBrokerAuthorizationCorrelator, BrokerAuthorizationCorrelator>();
       services.AddSingleton<ICtraderProtocolClientFactory, CtraderProtocolClientFactory>();
+      services.AddScoped<ICtraderSnapshotReader, CtraderSnapshotReader>();
 
       return services;
     }

@@ -116,8 +116,8 @@ namespace AutoTrade.Trading.Handlers.MarketData
 
   /// <summary>
   /// The seam between the application and whoever supplies market and account data. Behind it live the
-  /// simulated source used for development and the broker source that arrives with the approved
-  /// integration; above it nothing knows which one is active.
+  /// simulated source used for development and the cTrader source enabled after application approval;
+  /// above it nothing knows which one is active.
   /// </summary>
   public interface IMarketDataSource
   {

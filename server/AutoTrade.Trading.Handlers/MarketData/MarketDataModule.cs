@@ -18,6 +18,10 @@ namespace AutoTrade.Trading.Handlers.MarketData
 
       switch (options.Provider)
       {
+        case MarketDataProviderKind.Ctrader:
+          services.AddScoped<IMarketDataSource, CtraderMarketDataSource>();
+          break;
+
         case MarketDataProviderKind.Simulated:
           services.AddSingleton<IMarketDataSource, SimulatedMarketDataSource>();
           break;
@@ -43,9 +47,10 @@ namespace AutoTrade.Trading.Handlers.MarketData
 
       if (options.Provider == MarketDataProviderKind.Ctrader)
       {
-        // The broker source reads from the Open API client, so it cannot work without credentials, and it
-        // is not implemented until the application is approved.
-        throw new InvalidOperationException("Trading:MarketData:Provider is Ctrader, but the broker source is not available yet. Set it to None or Simulated, or complete the broker integration first.");
+        if (brokerOptions == null || !brokerOptions.IsClientConfigured)
+        {
+          throw new InvalidOperationException("Trading:MarketData:Provider is Ctrader, but Trading:Broker:ClientId and Trading:Broker:ClientSecret are not configured.");
+        }
       }
     }
   }

@@ -1,6 +1,6 @@
 # Roadmap di implementazione
 
-Status: Slice 0-2 consegnate; Slice 3 parzialmente consegnata e bloccata dall'approvazione cTrader; Slice 4 consegnata con gate umano sulle soglie ancora aperto; Slice 5 e 6 consegnate; Slice 9 (Strategia) consegnata
+Status: Slice 0-2 consegnate; Slice 3 implementata e in attesa della verifica live su conto demo; Slice 4 consegnata con gate umano sulle soglie ancora aperto; Slice 5 implementata dietro seam e in attesa della verifica demo; Slice 6 consegnata; Slice 9 (Strategia) consegnata
 Strategia: vertical slice demo-first
 
 ## Stato di consegna
@@ -10,9 +10,9 @@ Strategia: vertical slice demo-first
 | 0 - Fondazioni | Consegnata | build e test verdi su entrambi i progetti; health `200`; pagina autenticata |
 | 1 - Sessione e stato operativo | Consegnata | login `200` / logout `204` / `401` dopo logout; kill switch persistito con operatore e motivo; 35 test |
 | 2 - Basket lifecycle | Consegnata | 143 test; flusso completo verificato via HTTP e in browser; snapshot immutabili verificati a DB; `InitialCreate` applicata |
-| 3 - Broker demo | Parziale, bloccata da fuori | codice completo e test verde; reachability TCP/wss e errore provider reali (`OA client is not in active state`); autenticazione, snapshot, riconciliazione e rinnovo token non verificabili finche l'app non e approvata |
+| 3 - Broker demo | Implementata, verifica live pendente | OAuth/token cifrati, runtime WebSocket con reconnect, app/account auth, snapshot account/symbol, trendbar M15 e volatilita, reconcile posizioni e pending order, refresh preventivo e seam cTrader per market data; test locali verdi; resta la prova su credenziali/conto demo approvati |
 | 4 - Risk Engine | Consegnata (gate umano aperto) | 269 test; 12 codici gate con codice, valore osservato, soglia e timestamp; limiti di gamba sulla gamba (ADR-0021, sostituisce ADR-0013); pannelli Risk gate e Soglie di verifica in browser, incluso il ciclo kill switch ingaggiato/rilasciato riflesso nei gate |
-| 5 - Execution Engine | Consegnata (senza conto broker reale) | 385 test; persist-first con `clientOrderId` idempotente, invio sequenziale, dedup degli eventi broker, fill parziali, compensazione esplicita e journal di ogni avvio rifiutato; gateway simulato dietro `IExecutionGateway` (ADR-0018/0019); vista Esecuzione verificata in browser (coda, dettaglio gambe/eventi, compensazione con motivo obbligatorio). La verifica su conto demo autorizzato e la riconciliazione reale restano bloccate dall'approvazione cTrader |
+| 5 - Execution Engine | Implementata, verifica demo pendente | 486 test; persist-first con `clientOrderId` idempotente, invio sequenziale, dedup degli eventi broker, fill parziali, compensazione esplicita e journal di ogni avvio rifiutato; gateway simulato e `CtraderExecutionGateway` dietro `IExecutionGateway` (ADR-0018/0019/0028/0029); worker di riconciliazione fail-closed, guardia demo/promozione live e scope OAuth `trading`. La verifica su conto demo autorizzato resta pendente |
 | 6 - Market Manager | Consegnata | 340 test; ciclo di analisi reale con proposte, snapshot persistito e 10 valutazioni di gate per proposta; matrice di instradamento a tabella; decisioni con rivalutazione del gate e rispetto della modalita (ADR-0017); vista operatore verificata in browser (coda, dettaglio, rifiuto con motivazione obbligatoria) |
 
 Le slice successive restano da consegnare.
@@ -89,13 +89,13 @@ Output:
 - symbol/account snapshot e stato connessione;
 - reconnect, refresh token, reconcile di posizioni e pending order;
 - journal e UI degli stati degradati;
-- nessun invio ordine.
+- nessun invio ordine dalla slice di connettività: l'invio vive nello Slice 5 dietro `IExecutionGateway`.
 
 Copre: parte di AC-08, AC-12, AC-15.
 
 Exit criteria: restart e reconnect ricostruiscono lo stesso snapshot demo senza duplicati.
 
-### Blocco verificato: approvazione dell'applicazione (2026-09-19)
+### Verifica live pendente: approvazione dell'applicazione (2026-09-19)
 
 Il 19 settembre 2026 il probe di connettività ha contattato `demo.ctraderapi.com:5035` e ha ricevuto:
 
@@ -106,12 +106,28 @@ description: OA client is not in active state
 
 Segue che **il Playground non aggira l'approvazione**: i token che emette servono per un'applicazione gia attiva, e senza stato attivo il provider rifiuta persino la `ProtoOAApplicationAuthReq`. Finche l'app non e approvata, nessuna verifica live e possibile su demo, che resta comunque l'ambiente corretto di destinazione.
 
-Conseguenza sulla pianificazione: le parti di Slice 3 che richiedono una connessione reale restano non verificabili. Le attivita che non dipendono dal provider sono:
+Conseguenza sulla pianificazione: prima dell'approvazione le parti di Slice 3 che richiedono una connessione reale restavano non verificabili. Ora il codice è pronto dietro seam e le sole attività residue sono:
 
-- contratti, stato macchina e test di riconciliazione read-only;
-- rinnovo token, reconnect e stati degradati;
-- pannello di connessione e stati degradati nel client;
-- Slice 4 (Risk Engine), interamente deterministico e indipendente da cTrader.
+- configurare le credenziali fuori dal repository e completare il consenso OAuth sul conto demo;
+- eseguire il probe e `GET /api/broker/snapshot`, quindi verificare che un reconnect ricostruisca lo stesso insieme senza duplicati;
+- confermare sul conto demo reale le scale di volume/prezzo e le trendbar M15 usate per la volatilità annualizzata;
+- mantenere attivo il fail-closed: la connettività read-only non invia ordini; il gateway di Slice 5 richiede scope `trading`, idempotency key deterministica e guardia esplicita per la promozione live.
+
+### Implementazione execution cTrader (2026-09-21)
+
+- `CtraderExecutionGateway` riusa app/account auth, token cifrati e client protobuf; invia solo market order e passa al provider il `clientOrderId` già deterministico dell'Execution Engine.
+- Gli execution event vengono mappati in accepted/rejected/partial/filled con identità broker deterministica; una risposta incompleta diventa `NoResponse` e richiede riconciliazione.
+- `QueryAsync` legge la order list dell'ultima giornata, rifiuta liste troncate o ambigue e non ritenta mai automaticamente un ordine incerto.
+- Demo è il default. Live richiede `Trading:Execution:Ctrader:AllowLive=true` e un OAuth scope che contenga `trading`; nessun collaudo live è dichiarato senza credenziali.
+
+### Implementazione completata dietro seam (2026-09-21)
+
+- `ICtraderSnapshotReader` esegue app auth, account auth, trader/assets/symbols, `ProtoOAReconcileReq`, PnL/deal del giorno e spot per i simboli richiesti.
+- Il refresh preventivo ruota e cifra i token prima di usare quello nuovo; un access token non decifrabile, una lista account ambigua o una risposta incompleta rendono la cattura indisponibile.
+- `CtraderMarketDataSource` è selezionata solo con `Trading:MarketData:Provider=Ctrader` e mantiene la stessa seam della sorgente simulata. La volatilità è calcolata deterministicamente dalle ultime 96 trendbar M15 chiuse; storia insufficiente, stale o malformata rende la cattura indisponibile.
+- `GET /api/broker/snapshot` espone account, catalogo simboli, posizioni e pending order senza segreti. Le liste protobuf restano nell'adapter.
+- Il runtime WebSocket serializza gli invii, mantiene heartbeat e correlazione, esegue reconnect con backoff limitato, ri-autentica e ripristina le sottoscrizioni; un ordine non viene mai ritentato dal trasporto.
+- Il worker di riconciliazione, disabilitato per default, interroga soltanto le gambe non terminali, deduplica gli eventi e aggiorna atomicamente stato locale e watermark del conto senza inviare ordini.
 
 ### Prerequisiti verificati (2026-09-18)
 

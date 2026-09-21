@@ -107,11 +107,11 @@
 - Context: The Execution Engine has to be built and verified before the cTrader application is approved, otherwise it stays unverifiable for weeks. The alternative, waiting, leaves the most dangerous code in the project (the one that sends orders) written only on paper. ADR-0015 already established how this is solved for market data: one seam, two implementations, and no part of the application knowing which one is in force.
 - Decision:
   - `IExecutionGateway` exposes the two operations the engine actually needs: send one leg with its `clientOrderId`, and read the current state of an order for reconciliation.
-  - Two implementations live behind it: the simulated gateway now and the cTrader gateway when the application is approved. The simulated one is deterministic and profile driven — it accepts, rejects, partially fills, never answers (to exercise the timeout) and repeats an event (to exercise dedup).
+  - Two implementations live behind it: the simulated gateway and the cTrader gateway. The simulated one is deterministic and profile driven — it accepts, rejects, partially fills, never answers (to exercise the timeout) and repeats an event (to exercise dedup). The cTrader implementation remains unverified against a real account until the approved demo credentials are configured.
   - The same boundary as ADR-0015 holds: no contract, no decision, no journal payload and no screen carries a marker of which implementation is active. Where the outcomes come from is an operational fact, answered by configuration.
   - The gateway never writes transactional state: persistence belongs to the handler and happens before the send.
-  - What the simulation does **not** replace: reconciliation against a real account. Every rule that needs the real broker (dedup of true broker identities, reconnect without duplicates, deal reconstruction) stays unverified until the application is approved, and no claim is made about it.
-- Consequences: The engine, its state machine, idempotency, sequencing, timeout handling and compensation become buildable and verifiable now, with the simulated gateway as the only thing to delete later. In exchange, the project must be explicit that reconciliation is verified only in its logic, not against the real provider, and the promotion gate keeps that distinction visible.
+  - What the simulation does **not** replace: reconciliation against a real account. Every rule that needs the real broker (dedup of true broker identities, reconnect without duplicates, deal reconstruction) stays unverified until the approved demo credentials are exercised, and no claim is made about it.
+- Consequences: The engine, its state machine, idempotency, sequencing, timeout handling and compensation are verifiable with the simulator, while the cTrader adapter supplies the provider path after approval. The project remains explicit that reconciliation is verified only in its logic until a real demo account is exercised, and the promotion gate keeps that distinction visible.
 
 ## ADR-0019 - Compensation is an explicit operator action, never a rollback
 
@@ -347,3 +347,39 @@
   - The wording is versioned (`OperationalEpisodeRenderer.TextVersion`) and rendered under the **invariant culture**. The version is part of the collection name, and a comma-decimal locale would otherwise change the text, and therefore the vector, for a reason invisible in the code.
   - Writing to memory is **auxiliary**: a memory that is unavailable or failing never blocks or fails the transactional operation that produced the episode.
 - Consequences: the memory can be populated with facts the system already records, and a retrieval can contrast a new situation with situations that were actually measured. The cost is that the two meanings of the word stay distinct in the codebase, and that the economic outcome will arrive later as a separate concept, linked by reference rather than by rewriting the episode that was already stored.
+
+## ADR-0027 - cTrader read-only snapshot stays behind the market-data seam
+
+- Date: 2026-09-21
+- Status: Accepted
+- Context: The cTrader application is now approved, so Slice 3 can be completed in code. The provider owns account balances, instrument rules, prices, positions and pending orders; the application must not reproduce those facts or send orders from the connectivity slice.
+- Decision:
+  - The vendored protobuf schema is driven by our own WebSocket client. A snapshot reader owns app/account authentication, token rotation, trader/assets/symbols, reconcile, daily deals, unrealized PnL and requested spot events.
+  - `CtraderMarketDataSource` implements the existing `IMarketDataSource` seam. It maps provider scales once, returns unavailable on incomplete data, and leaves volatility absent because these messages do not publish a volatility percentage.
+  - Refresh is preventive and rotates both tokens, encrypting and persisting the pair before the new access token is used. A missing or ambiguous account is fail-closed; no account is guessed.
+  - `GET /api/broker/snapshot` exposes a secret-free projection of account, symbols, positions and pending orders. Reconciliation is read-only and no execution gateway is enabled by this slice.
+- Consequences: the risk path can select cTrader through configuration without changing contracts, and the remaining live check is operational (credentials, OAuth grant, demo account and reconnect duplicate check). Token/account metadata is persisted by the credential boundary as part of refresh/selection; this is lifecycle bookkeeping and never changes a risk verdict.
+
+## ADR-0028 - cTrader execution is a guarded, idempotent market-order adapter
+
+- Date: 2026-09-21
+- Status: Accepted
+- Context: The cTrader application is approved and the existing `IExecutionGateway` already defines the only boundary through which the Execution Engine can send a leg or reconcile an uncertain order. The provider requires an OAuth grant with `trading` scope, exposes market-order execution events asynchronously, and identifies orders with a caller-supplied `clientOrderId`; retrying an unknown response would risk duplicate exposure.
+- Decision:
+  - `CtraderExecutionGateway` uses the existing app/account authentication, encrypted credential storage and protobuf WebSocket client. It sends market orders only, passes through the deterministic idempotency key created by the Execution Engine, and never writes transactional execution state.
+  - Provider execution events are mapped only when they carry a matching order and a usable order/deal identity. Missing or unsupported information becomes `NoResponse`, so the handler moves to reconciliation rather than guessing.
+  - Reconciliation reads the provider order list for the recent window, rejects truncated or ambiguous matches, and reports `Unknown` when the provider cannot identify exactly one order. It never retries or sends a replacement order.
+  - The default environment is Demo. Live execution is a separate promotion guarded by `Trading:Execution:Ctrader:AllowLive=true` and an OAuth scope containing `trading`; no deployment enables it implicitly.
+- Consequences: the real gateway now exists behind the same seam as the simulator and can be exercised with approved demo credentials. The transport, event mapping and reconciliation logic are locally tested, but provider behavior, reconnect deduplication and live promotion remain operational checks rather than claims made by the default test suite.
+
+## ADR-0029 - cTrader recovery is read-only and volatility is derived from closed bars
+
+- Date: 2026-09-21
+- Status: Accepted
+- Context: A broker adapter that only handles the happy-path response is not operational after a disconnect or restart, and cTrader spot messages do not provide the volatility percentage required by the deterministic risk gate.
+- Decision:
+  - The WebSocket runtime owns serialized writes, correlation, heartbeat and bounded reconnect. After reconnect it re-authenticates and restores subscriptions, but it never retries an order-placement request.
+  - Volatility is derived from the latest 96 closed M15 trendbars using close-to-close logarithmic returns, sample standard deviation and annualisation by `sqrt(252 * 96)`. Insufficient, stale, duplicate, future or malformed bars fail closed.
+  - `ReconcileExecutions` is the only recovery command. Its worker is disabled by default and configured under `Trading:Execution:Reconciliation`; a pass queries non-terminal legs, deduplicates broker events and atomically updates legs, executions and the account reconciliation watermark.
+  - Reconciliation never sends or retries an order. Unknown, ambiguous or incomplete broker state leaves the account and execution in `ReconciliationRequired`.
+- Consequences: the real market-data path can satisfy the volatility gate without inventing a provider value, and restart/reconnect recovery has an explicit write owner. Live provider behaviour still requires the approved demo-account drill before the implementation can be declared operational.

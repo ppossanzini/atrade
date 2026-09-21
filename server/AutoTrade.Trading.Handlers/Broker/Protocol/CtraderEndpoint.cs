@@ -63,5 +63,57 @@ namespace AutoTrade.Trading.Handlers.Broker.Protocol
 
     /// <summary>ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES.</summary>
     public const uint AccountsByAccessTokenResponse = 2150;
+
+    public const uint DealListRequest = 2133;
+
+    public const uint DealListResponse = 2134;
+
+    public const uint TrendbarsRequest = 2137;
+
+    public const uint TrendbarsResponse = 2138;
+
+    public const uint TraderRequest = 2121;
+
+    public const uint TraderResponse = 2122;
+
+    public const uint ReconcileRequest = 2124;
+
+    public const uint ReconcileResponse = 2125;
+
+    public const uint SymbolsListRequest = 2114;
+
+    public const uint SymbolsListResponse = 2115;
+
+    public const uint SymbolByIdRequest = 2116;
+
+    public const uint SymbolByIdResponse = 2117;
+
+    public const uint SubscribeSpotsRequest = 2127;
+
+    public const uint SubscribeSpotsResponse = 2128;
+
+    public const uint SpotEvent = 2131;
+
+    public const uint AssetListRequest = 2112;
+
+    public const uint AssetListResponse = 2113;
+
+    public const uint PositionUnrealizedPnlRequest = 2187;
+
+    public const uint PositionUnrealizedPnlResponse = 2188;
+
+    public const uint NewOrderRequest = 2106;
+
+    public const uint ExecutionEvent = 2126;
+
+    public const uint OrderErrorEvent = 2132;
+
+    public const uint OrderListRequest = 2175;
+
+    public const uint OrderListResponse = 2176;
+
+    public const uint OrderDetailsRequest = 2181;
+
+    public const uint OrderDetailsResponse = 2182;
   }
 }

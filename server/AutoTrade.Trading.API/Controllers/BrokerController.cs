@@ -29,6 +29,17 @@ namespace AutoTrade.Trading.API.Controllers
       return Ok(status);
     }
 
+    [HttpGet("snapshot")]
+    [Authorize]
+    [ProducesResponseType(typeof(BrokerSnapshotDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetSnapshot(CancellationToken cancellationToken)
+    {
+      BrokerSnapshotDto snapshot = await hikyaku.Send(new GetBrokerSnapshot(), cancellationToken);
+
+      return Ok(snapshot);
+    }
+
     [HttpPost("authorization")]
     [Authorize]
     [ValidateAntiForgeryToken]

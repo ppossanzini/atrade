@@ -21,6 +21,17 @@ namespace AutoTrade.Trading.Handlers.Execution
     public ExecutionProviderKind Provider { get; set; }
 
     public SimulatedExecutionOptions Simulated { get; set; }
+
+    public CtraderExecutionOptions Ctrader { get; set; }
+  }
+
+  /// <summary>
+  /// Promotion guard for the real broker gateway. Demo is the only environment enabled by default;
+  /// live execution needs an explicit deployment decision and a trading-scoped OAuth grant.
+  /// </summary>
+  public class CtraderExecutionOptions
+  {
+    public bool AllowLive { get; set; }
   }
 
   /// <summary>
@@ -74,6 +85,10 @@ namespace AutoTrade.Trading.Handlers.Execution
           DefaultBehaviour = section["Simulated:DefaultBehaviour"],
           DefaultAfterQueryBehaviour = section["Simulated:DefaultAfterQueryBehaviour"],
           Symbols = new Dictionary<string, SimulatedSymbolBehaviour>(StringComparer.OrdinalIgnoreCase)
+        },
+        Ctrader = new CtraderExecutionOptions
+        {
+          AllowLive = ReadBool(section.GetSection("Ctrader"), "AllowLive")
         }
       };
 

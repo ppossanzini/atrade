@@ -40,6 +40,7 @@ builder.Services.AddTradingHandlers(configuration);
 // The analysis cycle is host infrastructure: it owns the wake up interval and dispatches the cycle command,
 // which owns the rules. Without configured timing it stops instead of choosing a pace of its own.
 builder.Services.AddHostedService<AnalysisCycleService>();
+builder.Services.AddHostedService<ExecutionReconciliationWorker>();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 
@@ -86,7 +87,9 @@ MarketDataModule.EnsureSourceIsUsable(marketDataOptions, brokerOptions);
 // Fail-closed: an execution provider that cannot work aborts startup, and no provider at all is a supported
 // state in which nothing can be sent.
 ExecutionOptions executionOptions = app.Services.GetRequiredService<ExecutionOptions>();
-ExecutionModule.EnsureProviderIsUsable(executionOptions);
+ExecutionModule.EnsureProviderIsUsable(executionOptions, brokerOptions);
+ExecutionReconciliationOptions reconciliationOptions = app.Services.GetRequiredService<ExecutionReconciliationOptions>();
+ExecutionModule.EnsureReconciliationIsUsable(executionOptions, reconciliationOptions);
 
 // Fail-closed: asking for a semantic memory without saying where it lives aborts startup, because coming up
 // without the capability that was configured would be worse than refusing. No provider is a supported state.
@@ -177,4 +180,3 @@ static async Task ValidatePrincipalAsync(CookieValidatePrincipalContext context)
     await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
   }
 }
-
