@@ -22,12 +22,15 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
   /// three rules that keep a proposal honest are applied: nothing is proposed without a captured market,
   /// the gate is the engine's own verdict, and routing never turns a non-allow into a permission.
   /// </summary>
-  public class RunAnalysisCycleHandler(DB db, IMarketDataSource marketDataSource, RiskEngine engine, IProposalSource proposalSource, IJournalWriter journalWriter, IOperationalEpisodeWriter episodeWriter, MarketOptions marketOptions, TimeProvider timeProvider)
+  public class RunAnalysisCycleHandler(DB db, IMarketDataSource marketDataSource, RiskEngine engine, IProposalSource proposalSource, IJournalWriter journalWriter, IOperationalEpisodeWriter episodeWriter, IOperationalMemoryRetrieval memoryRetrieval, MarketOptions marketOptions, TimeProvider timeProvider)
     : IRequestHandler<RunAnalysisCycle, AnalysisCycleResultDto>
   {
     private const int ActiveVersionSlotId = 1;
     private const int KillSwitchSingletonId = 1;
     private const int MarketManagerStateId = 1;
+
+    /// <summary>How many past situations are kept per proposal. Bounded, because a retrieval without a bound is not a decision.</summary>
+    private const int RetrievalTop = 3;
 
     public async Task<AnalysisCycleResultDto> Handle(RunAnalysisCycle request, CancellationToken cancellationToken)
     {
@@ -155,6 +158,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
         await episodeWriter.RecordAsync(episode, cancellationToken);
       }
 
+      await RecordSimilarSituationsAsync(proposal, decision, now, cancellationToken);
+
       return new AnalysisCycleResultDto
       {
         Proposed = true,
@@ -162,6 +167,58 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
         Status = proposal.Status,
         Gate = proposal.Gate
       };
+    }
+
+    /// <summary>
+    /// Records which past situations were similar to this proposal's.
+    /// </summary>
+    /// <remarks>
+    /// Called after the proposal has been committed, so the retrieval cannot influence the verdict: what the
+    /// memory returns is evidence about the past, and the gate decides on the present. The question asked is the
+    /// situation rendered exactly as an episode would carry it, so what is compared is the situation and not the
+    /// wording. A memory that is unavailable leaves the proposal untouched, and the absence is not written as
+    /// "nothing similar happened", because those are different facts.
+    /// </remarks>
+    private async Task RecordSimilarSituationsAsync(Proposal proposal, RiskDecisionDto decision, DateTime now, CancellationToken cancellationToken)
+    {
+      OperationalEpisodeContext situation = OperationalEpisodeBuilder.Situation(
+        new EpisodeProposalFacts
+        {
+          ProposalId = proposal.Id,
+          VersionNumber = proposal.VersionNumber,
+          EntryMode = proposal.EntryMode.ToString(),
+          Action = proposal.Action.ToString(),
+          Confidence = proposal.Confidence
+        },
+        decision.Gates);
+
+      MemoryRetrievalResult memory = await memoryRetrieval.FindSimilarAsync(
+        OperationalEpisodeRenderer.RenderSituation(situation),
+        RetrievalTop,
+        cancellationToken);
+
+      if (!memory.IsAvailable || memory.Episodes.Count == 0)
+      {
+        return;
+      }
+
+      foreach (RetrievedEpisode found in memory.Episodes)
+      {
+        db.ProposalEvidences.Add(new ProposalEvidence
+        {
+          Id = Guid.CreateVersion7(),
+          ProposalId = proposal.Id,
+          EvidenceId = found.EvidenceId,
+          Rank = found.Rank,
+          Score = found.Score,
+          EmbeddingModel = found.EmbeddingModel,
+          QueryHash = memory.QueryHash,
+          SourceRef = found.SourceRef,
+          RetrievedAtUtc = now
+        });
+      }
+
+      await db.SaveChangesAsync(cancellationToken);
     }
 
     private async Task ExpireStaleProposalsAsync(DateTime now, CancellationToken cancellationToken)

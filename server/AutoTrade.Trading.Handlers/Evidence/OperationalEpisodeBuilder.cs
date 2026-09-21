@@ -70,6 +70,33 @@ namespace AutoTrade.Trading.Handlers.Evidence
         throw new InvalidOperationException("A blocked proposal has to carry at least one blocking gate: without it there is nothing to remember.");
       }
 
+      return OperationalEpisodeRenderer.Create(
+        OperationalEpisodeKind.GateBlocked,
+        "proposal:" + facts.ProposalId,
+        occurredAtUtc,
+        Situation(facts, gates),
+        outcome);
+    }
+
+    /// <summary>
+    /// The measurable situation a proposal was judged in, rebuilt from its gate evaluations.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the episode and by the retrieval query on purpose: if the question were phrased differently
+    /// from the answer, the comparison would depend on the phrasing rather than on the situation.
+    /// </remarks>
+    public static OperationalEpisodeContext Situation(EpisodeProposalFacts facts, IReadOnlyList<RiskGateResultDto> gates)
+    {
+      if (facts == null)
+      {
+        throw new ArgumentNullException(nameof(facts));
+      }
+
+      if (gates == null)
+      {
+        throw new ArgumentNullException(nameof(gates));
+      }
+
       OperationalEpisodeContext context = new OperationalEpisodeContext
       {
         VersionNumber = facts.VersionNumber,
@@ -97,12 +124,7 @@ namespace AutoTrade.Trading.Handlers.Evidence
         }
       }
 
-      return OperationalEpisodeRenderer.Create(
-        OperationalEpisodeKind.GateBlocked,
-        "proposal:" + facts.ProposalId,
-        occurredAtUtc,
-        context,
-        outcome);
+      return context;
     }
 
     /// <summary>

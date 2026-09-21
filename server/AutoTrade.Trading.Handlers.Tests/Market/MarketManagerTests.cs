@@ -262,6 +262,79 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
     }
 
     [Fact]
+    public async Task Cycle_WithAMemoryResult_TracesWhatWasRetrieved()
+    {
+      using TradingTestContext context = CreateContext("Manual");
+      SeedActiveVersion(context, "Manual");
+
+      Guid evidenceId = Guid.CreateVersion7();
+
+      context.MemoryRetrieval.IsAvailable = true;
+      context.MemoryRetrieval.Episodes.Add(new RetrievedEpisode
+      {
+        EvidenceId = evidenceId,
+        Rank = 0,
+        Score = 0.874d,
+        SourceRef = "proposal:01A0B94A",
+        EmbeddingModel = "nomic-embed-text-v1.5",
+        Text = "The gate blocked a proposal."
+      });
+
+      await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
+
+      Proposal proposal = Assert.Single(context.Db.Proposals);
+
+      ProposalEvidence traced = Assert.Single(context.Db.ProposalEvidences);
+
+      Assert.Equal(proposal.Id, traced.ProposalId);
+      Assert.Equal(evidenceId, traced.EvidenceId);
+      Assert.Equal(0, traced.Rank);
+      Assert.Equal(0.874d, traced.Score);
+      Assert.Equal("nomic-embed-text-v1.5", traced.EmbeddingModel);
+      Assert.Equal("proposal:01A0B94A", traced.SourceRef);
+      Assert.Equal(context.MemoryRetrieval.QueryHash, traced.QueryHash);
+      Assert.Equal(Start, traced.RetrievedAtUtc);
+
+      // The question is the situation rendered the way an episode carries it: if the query were phrased
+      // differently from the stored answers, the comparison would depend on the wording.
+      Assert.Contains("Situation:", context.MemoryRetrieval.LastSituation, StringComparison.Ordinal);
+      Assert.Contains("Legs:", context.MemoryRetrieval.LastSituation, StringComparison.Ordinal);
+      Assert.Equal(3, context.MemoryRetrieval.LastTop);
+    }
+
+    [Fact]
+    public async Task Cycle_WhenNoEarlierSituationWasFound_TracesNothingButStillProposes()
+    {
+      using TradingTestContext context = CreateContext("Manual");
+      SeedActiveVersion(context, "Manual");
+
+      // The memory is in force and simply has nothing similar. That is different from being unavailable, and
+      // neither may be recorded as the other.
+      context.MemoryRetrieval.IsAvailable = true;
+
+      await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
+
+      Assert.Single(context.Db.Proposals);
+      Assert.Empty(context.Db.ProposalEvidences);
+    }
+
+    [Fact]
+    public async Task Cycle_WhenTheMemoryIsUnavailable_LeavesTheProposalUntouched()
+    {
+      using TradingTestContext context = CreateContext("Manual");
+      SeedActiveVersion(context, "Manual");
+
+      context.MemoryRetrieval.IsAvailable = false;
+
+      AnalysisCycleResultDto result = await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
+
+      // The gate decided on the present and the memory is about the past: an absent memory must not stop the
+      // cycle, and must not be written down as "nothing similar happened".
+      Assert.True(result.Proposed);
+      Assert.Empty(context.Db.ProposalEvidences);
+    }
+
+    [Fact]
     public async Task Cycle_WithABlockedGate_RemembersTheEpisode()
     {
       using TradingTestContext context = CreateContext("Manual");

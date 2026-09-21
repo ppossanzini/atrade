@@ -325,6 +325,94 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
       }
     }
 
+    /// <summary>
+    /// The full round trip: an episode is remembered, and a later situation is matched against it by meaning.
+    /// This is the loop the memory exists for, with nothing stubbed.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Live_ARememberedEpisodeIsFoundForALaterSimilarSituation()
+    {
+      if (!IsLiveRequested)
+      {
+        return;
+      }
+
+      EmbeddingOptions options = CreateOptions();
+
+      string path = Path.Combine(Path.GetTempPath(), "autotrade-onnx-retrieval-" + Guid.NewGuid().ToString("N"));
+      createdDirectories.Add(path);
+
+      using (JigenOnnxTextEmbeddingSource source = new JigenOnnxTextEmbeddingSource(options, NullLogger<JigenOnnxTextEmbeddingSource>.Instance))
+      using (JigenEvidenceStore store = new JigenEvidenceStore(new EvidenceOptions
+      {
+        Provider = EvidenceProviderKind.Jigen,
+        DataBasePath = path,
+        DataBaseName = "autotrade"
+      }))
+      {
+        JigenOperationalEpisodeWriter writer = new JigenOperationalEpisodeWriter(store, source, options, NullLogger<JigenOperationalEpisodeWriter>.Instance);
+        JigenOperationalMemoryRetrieval retrieval = new JigenOperationalMemoryRetrieval(store, source, options, NullLogger<JigenOperationalMemoryRetrieval>.Instance);
+
+        EpisodeProposalFacts facts = new EpisodeProposalFacts
+        {
+          ProposalId = Guid.CreateVersion7(),
+          VersionNumber = 3,
+          EntryMode = "RegimeMomentum",
+          Action = "Entry",
+          Confidence = 100d
+        };
+
+        OperationalEpisode blocked = OperationalEpisodeBuilder.GateBlocked(
+          facts,
+          new List<RiskGateResultDto>
+          {
+            new RiskGateResultDto { Code = RiskGateCode.CoverageBelowMinimum, Verdict = RiskGateVerdict.Allow, Subject = "basket", ObservedValue = 100d, ThresholdValue = 100d, Unit = "percent", Detail = "Every selected leg is executable." },
+            new RiskGateResultDto { Code = RiskGateCode.RiskPerBasketExceeded, Verdict = RiskGateVerdict.Block, Subject = "basket", ObservedValue = 2.3d, ThresholdValue = 0.8d, Unit = "percent", Detail = "The basket risk exceeds the risk per basket limit." },
+            new RiskGateResultDto { Code = RiskGateCode.LegSpreadExceeded, Verdict = RiskGateVerdict.Allow, Subject = "EURUSD", ObservedValue = 0.802d, ThresholdValue = 1.5d, Unit = "pips", Detail = "The spread is within the limit of this leg." }
+          },
+          new DateTime(2026, 9, 21, 9, 0, 0, DateTimeKind.Utc));
+
+        await writer.RecordAsync(blocked, CancellationToken.None);
+
+        // A round trip through the database: only the facts survive, and the situation is rebuilt from them
+        // exactly as the cycle does it.
+        EpisodeProposalFacts later = new EpisodeProposalFacts
+        {
+          ProposalId = Guid.CreateVersion7(),
+          VersionNumber = 3,
+          EntryMode = "RegimeMomentum",
+          Action = "Entry",
+          Confidence = 100d
+        };
+
+        string situation = OperationalEpisodeRenderer.RenderSituation(OperationalEpisodeBuilder.Situation(
+          later,
+          new List<RiskGateResultDto>
+          {
+            new RiskGateResultDto { Code = RiskGateCode.CoverageBelowMinimum, Verdict = RiskGateVerdict.Allow, Subject = "basket", ObservedValue = 100d, ThresholdValue = 100d, Unit = "percent", Detail = "Every selected leg is executable." },
+            new RiskGateResultDto { Code = RiskGateCode.RiskPerBasketExceeded, Verdict = RiskGateVerdict.Block, Subject = "basket", ObservedValue = 2.6d, ThresholdValue = 0.8d, Unit = "percent", Detail = "The basket risk exceeds the risk per basket limit." },
+            new RiskGateResultDto { Code = RiskGateCode.LegSpreadExceeded, Verdict = RiskGateVerdict.Allow, Subject = "EURUSD", ObservedValue = 0.75d, ThresholdValue = 1.5d, Unit = "pips", Detail = "The spread is within the limit of this leg." }
+          }));
+
+        MemoryRetrievalResult memory = await retrieval.FindSimilarAsync(situation, 3, CancellationToken.None);
+
+        Assert.True(memory.IsAvailable, memory.FailureReason);
+
+        RetrievedEpisode found = Assert.Single(memory.Episodes);
+
+        Assert.Equal(blocked.EpisodeId, found.EvidenceId);
+        Assert.Equal(blocked.SourceRef, found.SourceRef);
+        Assert.Equal(0, found.Rank);
+        Assert.Equal("nomic-embed-text-v1.5", found.EmbeddingModel);
+
+        // Sixty-four hex characters: the question is identifiable without being stored twice.
+        Assert.Equal(64, memory.QueryHash.Length);
+
+        Assert.True(found.Score > 0.85d, "A nearly identical situation should be recognised as nearly identical, but scored " + found.Score.ToString("F4", System.Globalization.CultureInfo.InvariantCulture) + ".");
+      }
+    }
+
     private static EvidenceRecord CreateRecord(EvidenceCollection collection, string content, float[] embedding, string sourceRef)
     {
       return new EvidenceRecord

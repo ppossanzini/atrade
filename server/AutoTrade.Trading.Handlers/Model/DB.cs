@@ -48,6 +48,8 @@ namespace AutoTrade.Trading.Handlers.Model
 
     public DbSet<GateEvaluation> GateEvaluations { get; set; }
 
+    public DbSet<ProposalEvidence> ProposalEvidences { get; set; }
+
     public DbSet<Execution> Executions { get; set; }
 
     public DbSet<ExecutionLeg> ExecutionLegs { get; set; }
@@ -84,6 +86,7 @@ namespace AutoTrade.Trading.Handlers.Model
       modelBuilder.Entity<Proposal>().HasIndex(item => item.SnapshotId);
       modelBuilder.Entity<ProposalLeg>().HasIndex(item => new { item.ProposalId, item.Ordinal }).IsUnique();
       modelBuilder.Entity<GateEvaluation>().HasIndex(item => new { item.ProposalId, item.Ordinal }).IsUnique();
+      modelBuilder.Entity<ProposalEvidence>().HasIndex(item => new { item.ProposalId, item.Rank }).IsUnique();
       modelBuilder.Entity<MarketSnapshotLeg>().HasIndex(item => new { item.SnapshotId, item.Ordinal }).IsUnique();
 
       // One proposal produces at most one execution, one leg owns exactly one client order id, and a broker

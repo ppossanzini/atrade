@@ -75,6 +75,7 @@ namespace AutoTrade.Trading.Handlers.Tests
       // The episode writer is replaced rather than configured: remembering is covered by asserting what the
       // application tried to remember, not by needing a real store and a real model in a unit test.
       services.AddSingleton<IOperationalEpisodeWriter>(EpisodeWriter);
+      services.AddSingleton<IOperationalMemoryRetrieval>(MemoryRetrieval);
 
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();
@@ -88,6 +89,9 @@ namespace AutoTrade.Trading.Handlers.Tests
 
     /// <summary>Episodes the application tried to remember during this test.</summary>
     public Tests.Evidence.FakeOperationalEpisodeWriter EpisodeWriter { get; } = new Tests.Evidence.FakeOperationalEpisodeWriter();
+
+    /// <summary>What the semantic memory answers with during this test.</summary>
+    public Tests.Evidence.FakeOperationalMemoryRetrieval MemoryRetrieval { get; } = new Tests.Evidence.FakeOperationalMemoryRetrieval();
 
     /// <summary>Exposed so tests can prove what actually reached the database.</summary>
     public AutoTrade.Trading.Handlers.Broker.IBrokerTokenProtector TokenProtector

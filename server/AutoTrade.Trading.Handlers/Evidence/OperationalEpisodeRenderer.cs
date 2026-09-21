@@ -40,6 +40,33 @@ namespace AutoTrade.Trading.Handlers.Evidence
       };
     }
 
+    /// <summary>
+    /// Renders only the measurable situation, without the outcome.
+    /// </summary>
+    /// <remarks>
+    /// This is what a retrieval asks with. It is the same wording an episode carries for the same numbers, so a
+    /// new situation is compared with stored ones in one vocabulary instead of two: paraphrasing the query
+    /// would move it in the vector space for a reason that has nothing to do with the situation itself.
+    /// </remarks>
+    public static string RenderSituation(OperationalEpisodeContext context)
+    {
+      if (context == null)
+      {
+        throw new ArgumentNullException(nameof(context));
+      }
+
+      StringBuilder text = new StringBuilder();
+
+      text.Append("Basket version ").Append(context.VersionNumber);
+      text.Append(", entry mode ").Append(Named(context.EntryMode));
+      text.Append(", action ").Append(Named(context.Action));
+      text.Append(", confidence ").Append(Number(context.Confidence)).Append('.');
+      text.Append(' ').Append(Situation(context));
+      text.Append(' ').Append(Legs(context.Legs));
+
+      return text.ToString();
+    }
+
     public static string Render(OperationalEpisodeKind kind, OperationalEpisodeContext context, OperationalEpisodeOutcome outcome)
     {
       StringBuilder text = new StringBuilder();
@@ -48,13 +75,9 @@ namespace AutoTrade.Trading.Handlers.Evidence
 
       if (context != null)
       {
-        text.Append(' ');
-        text.Append("Basket version ").Append(context.VersionNumber);
-        text.Append(", entry mode ").Append(Named(context.EntryMode));
-        text.Append(", action ").Append(Named(context.Action));
-        text.Append(", confidence ").Append(Number(context.Confidence)).Append('.');
-        text.Append(' ').Append(Situation(context));
-        text.Append(' ').Append(Legs(context.Legs));
+        // The episode text is literally the situation a retrieval would ask with, plus the outcome. Keeping the
+        // two in one place is what stops the query and the stored episodes from drifting apart in wording.
+        text.Append(' ').Append(RenderSituation(context));
       }
 
       if (outcome != null)

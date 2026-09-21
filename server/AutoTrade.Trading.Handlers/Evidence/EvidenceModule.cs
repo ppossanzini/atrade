@@ -31,6 +31,7 @@ namespace AutoTrade.Trading.Handlers.Evidence
       // The episode writer belongs to the same tier: it is the only thing that writes to the semantic memory,
       // and it stays usable with no store because it reports rather than raises.
       services.AddSingleton<IOperationalEpisodeWriter, JigenOperationalEpisodeWriter>();
+      services.AddSingleton<IOperationalMemoryRetrieval, JigenOperationalMemoryRetrieval>();
 
       return services;
     }
