@@ -72,6 +72,10 @@ namespace AutoTrade.Trading.Handlers.Tests
       // a test never needs a checkpoint on disk.
       services.AddTradingEmbedding(configuration);
 
+      // The episode writer is replaced rather than configured: remembering is covered by asserting what the
+      // application tried to remember, not by needing a real store and a real model in a unit test.
+      services.AddSingleton<IOperationalEpisodeWriter>(EpisodeWriter);
+
       _provider = services.BuildServiceProvider();
       _scope = _provider.CreateScope();
       Db = _scope.ServiceProvider.GetRequiredService<DB>();
@@ -81,6 +85,9 @@ namespace AutoTrade.Trading.Handlers.Tests
 
     /// <summary>Analysis model stand-in, so a status test can choose whether a model is in force.</summary>
     public Tests.Analysis.FakeAnalysisClient AnalysisClient { get; } = new Tests.Analysis.FakeAnalysisClient();
+
+    /// <summary>Episodes the application tried to remember during this test.</summary>
+    public Tests.Evidence.FakeOperationalEpisodeWriter EpisodeWriter { get; } = new Tests.Evidence.FakeOperationalEpisodeWriter();
 
     /// <summary>Exposed so tests can prove what actually reached the database.</summary>
     public AutoTrade.Trading.Handlers.Broker.IBrokerTokenProtector TokenProtector

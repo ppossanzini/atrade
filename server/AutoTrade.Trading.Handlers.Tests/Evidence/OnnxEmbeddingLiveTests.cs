@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoTrade.Trading.Core.Dto;
+using AutoTrade.Trading.Core.Enums;
 using AutoTrade.Trading.Handlers.Evidence;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -250,6 +252,77 @@ namespace AutoTrade.Trading.Handlers.Tests.Evidence
 
       Assert.Equal(bestPerVariant[0], bestPerVariant[1]);
       Assert.Equal("relevant", bestPerVariant[0]);
+    }
+
+    /// <summary>
+    /// The whole chain, from a blocked gate to a retrievable memory: the production builder, the production
+    /// writer, the real embedding model and the real store. Nothing is stubbed.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Live_ABlockedGateBecomesARetrievableEpisode()
+    {
+      if (!IsLiveRequested)
+      {
+        return;
+      }
+
+      EmbeddingOptions options = CreateOptions();
+
+      string path = Path.Combine(Path.GetTempPath(), "autotrade-onnx-episode-" + Guid.NewGuid().ToString("N"));
+      createdDirectories.Add(path);
+
+      using (JigenOnnxTextEmbeddingSource source = new JigenOnnxTextEmbeddingSource(options, NullLogger<JigenOnnxTextEmbeddingSource>.Instance))
+      using (JigenEvidenceStore store = new JigenEvidenceStore(new EvidenceOptions
+      {
+        Provider = EvidenceProviderKind.Jigen,
+        DataBasePath = path,
+        DataBaseName = "autotrade"
+      }))
+      {
+        JigenOperationalEpisodeWriter writer = new JigenOperationalEpisodeWriter(
+          store,
+          source,
+          options,
+          NullLogger<JigenOperationalEpisodeWriter>.Instance);
+
+        OperationalEpisode blocked = OperationalEpisodeBuilder.GateBlocked(
+          new EpisodeProposalFacts
+          {
+            ProposalId = Guid.CreateVersion7(),
+            VersionNumber = 3,
+            EntryMode = "RegimeMomentum",
+            Action = "Entry",
+            Confidence = 100d
+          },
+          new List<RiskGateResultDto>
+          {
+            new RiskGateResultDto { Code = RiskGateCode.CoverageBelowMinimum, Verdict = RiskGateVerdict.Allow, Subject = "basket", ObservedValue = 100d, ThresholdValue = 100d, Unit = "percent", Detail = "Every selected leg is executable." },
+            new RiskGateResultDto { Code = RiskGateCode.RiskPerBasketExceeded, Verdict = RiskGateVerdict.Block, Subject = "basket", ObservedValue = 2.3d, ThresholdValue = 0.8d, Unit = "percent", Detail = "The basket risk exceeds the risk per basket limit." },
+            new RiskGateResultDto { Code = RiskGateCode.LegSpreadExceeded, Verdict = RiskGateVerdict.Allow, Subject = "EURUSD", ObservedValue = 0.802d, ThresholdValue = 1.5d, Unit = "pips", Detail = "The spread is within the limit of this leg." }
+          },
+          new DateTime(2026, 9, 21, 9, 0, 0, DateTimeKind.Utc));
+
+        await writer.RecordAsync(blocked, CancellationToken.None);
+
+        // Retrieved by meaning, not by identifier: this is the question the memory exists to answer.
+        float[] queryVector = await source.EmbedQueryAsync(
+          "a proposal stopped because the basket risk was over the limit",
+          CancellationToken.None);
+
+        EvidenceSearchResult result = await store.SearchAsync(
+          new EvidenceQuery { Collection = options.CreateCollection(JigenOperationalEpisodeWriter.CollectionName), Embedding = queryVector, Top = 3 },
+          CancellationToken.None);
+
+        Assert.True(result.IsAvailable);
+
+        EvidenceMatch match = Assert.Single(result.Matches);
+
+        Assert.Equal(blocked.EpisodeId, match.EvidenceId);
+        Assert.Equal(blocked.SourceRef, match.SourceRef);
+        Assert.Equal(blocked.Text, match.Content);
+        Assert.True(match.Score > 0.4d, "The episode was stored but is barely recognisable for its own situation.");
+      }
     }
 
     private static EvidenceRecord CreateRecord(EvidenceCollection collection, string content, float[] embedding, string sourceRef)

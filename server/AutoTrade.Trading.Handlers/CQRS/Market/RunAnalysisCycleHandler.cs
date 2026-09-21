@@ -6,6 +6,7 @@ using AutoTrade.Trading.Core.Command.Market;
 using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Enums;
 using AutoTrade.Trading.Handlers.CQRS.Journal;
+using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Market;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
@@ -21,7 +22,7 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
   /// three rules that keep a proposal honest are applied: nothing is proposed without a captured market,
   /// the gate is the engine's own verdict, and routing never turns a non-allow into a permission.
   /// </summary>
-  public class RunAnalysisCycleHandler(DB db, IMarketDataSource marketDataSource, RiskEngine engine, IProposalSource proposalSource, IJournalWriter journalWriter, MarketOptions marketOptions, TimeProvider timeProvider)
+  public class RunAnalysisCycleHandler(DB db, IMarketDataSource marketDataSource, RiskEngine engine, IProposalSource proposalSource, IJournalWriter journalWriter, IOperationalEpisodeWriter episodeWriter, MarketOptions marketOptions, TimeProvider timeProvider)
     : IRequestHandler<RunAnalysisCycle, AnalysisCycleResultDto>
   {
     private const int ActiveVersionSlotId = 1;
@@ -132,6 +133,26 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
       if (proposal.Status == ProposalStatus.AutoApproved)
       {
         await journalWriter.AppendSystemEventAsync(JournalEventKind.ProposalAutoApproved, "Proposal", proposal.Id, payload, cancellationToken);
+      }
+
+      // Remembered after the transaction has committed, and only for a proposal that was actually stopped: the
+      // thousands of cycles that produce nothing are not experience, and the writer never reports failure back
+      // here, because a memory that is unavailable must not turn a completed cycle into a failed one.
+      if (proposal.Status == ProposalStatus.Blocked)
+      {
+        OperationalEpisode episode = OperationalEpisodeBuilder.GateBlocked(
+          new EpisodeProposalFacts
+          {
+            ProposalId = proposal.Id,
+            VersionNumber = proposal.VersionNumber,
+            EntryMode = proposal.EntryMode.ToString(),
+            Action = proposal.Action.ToString(),
+            Confidence = proposal.Confidence
+          },
+          decision.Gates,
+          now);
+
+        await episodeWriter.RecordAsync(episode, cancellationToken);
       }
 
       return new AnalysisCycleResultDto

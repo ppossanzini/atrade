@@ -7,6 +7,7 @@ using AutoTrade.Trading.Core.Command.Market;
 using AutoTrade.Trading.Core.Dto;
 using AutoTrade.Trading.Core.Enums;
 using AutoTrade.Trading.Core.Query.Market;
+using AutoTrade.Trading.Handlers.Evidence;
 using AutoTrade.Trading.Handlers.Market;
 using AutoTrade.Trading.Handlers.Model;
 using Hikyaku;
@@ -258,6 +259,49 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
       Assert.Equal(RiskGateVerdict.Review, proposal.Gate);
       Assert.Equal(ProposalStatus.NeedsReview, proposal.Status);
       Assert.DoesNotContain(context.Db.JournalEvents, item => item.Kind == JournalEventKind.ProposalAutoApproved);
+    }
+
+    [Fact]
+    public async Task Cycle_WithABlockedGate_RemembersTheEpisode()
+    {
+      using TradingTestContext context = CreateContext("Manual");
+      SeedActiveVersion(context, "Manual", legSpreadLimit: 0.49);
+
+      await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
+
+      // The only cycles worth remembering are the ones where something actually happened: everything else would
+      // be noise that buries the cases that matter.
+      OperationalEpisode episode = Assert.Single(context.EpisodeWriter.Episodes);
+
+      Assert.Equal(OperationalEpisodeKind.GateBlocked, episode.Kind);
+      Assert.StartsWith("proposal:", episode.SourceRef, StringComparison.Ordinal);
+
+      // The deciding rule is the one the engine actually produced, quoted verbatim rather than paraphrased.
+      Assert.Contains("Outcome: LegSpreadExceeded", episode.Text, StringComparison.Ordinal);
+      Assert.Contains("The spread exceeds the limit of this leg.", episode.Text, StringComparison.Ordinal);
+
+      // And the situation travels with it, or the memory could only ever be matched on wording. The limit is
+      // pinned because the test set it; the observed value is not, because it comes from the simulated source
+      // and pinning it would make this test a change detector for the simulator.
+      Assert.Contains("The gate blocked a proposal.", episode.Text, StringComparison.Ordinal);
+      Assert.Contains("EURUSD spread", episode.Text, StringComparison.Ordinal);
+      Assert.Contains("of 0.49 pips", episode.Text, StringComparison.Ordinal);
+      Assert.Equal(OperationalEpisodeRenderer.TextVersion, episode.TextVersion);
+    }
+
+    [Fact]
+    public async Task Cycle_WhenNothingIsBlocked_RemembersNothing()
+    {
+      using TradingTestContext context = CreateContext("Manual");
+      SeedActiveVersion(context, "Manual");
+
+      await context.Hikyaku.Send(new RunAnalysisCycle(), CancellationToken.None);
+
+      Assert.Single(context.Db.Proposals);
+
+      // A cycle that produced an allowable proposal is not an episode: remembering every cycle would fill the
+      // memory with the thousands of times nothing happened.
+      Assert.Empty(context.EpisodeWriter.Episodes);
     }
 
     [Fact]
