@@ -138,14 +138,24 @@
           </span>
         </div>
         <div class="metric-row">
-          <span class="metric-row__label">{{ t('strategy.mode') }}</span>
+          <span class="metric-row__label">{{ t('market.confidence') }}</span>
+          <span class="metric-row__value">{{ marketStore.detail.confidence }} %</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-row__label">{{ t('market.selectedScenario') }}</span>
           <span class="metric-row__value">
-            {{ t(`entryMode.${marketStore.detail.entryMode}`) }}
+            {{ marketStore.detail.selectedScenario || t('risk.notAvailable') }}
           </span>
         </div>
         <div class="metric-row">
-          <span class="metric-row__label">{{ t('market.confidence') }}</span>
-          <span class="metric-row__value">{{ marketStore.detail.confidence }} %</span>
+          <span class="metric-row__label">{{ t('market.strategyAgreement') }}</span>
+          <span class="metric-row__value">{{ marketStore.detail.strategyAgreement }} %</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-row__label">{{ t('market.llmConfidence') }}</span>
+          <span class="metric-row__value">
+            {{ marketStore.detail.llmConfidence === null ? t('risk.notAvailable') : `${marketStore.detail.llmConfidence} %` }}
+          </span>
         </div>
         <div class="metric-row">
           <span class="metric-row__label">{{ t('market.risk') }}</span>
@@ -197,6 +207,12 @@
           <span class="metric-row__label">{{ t('market.rationale') }}</span>
           <span class="metric-row__value market-detail__rationale">
             {{ marketStore.detail.rationale }}
+          </span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-row__label">{{ t('market.llmRationale') }}</span>
+          <span class="metric-row__value market-detail__rationale">
+            {{ marketStore.detail.llmRationale || t('risk.notAvailable') }}
           </span>
         </div>
 

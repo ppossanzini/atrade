@@ -14,7 +14,6 @@ export default defineComponent({
     const navigationItems = [
       { routeName: 'status', labelKey: 'navigation.status' },
       { routeName: 'basket', labelKey: 'navigation.basket' },
-      { routeName: 'strategy', labelKey: 'navigation.strategy' },
       { routeName: 'market', labelKey: 'navigation.market' },
       { routeName: 'execution', labelKey: 'navigation.execution' },
       { routeName: 'history', labelKey: 'navigation.history' },

@@ -1,5 +1,16 @@
 # Project Information and Decisions
 
+## ADR-0026 - Strategia visualmente inclusa nel Basket Builder
+
+- Date: 2026-09-21
+- Status: Accepted
+- Context: Il modello dati tratta la strategia come policy del basket, ma il client la esponeva in una rotta separata.
+- Decision:
+  - Rimuovere la voce Strategia dalla navigazione e dalla rotta principale.
+  - Mostrare `EntryMode` insieme a failure policy, copertura e limiti nel Basket Builder.
+  - Mantenere invariati servizi, store e contratti REST: il server resta la fonte canonica e la pubblicazione continua a congelare policy e gambe nella stessa versione.
+- Consequences: L’operatore configura e pubblica la strategia nello stesso contesto del paniere; la vecchia `StrategyView` resta codice non raggiunto e potrà essere rimossa in una pulizia successiva.
+
 ## ADR-0001 - Prototype technology and scope
 
 - Date: 2026-09-18

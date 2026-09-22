@@ -1,21 +1,26 @@
 .app-shell__sidebar {
   display: flex;
   flex-direction: column;
+  min-height: 100%;
   overflow-y: auto;
   border-right: 1px solid var(--at-border-subtle);
-  background-color: var(--at-surface-base);
+  background-color: #f8fbfb;
+}
+
+.app-shell__menu {
+  flex: 1 1 auto;
 }
 
 .app-shell__brand {
-  padding: var(--at-space-md);
+  padding: 20px var(--at-space-md);
   border-bottom: 1px solid var(--at-border-subtle);
 }
 
 .app-shell__brand-name {
   display: block;
   font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 760;
+  letter-spacing: -0.03em;
   color: var(--at-text-primary);
 }
 
@@ -27,20 +32,42 @@
   color: var(--at-text-muted);
 }
 
-.app-shell__topbar {
+.app-shell__operator {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--at-space-md);
-  padding: var(--at-space-sm) var(--at-space-lg);
-  border-bottom: 1px solid var(--at-border-subtle);
+  flex-direction: column;
+  gap: 5px;
+  margin: auto var(--at-space-sm) var(--at-space-md);
+  padding: 14px 12px 12px;
+  border: 1px solid var(--at-border-subtle);
+  border-radius: var(--at-radius);
+  background: var(--at-surface-raised);
 }
 
-.app-shell__operator {
-  font-size: 13px;
-  color: var(--at-text-secondary);
+.app-shell__operator-label {
+  color: var(--at-text-muted);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.app-shell__operator-name {
+  overflow: hidden;
+  color: var(--at-text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell__sign-out {
+  justify-content: flex-start;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 0;
+  color: var(--at-text-muted);
+  font-size: 11px;
 }
 
 .app-shell__content {
-  padding: var(--at-space-lg);
+  padding: 28px;
 }

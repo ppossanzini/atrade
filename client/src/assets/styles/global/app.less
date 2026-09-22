@@ -34,11 +34,11 @@ body {
   width: 232px;
   overflow-y: auto;
   border-right: 1px solid var(--at-border-subtle);
-  background-color: var(--at-surface-base);
+  background-color: #f8fbfb;
 }
 
 .app-shell__brand {
-  padding: var(--at-space-md);
+  padding: 20px var(--at-space-md);
   border-bottom: 1px solid var(--at-border-subtle);
 }
 
@@ -66,42 +66,26 @@ body {
   overflow: hidden;
 }
 
-.app-shell__topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex: 0 0 auto;
-  gap: var(--at-space-md);
-  padding: var(--at-space-sm) var(--at-space-lg);
-  border-bottom: 1px solid var(--at-border-subtle);
-  background-color: rgb(255 255 255 / 82%);
-  backdrop-filter: blur(12px);
-}
-
-.app-shell__operator {
-  font-size: 13px;
-  color: var(--at-text-secondary);
-}
-
 .app-shell__content {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: var(--at-space-lg);
+  padding: 28px;
 }
 
 .panel {
-  padding: var(--at-space-md);
+  padding: 18px;
   border: 1px solid var(--at-border-subtle);
   border-radius: var(--at-radius);
   background-color: var(--at-surface-raised);
-  box-shadow: var(--at-shadow-panel);
+  box-shadow: 0 8px 24px rgb(31 52 62 / 4%);
 }
 
 .panel-title {
   display: block;
   margin-bottom: var(--at-space-sm);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--at-text-muted);
 }
@@ -146,14 +130,14 @@ body {
 
 .page-header__title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: 25px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
 }
 
 .page-header__subtitle {
   margin: var(--at-space-xs) 0 0;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--at-text-secondary);
 }
 
@@ -226,7 +210,23 @@ body {
 .el-menu-item.is-active {
   background-color: var(--at-accent-soft);
   color: var(--at-accent);
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.el-button {
+  border-radius: 7px;
+  font-weight: 650;
+}
+
+.el-tag {
+  border-radius: 5px;
+  font-weight: 700;
+}
+
+.el-card {
+  border-radius: var(--at-radius);
+  border-color: var(--at-border-subtle);
+  box-shadow: var(--at-shadow-panel);
 }
 
 :is(.el-input__wrapper, .el-select__wrapper, .el-textarea__inner) {

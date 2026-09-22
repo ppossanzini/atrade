@@ -37,7 +37,7 @@ namespace AutoTrade.Trading.Handlers.MarketData
             {
                 foreach (SymbolRequest request in symbols)
                 {
-                    captures.Add(CaptureSymbol(settings, request, cycle));
+                    captures.Add(CaptureSymbol(settings, request, cycle, timeProvider.GetUtcNow().UtcDateTime));
                 }
             }
 
@@ -99,7 +99,7 @@ namespace AutoTrade.Trading.Handlers.MarketData
             return Task.FromResult(specifications);
         }
 
-        private static SymbolCapture CaptureSymbol(SimulatedMarketDataOptions settings, SymbolRequest request, int cycle)
+        private static SymbolCapture CaptureSymbol(SimulatedMarketDataOptions settings, SymbolRequest request, int cycle, DateTime now)
         {
             SimulatedSymbolOptions profile = ResolveProfile(settings, request);
 
@@ -125,8 +125,46 @@ namespace AutoTrade.Trading.Handlers.MarketData
                 Price = Math.Round(profile.BasePrice * factor, 5),
                 SpreadPips = Math.Round(profile.SpreadPips * factor, 3),
                 VolatilityPercent = Math.Round(profile.VolatilityPercent * factor, 3),
-                IsTradable = profile.IsTradable
+                IsTradable = profile.IsTradable,
+                Bars = BuildBars(profile, request, cycle, now)
             };
+        }
+
+        private static List<MarketBar> BuildBars(SimulatedSymbolOptions profile, SymbolRequest request, int cycle, DateTime now)
+        {
+            List<MarketBar> bars = new List<MarketBar>();
+            double trend = ((StableHash(request.Symbol) % 7) - 3) * 0.0002;
+            double previous = profile.BasePrice * (1 + trend * cycle / 100);
+
+            for (int index = 96; index >= 1; index--)
+            {
+                double open = previous;
+                double close = open + trend + Math.Sin(index + cycle) * profile.BasePrice * 0.00005;
+                double high = Math.Max(open, close) + profile.BasePrice * 0.0001;
+                double low = Math.Min(open, close) - profile.BasePrice * 0.0001;
+                bars.Add(new MarketBar
+                {
+                    TimeFrame = TimeFrame.M15,
+                    ClosedAtUtc = now.AddMinutes(-15 * index),
+                    Open = open, High = high, Low = low, Close = close, Volume = 1000 + index
+                });
+                previous = close;
+            }
+
+            return bars;
+        }
+
+        private static int StableHash(string value)
+        {
+            unchecked
+            {
+                int hash = 17;
+                foreach (char character in value ?? string.Empty)
+                {
+                    hash = hash * 31 + character;
+                }
+                return Math.Abs(hash);
+            }
         }
 
         private static SimulatedSymbolOptions ResolveProfile(SimulatedMarketDataOptions settings, SymbolRequest request)

@@ -1,4 +1,5 @@
 using AutoTrade.Trading.Core.Enums;
+using System.Collections.Generic;
 
 namespace AutoTrade.Trading.Core.Dto
 {
@@ -16,5 +17,28 @@ namespace AutoTrade.Trading.Core.Dto
         public int MinimumCoverage { get; set; }
         public double RiskPerBasket { get; set; }
         public double DailyLossLimit { get; set; }
+
+        public StrategyCombinationMode CombinationMode { get; set; }
+
+        public int MinimumAgreement { get; set; }
+
+        public int MinimumStrategyConfidence { get; set; }
+
+        public StrategyConflictPolicy ConflictPolicy { get; set; }
+
+        public List<StrategyComponentDto> Components { get; set; }
+    }
+
+    public class StrategyComponentDto
+    {
+        public StrategyComponentType Type { get; set; }
+
+        public bool Enabled { get; set; }
+
+        public int Weight { get; set; }
+
+        public TimeFrame TimeFrame { get; set; }
+
+        public string ParametersJson { get; set; }
     }
 }

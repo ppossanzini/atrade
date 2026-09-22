@@ -24,5 +24,13 @@ namespace AutoTrade.Trading.Handlers.Model
         public double RiskPerBasket { get; set; }
 
         public double DailyLossLimit { get; set; }
+
+        public StrategyCombinationMode CombinationMode { get; set; }
+
+        public int MinimumAgreement { get; set; }
+
+        public int MinimumStrategyConfidence { get; set; }
+
+        public StrategyConflictPolicy ConflictPolicy { get; set; }
     }
 }

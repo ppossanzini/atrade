@@ -3,6 +3,7 @@ using System;
 using AutoTrade.Trading.Handlers.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoTrade.Trading.Handlers.Model.Migrations
 {
     [DbContext(typeof(DB))]
-    partial class DBModelSnapshot : ModelSnapshot
+    [Migration("20260921221603_ComposedBasketStrategy")]
+    partial class ComposedBasketStrategy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
@@ -916,13 +919,6 @@ namespace AutoTrade.Trading.Handlers.Model.Migrations
                     b.Property<int>("Gate")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("LlmConfidence")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("LlmRationale")
-                        .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("ProposedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -930,17 +926,10 @@ namespace AutoTrade.Trading.Handlers.Model.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SelectedScenario")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
                     b.Property<Guid?>("SnapshotId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("StrategyAgreement")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("VersionNumber")

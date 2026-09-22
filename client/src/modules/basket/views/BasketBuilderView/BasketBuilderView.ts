@@ -15,6 +15,23 @@ const defaultPolicy = (): server.BasketPolicy => ({
   minimumCoverage: 75,
   riskPerBasket: 0.8,
   dailyLossLimit: 2.5,
+  combinationMode: 'WeightedEnsemble',
+  minimumAgreement: 55,
+  minimumStrategyConfidence: 50,
+  conflictPolicy: 'NoTrade',
+  components: [
+    'TrendFollowing',
+    'Momentum',
+    'Breakout',
+    'MeanReversion',
+    'VolatilityFilter',
+  ].map((type, index) => ({
+    type: type as server.StrategyComponentType,
+    enabled: index < 3,
+    weight: index < 3 ? 30 + index * 5 : 20,
+    timeFrame: 'M15',
+    parametersJson: null,
+  })),
 })
 
 export default defineComponent({
@@ -102,7 +119,17 @@ export default defineComponent({
 
     watch(detail, (value) => {
       draftLegs.value = value ? value.draftLegs.map((leg) => ({ ...leg })) : []
-      draftPolicy.value = value?.draftPolicy ? { ...value.draftPolicy } : defaultPolicy()
+      const fallback = defaultPolicy()
+      draftPolicy.value = value?.draftPolicy
+        ? {
+            ...fallback,
+            ...value.draftPolicy,
+            components:
+              value.draftPolicy.components?.length > 0
+                ? value.draftPolicy.components.map((component) => ({ ...component }))
+                : fallback.components,
+          }
+        : fallback
       versionNote.value = ''
     })
 

@@ -197,7 +197,15 @@
     </div>
 
     <div v-if="detail" class="panel basket-panel">
-      <span class="panel-title">{{ t('basket.policy') }}</span>
+      <div class="panel-header">
+        <div>
+          <span class="panel-title">{{ t('basket.strategy') }}</span>
+          <p class="basket-hint">{{ t('basket.strategyHint') }}</p>
+        </div>
+        <el-tag v-if="detail.activePolicy" effect="plain" size="small">
+          {{ t('basket.versionInForce') }} v{{ detail.activeVersionNumber }}
+        </el-tag>
+      </div>
 
       <el-form label-position="top">
         <el-row :gutter="16">
@@ -251,7 +259,91 @@
               />
             </el-form-item>
           </el-col>
+
+          <el-col :xs="24" :md="12">
+            <el-form-item :label="t('basket.combinationMode')">
+              <el-select v-model="draftPolicy.combinationMode" :disabled="isReadOnly">
+                <el-option
+                  v-for="mode in ['WeightedEnsemble', 'Consensus', 'RegimeGated']"
+                  :key="mode"
+                  :label="t(`strategyCombination.${mode}`)"
+                  :value="mode"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+
+          <el-col :xs="24" :md="12">
+            <el-form-item :label="t('basket.conflictPolicy')">
+              <el-select v-model="draftPolicy.conflictPolicy" :disabled="isReadOnly">
+                <el-option
+                  v-for="policy in ['NoTrade', 'RequireReview', 'FollowHighestWeight']"
+                  :key="policy"
+                  :label="t(`strategyConflict.${policy}`)"
+                  :value="policy"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+
+          <el-col :xs="24" :sm="12">
+            <el-form-item :label="t('basket.minimumAgreement')">
+              <el-input-number
+                v-model="draftPolicy.minimumAgreement"
+                :min="50"
+                :max="100"
+                :step="5"
+                :disabled="isReadOnly"
+              />
+            </el-form-item>
+          </el-col>
+
+          <el-col :xs="24" :sm="12">
+            <el-form-item :label="t('basket.minimumStrategyConfidence')">
+              <el-input-number
+                v-model="draftPolicy.minimumStrategyConfidence"
+                :min="1"
+                :max="100"
+                :step="5"
+                :disabled="isReadOnly"
+              />
+            </el-form-item>
+          </el-col>
         </el-row>
+
+        <div class="basket-strategy-components">
+          <div class="panel-header">
+            <div>
+              <span class="panel-title">{{ t('basket.strategyComponents') }}</span>
+              <p class="basket-hint">{{ t('basket.strategyComponentsHint') }}</p>
+            </div>
+          </div>
+
+          <el-table :data="draftPolicy.components" size="small">
+            <el-table-column :label="t('basket.include')" width="88">
+              <template #default="scope">
+                <el-switch v-model="scope.row.enabled" :disabled="isReadOnly" />
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('basket.strategyComponent')" min-width="180">
+              <template #default="scope">
+                {{ t(`strategyComponent.${scope.row.type}`) }}
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('basket.timeFrame')" width="130">
+              <template #default="scope">
+                <el-select v-model="scope.row.timeFrame" :disabled="isReadOnly">
+                  <el-option v-for="frame in ['M5', 'M15', 'M30', 'H1']" :key="frame" :label="frame" :value="frame" />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('basket.weight')" width="140">
+              <template #default="scope">
+                <el-input-number v-model="scope.row.weight" :min="1" :max="100" :disabled="isReadOnly" controls-position="right" />
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
 
         <el-button
           type="primary"
@@ -259,7 +351,7 @@
           :disabled="!canSavePolicy"
           @click="savePolicy"
         >
-          {{ t('basket.savePolicy') }}
+          {{ t('basket.saveStrategy') }}
         </el-button>
       </el-form>
     </div>

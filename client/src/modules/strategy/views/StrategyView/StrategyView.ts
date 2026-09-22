@@ -84,6 +84,11 @@ export default defineComponent({
         minimumCoverage: minimumCoverage.value,
         riskPerBasket: riskPerBasket.value,
         dailyLossLimit: dailyLossLimit.value,
+        combinationMode: 'WeightedEnsemble',
+        minimumAgreement: 55,
+        minimumStrategyConfidence: 50,
+        conflictPolicy: 'NoTrade',
+        components: [],
       })
 
       if (outcome === 'Applied') {

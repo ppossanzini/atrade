@@ -30,6 +30,10 @@ namespace AutoTrade.Trading.Core.Dto
         /// <summary>How far the gate was from the thresholds it applied, as an informational percentage.</summary>
         public int Confidence { get; set; }
 
+        public int StrategyAgreement { get; set; }
+
+        public int? LlmConfidence { get; set; }
+
         public double ExpectedRiskPercent { get; set; }
 
         public DateTime ProposedAtUtc { get; set; }
@@ -76,6 +80,10 @@ namespace AutoTrade.Trading.Core.Dto
 
         /// <summary>Language neutral summary of the input the gate judged, filled by the proposal source.</summary>
         public string Rationale { get; set; }
+
+        public string LlmRationale { get; set; }
+
+        public string SelectedScenario { get; set; }
 
         public DateTime? DecidedAtUtc { get; set; }
 

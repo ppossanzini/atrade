@@ -3,7 +3,6 @@ import TradingShell from '@/layouts/TradingShell/TradingShell.vue'
 import LoginView from '@/modules/auth/views/LoginView/LoginView.vue'
 import OperationalStatusView from '@/modules/operations/views/OperationalStatusView/OperationalStatusView.vue'
 import BasketBuilderView from '@/modules/basket/views/BasketBuilderView/BasketBuilderView.vue'
-import StrategyView from '@/modules/strategy/views/StrategyView/StrategyView.vue'
 import MarketManagerView from '@/modules/market/views/MarketManagerView/MarketManagerView.vue'
 import ExecutionView from '@/modules/execution/views/ExecutionView/ExecutionView.vue'
 import ComingSoonView from '@/modules/common/views/ComingSoonView/ComingSoonView.vue'
@@ -51,12 +50,6 @@ const routes: RouteRecordRaw[] = [
         name: 'basket',
         component: BasketBuilderView,
         meta: { titleKey: 'navigation.basket' },
-      },
-      {
-        path: 'strategy',
-        name: 'strategy',
-        component: StrategyView,
-        meta: { titleKey: 'navigation.strategy' },
       },
       {
         path: 'market',

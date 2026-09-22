@@ -119,8 +119,26 @@ namespace AutoTrade.Trading.Handlers.CQRS.BasketVersion
                     FailurePolicy = policy.FailurePolicy,
                     MinimumCoverage = policy.MinimumCoverage,
                     RiskPerBasket = policy.RiskPerBasket,
-                    DailyLossLimit = policy.DailyLossLimit
+                    DailyLossLimit = policy.DailyLossLimit,
+                    CombinationMode = policy.CombinationMode,
+                    MinimumAgreement = policy.MinimumAgreement,
+                    MinimumStrategyConfidence = policy.MinimumStrategyConfidence,
+                    ConflictPolicy = policy.ConflictPolicy
                 });
+
+                List<BasketDraftStrategyComponent> strategyComponents = await db.BasketDraftStrategyComponents
+                  .Where(item => item.BasketId == basket.Id && item.Enabled)
+                  .OrderBy(item => item.Ordinal).ToListAsync(cancellationToken);
+
+                foreach (BasketDraftStrategyComponent component in strategyComponents)
+                {
+                    db.BasketVersionStrategyComponents.Add(new BasketVersionStrategyComponent
+                    {
+                        Id = Guid.CreateVersion7(), VersionId = version.Id, Ordinal = component.Ordinal,
+                        Type = component.Type, Enabled = component.Enabled, Weight = component.Weight,
+                        TimeFrame = component.TimeFrame, ParametersJson = component.ParametersJson
+                    });
+                }
             }
 
             basket.UpdatedAtUtc = now;

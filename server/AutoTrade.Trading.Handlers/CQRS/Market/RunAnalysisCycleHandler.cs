@@ -11,6 +11,7 @@ using AutoTrade.Trading.Handlers.Market;
 using AutoTrade.Trading.Handlers.MarketData;
 using AutoTrade.Trading.Handlers.Model;
 using AutoTrade.Trading.Handlers.Risk;
+using AutoTrade.Trading.Handlers.Strategy;
 using Hikyaku;
 using Microsoft.EntityFrameworkCore;
 using BasketVersionEntity = AutoTrade.Trading.Handlers.Model.BasketVersion;
@@ -73,6 +74,9 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
               .AsNoTracking()
               .FirstOrDefaultAsync(item => item.VersionId == version.Id, cancellationToken);
 
+            List<BasketVersionStrategyComponent> strategyComponents = await db.BasketVersionStrategyComponents
+              .AsNoTracking().Where(item => item.VersionId == version.Id).OrderBy(item => item.Ordinal).ToListAsync(cancellationToken);
+
             List<BasketVersionLeg> legs = await db.BasketVersionLegs
               .AsNoTracking()
               .Where(item => item.VersionId == version.Id)
@@ -97,7 +101,19 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
             RiskDecisionDto decision = engine.Evaluate(input);
 
             MarketSnapshot snapshot = PersistSnapshot(capture, legs, cancellationToken);
-            ProposalCandidate proposalCandidate = proposalSource.Create(capture, input);
+            StrategyPolicy strategyPolicy = new StrategyPolicy
+            {
+                CombinationMode = policy != null ? policy.CombinationMode : StrategyCombinationMode.WeightedEnsemble,
+                MinimumAgreement = policy != null ? policy.MinimumAgreement : 55,
+                MinimumConfidence = policy != null ? policy.MinimumStrategyConfidence : 50,
+                ConflictPolicy = policy != null ? policy.ConflictPolicy : StrategyConflictPolicy.NoTrade,
+                Components = strategyComponents.Select(item => new StrategyComponentPolicy
+                {
+                    Type = item.Type, Enabled = item.Enabled, Weight = item.Weight, TimeFrame = item.TimeFrame
+                }).ToList()
+            };
+
+            ProposalCandidate proposalCandidate = await proposalSource.CreateAsync(capture, input, strategyPolicy, cancellationToken);
 
             Proposal proposal = new Proposal
             {
@@ -111,10 +127,14 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
                 Gate = decision.Verdict,
                 Status = AnalysisRules.Route(state.Mode, decision.Verdict),
                 Confidence = proposalCandidate.Confidence,
+                StrategyAgreement = proposalCandidate.Strategy != null ? proposalCandidate.Strategy.Agreement : 0,
+                LlmConfidence = proposalCandidate.LlmConfidence,
                 ExpectedRiskPercent = input.BasketRiskPercent ?? 0,
                 ProposedAtUtc = now,
                 ExpiresAtUtc = now.AddSeconds(marketOptions.ProposalTtlSeconds),
                 Rationale = proposalCandidate.Rationale,
+                LlmRationale = proposalCandidate.LlmRationale,
+                SelectedScenario = proposalCandidate.SelectedScenario,
                 CycleSequence = await NextCycleSequenceAsync(cancellationToken)
             };
 

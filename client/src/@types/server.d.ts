@@ -108,6 +108,23 @@ declare namespace server {
 
   /** Declared entry rule of the strategy. It is a declaration the version freezes and the proposal records. */
   type EntryMode = 'RegimeMomentum' | 'Momentum' | 'MeanReversion'
+  type StrategyComponentType =
+    | 'TrendFollowing'
+    | 'Momentum'
+    | 'Breakout'
+    | 'MeanReversion'
+    | 'VolatilityFilter'
+    | 'NoTrade'
+  type StrategyCombinationMode = 'WeightedEnsemble' | 'Consensus' | 'RegimeGated'
+  type StrategyConflictPolicy = 'NoTrade' | 'RequireReview' | 'FollowHighestWeight'
+
+  interface StrategyComponent {
+    type: StrategyComponentType
+    enabled: boolean
+    weight: number
+    timeFrame: TimeFrame
+    parametersJson: string | null
+  }
 
   /**
    * Operator-owned leg definition. Analysis values are produced by the analysis pipeline and are
@@ -136,6 +153,11 @@ declare namespace server {
     minimumCoverage: number
     riskPerBasket: number
     dailyLossLimit: number
+    combinationMode: StrategyCombinationMode
+    minimumAgreement: number
+    minimumStrategyConfidence: number
+    conflictPolicy: StrategyConflictPolicy
+    components: StrategyComponent[]
   }
 
   interface BasketSummary {
@@ -255,6 +277,8 @@ declare namespace server {
     status: ProposalStatus
     gate: RiskGateVerdict
     confidence: number
+    strategyAgreement: number
+    llmConfidence: number | null
     expectedRiskPercent: number
     proposedAtUtc: IsoDateTime
     expiresAtUtc: IsoDateTime
@@ -277,6 +301,8 @@ declare namespace server {
     snapshotCapturedAtUtc: IsoDateTime | null
     cycleSequence: number
     rationale: string
+    llmRationale: string | null
+    selectedScenario: string | null
     decidedAtUtc: IsoDateTime | null
     decidedByOperatorId: string | null
     decisionReason: string | null

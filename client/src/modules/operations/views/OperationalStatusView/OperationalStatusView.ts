@@ -52,6 +52,62 @@ export default defineComponent({
         : 'status.analysisSuspended'
     })
 
+    const connectionTagType = computed(() => {
+      switch (account.value?.connectionState) {
+        case 'Connected':
+          return 'success'
+        case 'Degraded':
+          return 'warning'
+        case 'ReconciliationRequired':
+          return 'danger'
+        default:
+          return 'info'
+      }
+    })
+
+    const systemTagType = computed(() => {
+      if (
+        isKillSwitchEngaged.value ||
+        account.value?.connectionState === 'ReconciliationRequired'
+      ) {
+        return 'danger'
+      }
+
+      if (
+        account.value?.connectionState === 'Degraded' ||
+        !marketManager.value?.isAnalysisRunning ||
+        analysisModel.value?.isAvailable === false
+      ) {
+        return 'warning'
+      }
+
+      return 'success'
+    })
+
+    const systemStateKey = computed(() => {
+      if (systemTagType.value === 'danger') {
+        return 'status.attention'
+      }
+
+      return systemTagType.value === 'warning' ? 'status.analysisNotReady' : 'status.allOperational'
+    })
+
+    const tradingStateKey = computed(() =>
+      account.value?.isTradingEnabled && !isKillSwitchEngaged.value
+        ? 'status.tradingReady'
+        : 'status.tradingBlocked',
+    )
+
+    const analysisStateKey = computed(() =>
+      marketManager.value?.isAnalysisRunning ? 'status.analysisReady' : 'status.analysisNotReady',
+    )
+
+    const evidenceStateKey = computed(() =>
+      evidenceStore.value?.isAvailable && embedding.value?.isAvailable
+        ? 'status.evidenceReady'
+        : 'status.evidenceMissing',
+    )
+
     function formatTimestamp(value: string | null): string {
       return value ? new Date(value).toLocaleString('it-IT') : t('status.never')
     }
@@ -112,6 +168,12 @@ export default defineComponent({
       connectionKey,
       modeKey,
       analysisKey,
+      connectionTagType,
+      systemTagType,
+      systemStateKey,
+      tradingStateKey,
+      analysisStateKey,
+      evidenceStateKey,
       formatTimestamp,
       refresh,
       engage,

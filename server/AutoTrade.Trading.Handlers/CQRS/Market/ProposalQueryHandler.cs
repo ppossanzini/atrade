@@ -68,6 +68,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
                 Status = proposal.Status,
                 Gate = proposal.Gate,
                 Confidence = proposal.Confidence,
+                StrategyAgreement = proposal.StrategyAgreement,
+                LlmConfidence = proposal.LlmConfidence,
                 ExpectedRiskPercent = proposal.ExpectedRiskPercent,
                 ProposedAtUtc = proposal.ProposedAtUtc,
                 ExpiresAtUtc = proposal.ExpiresAtUtc,
@@ -144,6 +146,8 @@ namespace AutoTrade.Trading.Handlers.CQRS.Market
                 DecidedByOperatorId = proposal.DecidedByOperatorId,
                 DecisionReason = proposal.DecisionReason,
                 Rationale = proposal.Rationale,
+                LlmRationale = proposal.LlmRationale,
+                SelectedScenario = proposal.SelectedScenario,
                 CycleSequence = proposal.CycleSequence,
                 Legs = new List<ProposalLegDto>(),
                 Gates = new List<RiskGateResultDto>()

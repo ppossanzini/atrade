@@ -32,6 +32,20 @@ namespace AutoTrade.Trading.Handlers.MarketData
 
         /// <summary>Whether the symbol can be traded right now. Coverage is computed from it.</summary>
         public bool IsTradable { get; set; }
+
+        public List<MarketBar> Bars { get; set; } = new List<MarketBar>();
+    }
+
+    /// <summary>Closed OHLC bar supplied by the market provider; open bars are never used by strategies.</summary>
+    public class MarketBar
+    {
+        public TimeFrame TimeFrame { get; set; }
+        public System.DateTime ClosedAtUtc { get; set; }
+        public double Open { get; set; }
+        public double High { get; set; }
+        public double Low { get; set; }
+        public double Close { get; set; }
+        public long Volume { get; set; }
     }
 
     /// <summary>

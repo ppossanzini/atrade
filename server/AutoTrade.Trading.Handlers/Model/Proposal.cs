@@ -36,6 +36,10 @@ namespace AutoTrade.Trading.Handlers.Model
         /// <summary>Informational confidence of the source, 0 when the source cannot express one.</summary>
         public int Confidence { get; set; }
 
+        public int StrategyAgreement { get; set; }
+
+        public int? LlmConfidence { get; set; }
+
         public double ExpectedRiskPercent { get; set; }
 
         public DateTime ProposedAtUtc { get; set; }
@@ -52,6 +56,12 @@ namespace AutoTrade.Trading.Handlers.Model
         /// <summary>Language neutral summary of what the source judged. Audit material, not UI copy.</summary>
         [StringLength(512)]
         public string Rationale { get; set; }
+
+        [StringLength(1024)]
+        public string LlmRationale { get; set; }
+
+        [StringLength(128)]
+        public string SelectedScenario { get; set; }
 
         public int CycleSequence { get; set; }
     }

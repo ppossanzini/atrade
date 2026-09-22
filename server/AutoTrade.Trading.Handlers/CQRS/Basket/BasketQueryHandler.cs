@@ -122,6 +122,9 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
               .AsNoTracking()
               .FirstOrDefaultAsync(item => item.BasketId == basket.Id, cancellationToken);
 
+            List<BasketDraftStrategyComponent> draftComponents = await db.BasketDraftStrategyComponents
+              .AsNoTracking().Where(item => item.BasketId == basket.Id).OrderBy(item => item.Ordinal).ToListAsync(cancellationToken);
+
             int? latestNumber = await db.BasketVersions
               .AsNoTracking()
               .Where(item => item.BasketId == basket.Id)
@@ -136,6 +139,22 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
               ? await db.BasketVersionPolicies.AsNoTracking().FirstOrDefaultAsync(item => item.VersionId == activeSlot.VersionId, cancellationToken)
               : null;
 
+            List<BasketVersionStrategyComponent> activeComponents = holdsActiveVersion
+              ? await db.BasketVersionStrategyComponents.AsNoTracking().Where(item => item.VersionId == activeSlot.VersionId).OrderBy(item => item.Ordinal).ToListAsync(cancellationToken)
+              : new List<BasketVersionStrategyComponent>();
+
+            BasketPolicyDto draftPolicyDto = draftPolicy != null ? mapper.Map<BasketPolicyDto>(draftPolicy) : null;
+            if (draftPolicyDto != null)
+            {
+                draftPolicyDto.Components = draftComponents.Select(ToDto).ToList();
+            }
+
+            BasketPolicyDto activePolicyDto = activePolicy != null ? mapper.Map<BasketPolicyDto>(activePolicy) : null;
+            if (activePolicyDto != null)
+            {
+                activePolicyDto.Components = activeComponents.Select(ToDto).ToList();
+            }
+
             BasketDetailDto detail = new BasketDetailDto
             {
                 BasketId = basket.Id,
@@ -145,11 +164,29 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
                 ActiveVersionId = holdsActiveVersion ? activeSlot.VersionId : (Guid?)null,
                 ActiveVersionNumber = holdsActiveVersion ? activeSlot.Number : 0,
                 DraftLegs = draftLegs.Select(item => mapper.Map<BasketCompositionLegDto>(item)).ToList(),
-                DraftPolicy = draftPolicy != null ? mapper.Map<BasketPolicyDto>(draftPolicy) : null,
-                ActivePolicy = activePolicy != null ? mapper.Map<BasketPolicyDto>(activePolicy) : null
+                DraftPolicy = draftPolicyDto,
+                ActivePolicy = activePolicyDto
             };
 
             return detail;
+        }
+
+        private static StrategyComponentDto ToDto(BasketDraftStrategyComponent component)
+        {
+            return new StrategyComponentDto
+            {
+                Type = component.Type, Enabled = component.Enabled, Weight = component.Weight,
+                TimeFrame = component.TimeFrame, ParametersJson = component.ParametersJson
+            };
+        }
+
+        private static StrategyComponentDto ToDto(BasketVersionStrategyComponent component)
+        {
+            return new StrategyComponentDto
+            {
+                Type = component.Type, Enabled = component.Enabled, Weight = component.Weight,
+                TimeFrame = component.TimeFrame, ParametersJson = component.ParametersJson
+            };
         }
 
         private async Task<ActiveSlot> ReadActiveSlotAsync(CancellationToken cancellationToken)

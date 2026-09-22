@@ -368,6 +368,25 @@ namespace AutoTrade.Trading.Handlers.CQRS.Basket
             policy.MinimumCoverage = request.Policy.MinimumCoverage;
             policy.RiskPerBasket = request.Policy.RiskPerBasket;
             policy.DailyLossLimit = request.Policy.DailyLossLimit;
+            policy.CombinationMode = request.Policy.CombinationMode;
+            policy.MinimumAgreement = request.Policy.MinimumAgreement;
+            policy.MinimumStrategyConfidence = request.Policy.MinimumStrategyConfidence;
+            policy.ConflictPolicy = request.Policy.ConflictPolicy;
+
+            List<StrategyComponentDto> components = request.Policy.Components ?? new List<StrategyComponentDto>();
+            List<BasketDraftStrategyComponent> storedComponents = await db.BasketDraftStrategyComponents.Where(item => item.BasketId == basket.Id).ToListAsync(cancellationToken);
+            db.BasketDraftStrategyComponents.RemoveRange(storedComponents);
+            int componentOrdinal = 0;
+            foreach (StrategyComponentDto component in components)
+            {
+                db.BasketDraftStrategyComponents.Add(new BasketDraftStrategyComponent
+                {
+                    Id = Guid.CreateVersion7(),
+                    BasketId = basket.Id,
+                    Ordinal = componentOrdinal++, Type = component.Type, Enabled = component.Enabled,
+                    Weight = component.Weight, TimeFrame = component.TimeFrame, ParametersJson = component.ParametersJson
+                });
+            }
 
             basket.UpdatedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
 

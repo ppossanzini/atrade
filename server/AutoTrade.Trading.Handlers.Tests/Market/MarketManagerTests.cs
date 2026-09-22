@@ -199,7 +199,8 @@ namespace AutoTrade.Trading.Handlers.Tests.Market
             Assert.Equal(ProposalAction.Entry, proposal.Action);
             Assert.Equal(Start.AddSeconds(300), proposal.ExpiresAtUtc);
             Assert.NotNull(proposal.SnapshotId);
-            Assert.Equal(100, proposal.Confidence);
+            Assert.InRange(proposal.Confidence, 0, 100);
+            Assert.True(proposal.Confidence < 100);
             Assert.Equal(0.8, proposal.ExpectedRiskPercent);
 
             // The proposal keeps both its own legs and the gate rows it was routed on.
